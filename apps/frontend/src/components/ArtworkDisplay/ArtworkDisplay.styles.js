@@ -66,8 +66,6 @@ export const artworkInfo = css`
   flex-direction: column;
   gap: 8px;
   text-align: center;
-  height: 80px;
-  min-height: 80px;
 `;
 
 // 감정 설명

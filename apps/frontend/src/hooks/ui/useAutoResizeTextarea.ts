@@ -7,8 +7,12 @@ import { useLayoutEffect, useRef } from 'react';
  * @param {number} minHeight - 최소 높이 (기본값: 57px)
  * @returns {React.RefObject} textarea ref
  */
-function useAutoResizeTextarea(value, placeholder, minHeight = 57) {
-  const textareaRef = useRef(null);
+function useAutoResizeTextarea(
+  value: string,
+  placeholder: string,
+  minHeight = 57,
+) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // useLayoutEffect: 브라우저가 화면을 그리기 전에 실행 (모바일에서 깜빡임 방지)
   useLayoutEffect(() => {

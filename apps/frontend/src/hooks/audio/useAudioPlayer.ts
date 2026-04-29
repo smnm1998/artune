@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 
+interface Track {
+  id: string;
+  preview_url: string | null;
+}
+
 /**
  * 오디오 플레이어의 재생 상태를 관리하는 훅
  * @returns {Object} 오디오 플레이어 관련 상태와 핸들러
@@ -8,10 +13,10 @@ import { useState, useRef, useEffect } from 'react';
  * @returns {React.RefObject} returns.audioRef - audio 엘리먼트에 연결할 ref
  */
 function useAudioPlayer() {
-  const [playingTrackId, setPlayingTrackId] = useState(null);
-  const audioRef = useRef(null);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const handlePlayPause = (track) => {
+  const handlePlayPause = (track: Track) => {
     if (!track.preview_url) {
       alert('미리듣기를 지원하지 않는 곡입니다.');
       return;
@@ -28,7 +33,7 @@ function useAudioPlayer() {
 
     audio.pause();
     audio.src = track.preview_url;
-    audio.play();
+    audio.play().catch(() => {});
     setPlayingTrackId(track.id);
   };
 

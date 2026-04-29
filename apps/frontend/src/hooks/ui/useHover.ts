@@ -8,10 +8,10 @@ import { useState } from 'react';
  * @returns {Function} returns.handleMouseLeave - 마우스가 아이템에서 나갔을 때 호출할 함수
  * @returns {Function} returns.isHovered - 특정 아이템이 hover되었는지 확인하는 함수
  */
-function useHover() {
-  const [hoveredItem, setHoveredItem] = useState(null);
+function useHover<T = string>() {
+  const [hoveredItem, setHoveredItem] = useState<T | null>(null);
 
-  const handleMouseEnter = (itemId) => {
+  const handleMouseEnter = (itemId: T) => {
     setHoveredItem(itemId);
   };
 
@@ -19,7 +19,7 @@ function useHover() {
     setHoveredItem(null);
   };
 
-  const isHovered = (itemId) => hoveredItem === itemId;
+  const isHovered = (itemId: T) => hoveredItem === itemId;
 
   return {
     hoveredItem,

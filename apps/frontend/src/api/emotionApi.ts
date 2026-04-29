@@ -1,27 +1,43 @@
 import { post } from './client';
 import { API_ENDPOINTS, API_BASE_URL } from '@/constants/api';
 
-/**
- * 감정 분석 API 호출
- *
- * @param {string} text - 분석할 텍스트
- * @returns {Promise<Object>} 감정 분석 결과
- * @throws {ApiError} API 호출 실패 시
- */
-export async function analyzeEmotion(text) {
-  const response = await post(API_ENDPOINTS.ANALYZE_EMOTION, { text });
-  return response;
+interface Track {
+  id: string;
+  title: string;
+  artists: string;
+  albumArt: string;
+  previewUrl: string | null;
 }
 
-/**
- * 감정 분석 API 호출 (SSE - 진행률 포함)
- *
- * @param {string} text - 분석할 텍스트
- * @param {Function} onProgress - 진행률 콜백 (progress: number, message: string)
- * @returns {Promise<Object>} 감정 분석 결과
- * @throws {Error} API 호출 실패 시
- */
-export async function analyzeEmotionWithProgress(text, onProgress) {
+interface Playlist {
+  modeLabel: string;
+  description: string;
+  tracks: Track[];
+}
+
+export interface EmotionResponse {
+  emotionLabel: string;
+  description: string;
+  artwork: {
+    url: string;
+    prompt: string;
+  };
+  playlists: {
+    immerse: Playlist;
+    soothe: Playlist;
+  };
+}
+
+type ProgressCallback = (progress: number, message: string) => void;
+
+export async function analyzeEmotion(text: string): Promise<EmotionResponse> {
+  return post<EmotionResponse>(API_ENDPOINTS.ANALYZE_EMOTION, { text });
+}
+
+export async function analyzeEmotionWithProgress(
+  text: string,
+  onProgress: ProgressCallback,
+): Promise<EmotionResponse> {
   return new Promise((resolve, reject) => {
     const url = `${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}?text=${encodeURIComponent(text)}`;
 
@@ -53,14 +69,12 @@ export async function analyzeEmotionWithProgress(text, onProgress) {
     };
 
     eventSource.onerror = (event) => {
-      console.error('SSE Error:', event);
       eventSource.close();
-
-      // EventSource 연결 실패 시 에러 메시지
-      const errorMessage = event.target.readyState === EventSource.CLOSED
-        ? '서버와의 연결이 끊어졌습니다. 다시 시도해주세요.'
-        : '감정 분석 중 오류가 발생했습니다.';
-
+      const target = event.target as EventSource;
+      const errorMessage =
+        target.readyState === EventSource.CLOSED
+          ? '서버와의 연결이 끊어졌습니다. 다시 시도해주세요.'
+          : '감정 분석 중 오류가 발생했습니다.';
       reject(new Error(errorMessage));
     };
   });

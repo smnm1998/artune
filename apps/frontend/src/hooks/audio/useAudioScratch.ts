@@ -1,25 +1,25 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
-/**
- * 페이드아웃 효과가 있는 오디오 플레이어 훅 (기존 Scratch 대체)
- *
- * @param {Object} options
- * @param {string} options.src - 오디오 소스 URL
- * @param {boolean} options.isEnabled - 재생 활성화 여부
- * @param {number} [options.fadeOutDuration=2] - 페이드아웃 효과 지속 시간 (초)
- *
- * @returns {Object} 오디오 플레이어 상태 및 ref
- */
-function useAudioScratch({ src, isEnabled, scratchDuration = 2 }) {
-  const audioRef = useRef(null);
+interface UseAudioScratchOptions {
+  src: string;
+  isEnabled: boolean;
+  scratchDuration?: number;
+}
+
+function useAudioScratch({
+  src,
+  isEnabled,
+  scratchDuration = 2,
+}: UseAudioScratchOptions) {
+  const audioRef = useRef<HTMLAudioElement>(null);
   const isFadingRef = useRef(false);
-  const animationFrameRef = useRef(null);
+  const animationFrameRef = useRef<number | null>(null);
   const prevEnabledRef = useRef(isEnabled);
-  const listenerCleanupRef = useRef(null);
-  const playTimeoutRef = useRef(null);
+  const listenerCleanupRef = useRef<(() => void) | null>(null);
+  const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * 오디오를 즉시 정지하고 상태를 초기화하는 함수
@@ -61,7 +61,7 @@ function useAudioScratch({ src, isEnabled, scratchDuration = 2 }) {
       const startTime = performance.now();
       const initialVolume = Math.max(0, Math.min(1, audio.volume));
 
-      const animate = (currentTime) => {
+      const animate = (currentTime: number) => {
         const elapsed = (currentTime - startTime) / 1000;
         const progress = Math.min(elapsed / duration, 1);
 

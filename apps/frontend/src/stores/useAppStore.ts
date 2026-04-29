@@ -1,6 +1,21 @@
 import { create } from 'zustand';
-import { analyzeEmotionWithProgress } from '@/api/emotionApi';
+import { analyzeEmotionWithProgress, EmotionResponse } from '@/api/emotionApi';
 import { ERROR_MESSAGES } from '@/constants/errorMessages';
+
+type Page = 'input' | 'loading' | 'result';
+
+interface AppState {
+  currentPage: Page;
+  isLoading: boolean;
+  progress: number;
+  emotionResult: EmotionResponse | null;
+  loadingMessage: string;
+  error: string | null;
+  setPage: (page: Page) => void;
+  analyzeEmotion: (text: string) => Promise<void>;
+  clearError: () => void;
+  reset: () => void;
+}
 
 /**
  * 앱 전체 상태를 관리하는 Zustand Store
@@ -18,7 +33,7 @@ import { ERROR_MESSAGES } from '@/constants/errorMessages';
  * @property {() => void} clearError - 에러 초기화
  * @property {() => void} reset - 전체 상태 초기화
  */
-const useAppStore = create((set) => ({
+const useAppStore = create<AppState>((set) => ({
   // 상태
   currentPage: 'input',
   isLoading: false,
@@ -27,18 +42,8 @@ const useAppStore = create((set) => ({
   loadingMessage: '',
   error: null,
 
-  /**
-   * 페이지 전환
-   *
-   * @param {string} page - 'input' | 'loading' | 'result'
-   */
   setPage: (page) => set({ currentPage: page }),
 
-  /**
-   * 감정 분석 실행 (SSE 기반 - 실제 API 진행률과 싱크)
-   *
-   * @param {string} text - 사용자가 입력한 감정 텍스트
-   */
   analyzeEmotion: async (text) => {
     // 1. 초기화 및 로딩 페이지로 전환
     set({
@@ -73,7 +78,10 @@ const useAppStore = create((set) => ({
       // 페이지 전환은 Loading 컴포넌트의 애니메이션 완료 후 onComplete에서 처리
     } catch (err) {
       set({
-        error: err.message || ERROR_MESSAGES.EMOTION_ANALYSIS_FAILED,
+        error:
+          err instanceof Error
+            ? err.message
+            : ERROR_MESSAGES.EMOTION_ANALYSIS_FAILED,
         progress: 0,
         isLoading: false,
         currentPage: 'input',

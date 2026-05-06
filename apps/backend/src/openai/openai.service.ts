@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Dependencies } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
@@ -6,12 +6,13 @@ import axios from 'axios';
  * OpenAI Chat Completions API를 활용한 감정 분석 서비스
  */
 @Injectable()
-@Dependencies(ConfigService)
 export class OpenAIService {
+  private readonly apiKey: string;
+  private readonly apiUrl: string;
   /**
    * @param {ConfigService} configService - NestJS ConfigService
    */
-  constructor(configService) {
+  constructor(private readonly configService: ConfigService) {
     this.apiKey = configService.get('OPENAI_API_KEY');
     this.apiUrl = 'https://api.openai.com/v1/chat/completions';
   }

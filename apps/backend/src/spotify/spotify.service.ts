@@ -1,11 +1,11 @@
-import { Injectable, BadRequestException, Dependencies } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import SpotifyWebApi from 'spotify-web-api-node';
 import axios from 'axios';
-import { filterTracks } from './utils/track-filter.util.js';
-import { ensureArtistDiversity } from './utils/artist-diversity.util.js';
-import { mapTracksToDTO } from './utils/track-mapper.util.js';
-import { ITunesService } from '../itunes/itunes.service.js';
+import { filterTracks } from './utils/track-filter.util';
+import { ensureArtistDiversity } from './utils/artist-diversity.util';
+import { mapTracksToDTO } from './utils/track-mapper.util';
+import { ITunesService } from '../itunes/itunes.service';
 
 /**
  * Spotify Web API를 활용한 음악 추천 서비스
@@ -13,13 +13,19 @@ import { ITunesService } from '../itunes/itunes.service.js';
  * - 감정 기반 음악 추천
  */
 @Injectable()
-@Dependencies(ConfigService, ITunesService)
 export class SpotifyService {
+  private spotifyApi: SpotifyWebApi;
+  private itunesService: ITunesService;
+  private authenticated: boolean;
+
   /**
    * @param {ConfigService} configService
    * @param {ITunesService} itunesService
    */
-  constructor(configService, itunesService) {
+  constructor(
+    private readonly configService: ConfigService,
+    itunesService: ITunesService,
+  ) {
     this.spotifyApi = new SpotifyWebApi({
       clientId: configService.get('SPOTIFY_CLIENT_ID'),
       clientSecret: configService.get('SPOTIFY_CLIENT_SECRET'),

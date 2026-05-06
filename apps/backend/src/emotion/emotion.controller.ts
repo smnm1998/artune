@@ -1,6 +1,6 @@
-import { Controller, Post, Scope, Sse } from '@nestjs/common';
-import { Dependencies } from '@nestjs/common';
+import { Controller, Post, Scope, Sse, Inject } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { EmotionService } from './emotion.service';
 
@@ -12,12 +12,11 @@ import { EmotionService } from './emotion.service';
   path: 'emotion',
   scope: Scope.REQUEST,
 })
-@Dependencies(EmotionService, REQUEST)
 export class EmotionController {
-  constructor(emotionService, request) {
-    this.emotionService = emotionService;
-    this.request = request;
-  }
+  constructor(
+    private readonly emotionService: EmotionService,
+    @Inject(REQUEST) private readonly request: Request,
+  ) {}
 
   /**
    * 텍스트 감정 분석 및 음악/디저트 추천 API
@@ -65,7 +64,7 @@ export class EmotionController {
    */
   @Sse('analyze-stream')
   analyzeStream() {
-    const text = this.request.query.text;
+    const text = this.request.query.text as string;
 
     return new Observable((observer) => {
       (async () => {

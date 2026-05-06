@@ -6,7 +6,11 @@
  * @param {number} maxSameArtist - 동일 아티스트의 최대 곡 수 (기본값: 2)
  * @returns {Array} 다양성이 보장된 트랙 배열
  */
-export function ensureArtistDiversity(tracks, limit = 20, maxSameArtist = 2) {
+export function ensureArtistDiversity(
+  tracks: any[],
+  limit = 20,
+  maxSameArtist = 2,
+): any[] {
   const selectedTracks = [];
   const artistCount = new Map();
 

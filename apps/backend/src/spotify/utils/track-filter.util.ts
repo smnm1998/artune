@@ -51,7 +51,10 @@ export function filterByPopularity(tracks, minPopularity = 40) {
  * @param {Object} options - 필터링 옵션
  * @returns {Object} 필터링 결과 및 로그
  */
-export function filterTracks(tracks, options = {}) {
+export function filterTracks(
+  tracks: any[],
+  options: { minPopularity?: number; minResults?: number } = {},
+) {
   const { minPopularity = 40, minResults = 20 } = options;
 
   const uniqueTracks = removeDuplicateTracks(tracks);

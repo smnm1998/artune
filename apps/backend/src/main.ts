@@ -26,7 +26,10 @@ const getAllowedOrigins = () => {
  * @param {string} origin - 요청 origin
  * @param {Function} callback - CORS 콜백
  */
-const corsOriginValidator = (origin, callback) => {
+const corsOriginValidator = (
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void,
+) => {
   const allowedOrigins = getAllowedOrigins();
 
   // Origin이 없는 경우 (예: 모바일 앱, Postman)

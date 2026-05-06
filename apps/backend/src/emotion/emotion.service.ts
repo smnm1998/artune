@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { Dependencies } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
 import { SpotifyService } from '../spotify/spotify.service';
 import { DalleService } from '../dalle/dalle.service';
@@ -16,13 +15,12 @@ import {
  * OpenAI, Spotify, DALLE 서비스를 조합하여 감정 기반 추천 시스템 구현
  */
 @Injectable()
-@Dependencies(OpenAIService, SpotifyService, DalleService)
 export class EmotionService {
-  constructor(openAIService, spotifyService, dalleService) {
-    this.openAIService = openAIService;
-    this.spotifyService = spotifyService;
-    this.dalleService = dalleService;
-  }
+  constructor(
+    private readonly openAIService: OpenAIService,
+    private readonly spotifyService: SpotifyService,
+    private readonly dalleService: DalleService,
+  ) {}
 
   /**
    * 감정에 따른 immerse 모드 설명 생성

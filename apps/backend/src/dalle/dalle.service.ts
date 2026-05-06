@@ -1,12 +1,13 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { Dependencies } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
 @Injectable()
-@Dependencies(ConfigService)
 export class DalleService {
-  constructor(configService) {
+  private readonly apiKey: string;
+  private readonly apiUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
     this.apiKey = configService.get('OPENAI_API_KEY');
     this.apiUrl = 'https://api.openai.com/v1/images/generations';
   }

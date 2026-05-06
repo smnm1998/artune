@@ -100,17 +100,13 @@ export class OpenAIService {
       "intensity": 0.0~1.0 (감정 강도),
       "description": "감정에 대한 공감적 설명 (한국어, 1~2문장, 따뜻한 어조)",
       "immerse": {
-        "genres": ["장르1", "장르2", "장르3", "장르4"], 
-        "valence": 0.0~1.0,
-        "energy": 0.0~1.0,
-        "tempo": 40~200
+        "genres": ["장르1", "장르2"],
+        "keywords": "iTunes 검색에 사용할 영문 감정 키워드 (공백 구분, 2~4단어)"
       },
       "soothe": {
-        "genres": ["장르1", "장르2", "장르3", "장르4"],
-        "valence": 0.0~1.0,
-        "energy": 0.0~1.0,
-        "tempo": 40~200
-      }
+        "genres": ["장르1", "장르2"],
+        "keywords": "iTunes 검색에 사용할 영문 감정 키워드 (공백 구분, 2~4단어)"
+      },
     }
 
     ---
@@ -118,63 +114,63 @@ export class OpenAIService {
     아티스트 검색 정확도를 위해 아래 **[허용 장르 목록]**에 있는 것만 사용하세요.
     특히 'sadness', 'lonely', 'sentimental' 등 차분한 감정의 'immerse' 모드에는 절대 'pop', 'dance', 'k-pop'을 넣지 마세요.
 
-    **[Spotify 허용 장르 - 검색 보장됨]**
+    **[허용 장르 - iTunes 검색 보장됨]**
     - High Energy: pop, dance, k-pop, k-hop, k-indie, k-rock, j-pop, hip hop, rock, electronic, house, edm, funk, punk
     - Mid Energy: r&b, soul, indie pop, disco, alternative, indie rock, synth-pop, dream pop, shoegaze, city pop
     - Low Energy: folk, jazz, blues, classical, singer-songwriter, acoustic pop, piano, ambient, lo-fi, bossa nova
 
     **감정별 파라미터 가이드 (총 12개)**
 
-    1. **joy (기쁨)**
-       - Immerse: 경쾌함 / genres: ["pop", "dance", "k-pop", "k-indie"] / val: 0.8~1.0 / energy: 0.7~0.9
-       - Soothe: 편안한 미소 / genres: ["r&b", "indie pop", "soul", "acoustic pop"] / val: 0.6~0.8 / energy: 0.3~0.5
+    1. joy (기쁨)
+      - Immerse: genres: ["pop", "k-pop"] / keywords: "happy upbeat energetic"
+      - Soothe:  genres: ["r&b", "indie pop"] / keywords: "uplifting positive chill"
 
-    2. **sadness (슬픔)** *Pop/Dance 금지*
-       - Immerse: 깊은 눈물 / genres: ["ballad", "folk", "blues", "piano"] / val: 0.0~0.2 / energy: 0.0~0.3
-       - Soothe: 따뜻한 위로 / genres: ["indie pop", "acoustic pop", "k-indie"] / val: 0.3~0.5 / energy: 0.3~0.5
+    2. sadness (슬픔) *Pop/Dance 금지*
+      - Immerse: genres: ["folk", "blues"] / keywords: "sad melancholic emotional"
+      - Soothe:  genres: ["indie pop", "acoustic"] / keywords: "comfort healing warm"
 
-    3. **anger (분노)**
-       - Immerse: 폭발적 / genres: ["rock", "metal", "hip hop", "punk"] / val: 0.2~0.4 / energy: 0.8~1.0
-       - Soothe: 진정 / genres: ["classical", "jazz", "ambient", "lo-fi"] / val: 0.4~0.6 / energy: 0.1~0.3
+    3. anger (분노)
+      - Immerse: genres: ["rock", "hip hop"] / keywords: "intense powerful aggressive"
+      - Soothe:  genres: ["classical", "jazz"] / keywords: "calm soothing peaceful"
 
-    4. **fear (두려움/불안)**
-       - Immerse: 긴장감 / genres: ["classical", "electronic", "soundtrack"] / val: 0.1~0.3 / energy: 0.5~0.7
-       - Soothe: 안정 / genres: ["classical", "jazz", "folk", "ambient"] / val: 0.5~0.7 / energy: 0.1~0.3
+    4. fear (두려움/불안)
+      - Immerse: genres: ["classical", "electronic"] / keywords: "tense dark atmospheric"
+      - Soothe:  genres: ["jazz", "ambient"] / keywords: "calm safe reassuring"
 
-    5. **surprise (놀람)**
-       - Immerse: 톡톡 튀는 / genres: ["electronic", "k-pop", "hyperpop", "funk"] / val: 0.6~0.9 / energy: 0.7~0.9
-       - Soothe: 차분하게 / genres: ["lo-fi", "indie pop", "r&b"] / val: 0.5~0.7 / energy: 0.3~0.5
+    5. surprise (놀람)
+      - Immerse: genres: ["electronic", "k-pop"] / keywords: "vibrant quirky playful"
+      - Soothe:  genres: ["lo-fi", "indie pop"] / keywords: "chill mellow smooth"
 
-    6. **neutral (평온/중립)**
-       - Immerse: 잔잔한 일상 / genres: ["indie pop", "jazz", "acoustic pop"] / val: 0.5 / energy: 0.4~0.6
-       - Soothe: 리프레시 / genres: ["pop", "k-indie", "r&b"] / val: 0.6~0.8 / energy: 0.5~0.7
+    6. neutral (평온/중립)
+      - Immerse: genres: ["indie pop", "jazz"] / keywords: "balanced moderate everyday"
+      - Soothe:  genres: ["pop", "r&b"] / keywords: "feel good easy listening"
 
-    7. **sentimental (아련함/그리움)**
-       - Immerse: 새벽 감성 / genres: ["k-indie", "folk", "singer-songwriter", "r&b"] / val: 0.3~0.5 / energy: 0.3~0.5
-       - Soothe: 밝은 추억 / genres: ["acoustic pop", "city pop", "indie pop"] / val: 0.5~0.7 / energy: 0.4~0.6
+    7. sentimental (아련함/그리움) *Pop/Dance 금지*
+      - Immerse: genres: ["folk", "singer-songwriter"] / keywords: "nostalgic bittersweet longing"
+      - Soothe:  genres: ["acoustic", "indie pop"] / keywords: "warm memories gentle"
 
-    8. **excited (신남/들뜸)**
-       - Immerse: 텐션 업 / genres: ["dance", "edm", "k-pop", "house", "funk"] / val: 0.8~1.0 / energy: 0.9~1.0
-       - Soothe: 기분 유지 / genres: ["pop", "r&b", "disco"] / val: 0.7~0.9 / energy: 0.5~0.7
+    8. excited (신남/들뜸)
+      - Immerse: genres: ["dance", "edm"] / keywords: "energetic upbeat dance"
+      - Soothe:  genres: ["pop", "r&b"] / keywords: "fun groovy feel good"
 
-    9. **lonely (고독/쓸쓸함)** *Pop/Dance 금지*
-       - Immerse: 고독 즐기기 / genres: ["jazz", "lo-fi", "blues", "piano"] / val: 0.1~0.3 / energy: 0.1~0.3
-       - Soothe: 온기 채우기 / genres: ["folk", "indie pop", "acoustic pop"] / val: 0.4~0.6 / energy: 0.3~0.5
+    9. lonely (고독/쓸쓸함) *Pop/Dance 금지*
+      - Immerse: genres: ["jazz", "lo-fi"] / keywords: "lonely solitude quiet"
+      - Soothe:  genres: ["folk", "acoustic"] / keywords: "comforting warm gentle"
 
-    10. **dreamy (몽환/신비)**
-       - Immerse: 빠져드는 / genres: ["indie pop", "electronic", "ambient", "k-indie"] / val: 0.4~0.6 / energy: 0.4~0.6
-       - Soothe: 현실로 / genres: ["r&b", "lo-fi", "city pop"] / val: 0.5~0.7 / energy: 0.3~0.5
+    10. dreamy (몽환/신비)
+        - Immerse: genres: ["electronic", "ambient"] / keywords: "dreamy ethereal atmospheric"
+        - Soothe:  genres: ["r&b", "lo-fi"] / keywords: "hazy mellow smooth"
 
-    11. **confident (자신감/당당)**
-       - Immerse: 파워풀 / genres: ["hip hop", "rock", "k-pop", "electronic"] / val: 0.6~0.8 / energy: 0.8~1.0
-       - Soothe: 여유로운 / genres: ["r&b", "soul", "jazz", "funk"] / val: 0.6~0.8 / energy: 0.4~0.6
+    11. confident (자신감/당당)
+        - Immerse: genres: ["hip hop", "rock"] / keywords: "confident powerful bold"
+        - Soothe:  genres: ["r&b", "soul"] / keywords: "cool smooth groove"
 
-    12. **romance (설렘/사랑)**
-       - Immerse: 달달한 / genres: ["k-indie", "r&b", "acoustic pop", "ballad"] / val: 0.7~0.9 / energy: 0.4~0.6
-       - Soothe: 차분한 사랑 / genres: ["jazz", "bossa nova", "piano"] / val: 0.5~0.7 / energy: 0.2~0.4
+    12. romance (설렘/사랑)
+        - Immerse: genres: ["k-indie", "r&b"] / keywords: "romantic sweet love"
+        - Soothe:  genres: ["jazz", "bossa nova"] / keywords: "tender gentle intimate"
 
     **제약 사항**
-    1. 'genres' 배열에는 반드시 위 [허용 장르] 중 2~3개를 선택하세요.
+    1. 'genres' 배열에는 반드시 위 [허용 장르] 중 2개를 선택하세요.
     2. **중요: 공백 사용!** "hip hop" (O), "hip-hop" (X) / "r&b" (O), "r-n-b" (X) / "indie pop" (O), "indie-pop" (X)
     3. **sadness, lonely, sentimental의 immerse에는 절대 pop, dance, k-pop 사용 금지**
     4. JSON 형식만 반환하세요.
@@ -205,7 +201,7 @@ export class OpenAIService {
     }
 
     // immerse, sooth 내부 필드 검증
-    const playlistFields = ['genres', 'valence', 'energy', 'tempo'];
+    const playlistFields = ['genres', 'keywords'];
 
     for (const mode of ['immerse', 'soothe']) {
       if (!result[mode] || typeof result[mode] !== 'object') {

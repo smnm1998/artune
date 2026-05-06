@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { SpotifyService } from './spotify.service';
+import { SpotifyService } from './music.service';
 import { ITunesService } from '../itunes/itunes.service.js';
 import SpotifyWebApi from 'spotify-web-api-node';
 import axios from 'axios';

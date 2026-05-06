@@ -55,6 +55,50 @@ export class ITunesService {
     return null;
   }
 
+  async searchTracks(
+    keywords: string,
+    genres: string[],
+    limit = 50,
+  ): Promise<any[]> {
+    const queries = genres.map((genre) =>
+      this.fetchItunesTracks(`${keywords} ${genre}`, limit),
+    );
+    const results = await Promise.all(queries);
+    const merged = results.flat();
+    const unique = this.deduplicateByTrackId(merged);
+    return this.shuffleArray(unique);
+  }
+
+  private async fetchItunesTracks(term: string, limit: number): Promise<any[]> {
+    try {
+      const response = await axios.get(ITunesService.BASE_URL, {
+        params: { term, media: 'music', entity: 'song', limit, country: 'us' },
+        timeout: 8000,
+      });
+      return response.data.results ?? [];
+    } catch {
+      return [];
+    }
+  }
+
+  private deduplicateByTrackId(tracks: any[]): any[] {
+    const seen = new Set<number>();
+    return tracks.filter((track) => {
+      if (seen.has(track.trackId)) return false;
+      seen.add(track.trackId);
+      return true;
+    });
+  }
+
+  private shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
   /**
    * 여러 트랙의 preview URL을 배치로 가져옴
    *

@@ -1,8 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
-import { SpotifyService } from '../spotify/spotify.service';
+import { MusicService } from '../music/music.service';
 import { DalleService } from '../dalle/dalle.service';
-import { mapToFrontendTrack } from '../spotify/utils/track-mapper.util';
+import { mapItunesTrackToFrontend } from '../music/utils/track-mapper.util';
 import {
   IMMERSE_DESCRIPTIONS,
   SOOTHE_DESCRIPTIONS,
@@ -18,7 +18,7 @@ import {
 export class EmotionService {
   constructor(
     private readonly openAIService: OpenAIService,
-    private readonly spotifyService: SpotifyService,
+    private readonly musicService: MusicService,
     private readonly dalleService: DalleService,
   ) {}
 
@@ -69,22 +69,18 @@ export class EmotionService {
     // 1. OpenAI로 감정 분석
     const emotion = await this.openAIService.analyzeEmotion(text);
 
-    // 2. Spotify 음악 추천 - immerse (병렬 처리)
+    // 2. 음악 추천 - immerse (병렬 처리)
     const [immerseRecommendations, sootheRecommendations, dessertImage] =
       await Promise.all([
         // immerse 플레이리스트
-        this.spotifyService.getRecommendations(
+        this.musicService.getRecommendations(
           emotion.immerse.genres,
-          emotion.immerse.valence,
-          emotion.immerse.energy,
-          emotion.immerse.tempo,
+          emotion.immerse.keywords,
         ),
         // soothe 플레이리스트
-        this.spotifyService.getRecommendations(
+        this.musicService.getRecommendations(
           emotion.soothe.genres,
-          emotion.soothe.valence,
-          emotion.soothe.energy,
-          emotion.soothe.tempo,
+          emotion.soothe.keywords,
         ),
         // DALLE 디저트 이미지
         this.dalleService.generateDessertImage(
@@ -106,12 +102,12 @@ export class EmotionService {
         immerse: {
           modeLabel: '감정 심취',
           description: this.getImmerseDescription(emotion.emotionLabel),
-          tracks: immerseRecommendations.map(mapToFrontendTrack),
+          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
         },
         soothe: {
           modeLabel: '감정 완화',
           description: this.getSootheDescription(emotion.emotionLabel),
-          tracks: sootheRecommendations.map(mapToFrontendTrack),
+          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
         },
       },
     };
@@ -143,21 +139,17 @@ export class EmotionService {
 
     // Spotify 음악 추천 - 감정 심취 (40% -> 60%)
     onProgress(40, '당신의 감정에 맞는 음악을 찾고 있어요...');
-    const immerseRecommendations = await this.spotifyService.getRecommendations(
+    const immerseRecommendations = await this.musicService.getRecommendations(
       emotion.immerse.genres,
-      emotion.immerse.valence,
-      emotion.immerse.energy,
-      emotion.immerse.tempo,
+      emotion.immerse.keywords,
     );
 
     onProgress(60, '플레이리스트를 만들기 시작했어요...');
 
     // Spotify 음악 추천 - 감정 완화 (60% -> 80%)
-    const sootheRecommendations = await this.spotifyService.getRecommendations(
+    const sootheRecommendations = await this.musicService.getRecommendations(
       emotion.soothe.genres,
-      emotion.soothe.valence,
-      emotion.soothe.energy,
-      emotion.soothe.tempo,
+      emotion.soothe.keywords,
     );
 
     onProgress(80, '플레이리스트를 만드는 중이에요...');
@@ -186,12 +178,12 @@ export class EmotionService {
         immerse: {
           modeLabel: '감정 심취',
           description: this.getImmerseDescription(emotion.emotionLabel),
-          tracks: immerseRecommendations.map(mapToFrontendTrack),
+          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
         },
         soothe: {
           modeLabel: '감정 완화',
           description: this.getSootheDescription(emotion.emotionLabel),
-          tracks: sootheRecommendations.map(mapToFrontendTrack),
+          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
         },
       },
     };

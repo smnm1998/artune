@@ -9,6 +9,12 @@ import {
   loadingTextStyle,
 } from './Loading.styles';
 
+interface LoadingProps {
+  progress?: number;
+  message?: string;
+  onComplete?: () => void;
+}
+
 /**
  * 로딩 상태를 표시하는 컴포넌트
  * @param {number} progress - 진행률 (0-100)
@@ -16,7 +22,7 @@ import {
  * @param {Function} onComplete - 로딩 완료 후 호출될 콜백
  */
 // 👇 여기 인자에 'message'가 빠져 있었습니다. 추가해주세요!
-function Loading({ progress = 0, message, onComplete }) {
+function Loading({ progress = 0, message, onComplete }: LoadingProps) {
   const isComplete = progress >= 100;
 
   return (

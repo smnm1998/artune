@@ -8,12 +8,16 @@ import {
 } from './ActionButtons.styles';
 import useAppStore from '@/stores/useAppStore';
 
+interface ActionButtonsProps {
+  onNext?: () => void;
+}
+
 /**
  * 결과 페이지 하단 액션 버튼 그룹
  * * @param {Object} props
  * @param {Function} [props.onNext] - '음악 보기' 버튼 핸들러 (없으면 렌더링 안함)
  */
-function ActionButtons({ onNext }) {
+function ActionButtons({ onNext }: ActionButtonsProps) {
   const reset = useAppStore((state) => state.reset);
 
   const handleRestart = () => {

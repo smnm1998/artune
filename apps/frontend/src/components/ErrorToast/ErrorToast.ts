@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
  * @param {string} message - 표시할 에러 메시지
  * @returns {string} toast ID
  */
-export const showErrorToast = (message) => {
+export const showErrorToast = (message: string) => {
   return toast.error(message, {
     duration: 4000,
     position: 'top-center',

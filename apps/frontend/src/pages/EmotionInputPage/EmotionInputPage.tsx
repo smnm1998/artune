@@ -24,7 +24,9 @@ function EmotionInputPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleTextChange = (e) => {
+  const handleTextChange: React.ChangeEventHandler<HTMLTextAreaElement> = (
+    e,
+  ) => {
     if (isSubmitting) return;
     const newValue = e.target.value;
 
@@ -56,8 +58,11 @@ function EmotionInputPage() {
       // Store에서 직접 호출
       await analyzeEmotion(textToSubmit);
     } catch (err) {
-      setError('감정 분석 중 오류가 발생했습니다. 다시 시도해주세요.');
-      setText(textToSubmit); // 실패 시 텍스트 복원
+      setError(
+        err instanceof Error
+          ? err.message
+          : '감정 분석 중 오류가 발생했습니다. 다시 시도해주세요.',
+      );
     } finally {
       setIsSubmitting(false);
     }

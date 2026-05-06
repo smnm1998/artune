@@ -10,16 +10,16 @@ import {
   inputWrapperStyle,
 } from './EmotionInput.styles';
 
-/**
- * 감정 입력 컴포넌트
- * @param {string} value - textarea 값
- * @param {Function} onChange - textarea 변경 핸들러
- * @param {Function} onSubmit - 제출 핸들러
- * @param {string} placeholder - placeholder 텍스트
- * @param {string} error - 에러 메시지
- * @param {number} minLength - 최소 길이
- * @param {number} maxLength - 최대 길이
- */
+interface EmotionInputProps {
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLTextAreaElement>;
+  onSubmit: () => void;
+  placeholder?: string;
+  error?: string;
+  minLength?: number;
+  maxLength?: number;
+}
+
 function EmotionInput({
   value,
   onChange,
@@ -28,7 +28,7 @@ function EmotionInput({
   error,
   minLength,
   maxLength,
-}) {
+}: EmotionInputProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   // 모바일 감지 (768px 이하)
@@ -51,7 +51,7 @@ function EmotionInput({
   const currentPlaceholder = getPlaceholder();
   const textareaRef = useAutoResizeTextarea(value, currentPlaceholder);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && e.shiftKey) {
       return;
     }
@@ -70,6 +70,7 @@ function EmotionInput({
           aria-label="감정 입력"
           aria-invalid={!!error}
           aria-describedby={error ? 'emotion-input-error' : undefined}
+          minLength={minLength}
           ref={textareaRef}
           css={textareaStyle}
           value={value}

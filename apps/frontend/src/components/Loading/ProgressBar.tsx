@@ -5,11 +5,15 @@ import {
   progressPercentageStyle,
 } from './Loading.styles';
 
+interface ProgressBarProps {
+  value: number;
+}
+
 /**
  * 프로그래스 바 컴포넌트
  * @param {number} value - 진행률 (0-100)
  */
-function ProgressBar({ value }) {
+function ProgressBar({ value }: ProgressBarProps) {
   return (
     <div>
       {/* 진행률 퍼센트 표시 */}

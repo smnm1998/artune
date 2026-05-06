@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoPlayCircle, IoWarning } from 'react-icons/io5';
 import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import { Track } from '@/types/track';
 import {
   modalOverlayStyle,
   modalContentStyle,
@@ -11,14 +12,18 @@ import {
   playingIndicatorStyle,
 } from './AlbumHoverModal.styles';
 
-function AlbumHoverModal({ isOpen, album }) {
-  const hasPreviewUrl = album.preview_url && album.preview_url.trim() !== '';
+interface AlbumHoverModalProps {
+  isOpen: boolean;
+  album: Track;
+}
+
+function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
+  const hasPreviewUrl = !!album.preview_url?.trim();
 
   const { audioRef, isPlaying, error } = useAudioScratch({
-    src: album.preview_url,
+    src: album.preview_url ?? undefined,
     isEnabled: isOpen && hasPreviewUrl,
     scratchDuration: 2,
-    minPlaybackRate: 0.3,
   });
 
   const artistNames = album.artists.map((artist) => artist.name).join(', ');
@@ -28,7 +33,7 @@ function AlbumHoverModal({ isOpen, album }) {
       {hasPreviewUrl && (
         <audio
           ref={audioRef}
-          src={isOpen ? album.preview_url : undefined}
+          src={isOpen ? (album.preview_url ?? undefined) : undefined}
           style={{ display: 'none' }}
         />
       )}

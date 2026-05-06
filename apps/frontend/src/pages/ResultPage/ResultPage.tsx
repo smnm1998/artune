@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Track } from '@/types/track';
 import { IoArrowBack } from 'react-icons/io5';
 import {
   ArtworkDisplay,
@@ -20,6 +21,9 @@ import {
   emptyStateStyle,
 } from './ResultPage.styles';
 
+type Mode = 'immerse' | 'soothe';
+type ViewMode = 'artwork' | 'music';
+
 /**
  * 감정 분석 결과 페이지
  *
@@ -28,16 +32,16 @@ import {
  */
 function ResultPage() {
   const emotionResult = useAppStore((state) => state.emotionResult);
-  const [selectedMode, setSelectedMode] = useState('immerse');
+  const [selectedMode, setSelectedMode] = useState<Mode>('immerse');
 
   // 뷰 상태: 'artwork' | 'music'
-  const [viewMode, setViewMode] = useState('artwork');
+  const [viewMode, setViewMode] = useState<ViewMode>('artwork');
 
   // 1024px 이하를 Compact View(Tablet/Mobile)로 취급
   const [isCompactView, setIsCompactView] = useState(false);
 
   // 선택된 트랙 상태 (모바일 모달용)
-  const [selectedTrack, setSelectedTrack] = useState(null);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
 
   useEffect(() => {
     const checkCompact = () => setIsCompactView(window.innerWidth <= 1024);
@@ -48,7 +52,7 @@ function ResultPage() {
   }, []);
 
   // 모바일 앨범 클릭 핸들러
-  const handleTrackClick = (track) => {
+  const handleTrackClick = (track: Track) => {
     if (isCompactView) {
       setSelectedTrack(track);
     }

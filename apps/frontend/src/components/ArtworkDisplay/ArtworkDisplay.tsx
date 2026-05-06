@@ -1,6 +1,16 @@
 import * as styles from './ArtworkDisplay.styles';
 
-function ArtworkDisplay({ artwork, emotionLabel, description }) {
+interface ArtworkDisplayProps {
+  artwork: { url: string; prompt: string };
+  emotionLabel: string;
+  description: string;
+}
+
+function ArtworkDisplay({
+  artwork,
+  emotionLabel,
+  description,
+}: ArtworkDisplayProps) {
   return (
     <div css={styles.artworkContainer}>
       <div css={styles.artworkWrapper}>

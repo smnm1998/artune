@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion';
 import { useHover } from '@/hooks';
 import { AlbumCard, AlbumHoverModal } from '@/components';
+import { Track } from '@/types/track';
 import { gridContainerStyle } from './AlbumGrid.styles';
+
+interface AlbumGridProps {
+  tracks: Track[];
+  onTrackClick?: (track: Track) => void;
+}
 
 /**
  * 앨범 그리드 컴포넌트
@@ -9,8 +15,8 @@ import { gridContainerStyle } from './AlbumGrid.styles';
  * @param {Array} props.tracks - 트랙 리스트
  * @param {Function} [props.onTrackClick] - 트랙 클릭 핸들러 (모바일용)
  */
-function AlbumGrid({ tracks, onTrackClick }) {
-  const { handleMouseEnter, handleMouseLeave, isHovered } = useHover();
+function AlbumGrid({ tracks, onTrackClick }: AlbumGridProps) {
+  const { handleMouseEnter, handleMouseLeave, isHovered } = useHover<string>();
 
   return (
     <div css={gridContainerStyle}>

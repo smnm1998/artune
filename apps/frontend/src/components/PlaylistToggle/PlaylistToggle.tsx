@@ -10,6 +10,17 @@ import {
   tooltipVisibleStyle,
 } from './PlaylistToggle.styles';
 
+type Mode = 'immerse' | 'soothe';
+
+interface PlaylistToggleProps {
+  selectedMode: Mode;
+  onModeChange: (mode: Mode) => void;
+  immerseLabel?: string;
+  sootheLabel?: string;
+  immerseDescription?: string;
+  sootheDescription?: string;
+}
+
 function PlaylistToggle({
   selectedMode,
   onModeChange,
@@ -17,8 +28,8 @@ function PlaylistToggle({
   sootheLabel,
   immerseDescription,
   sootheDescription,
-}) {
-  const { handleMouseEnter, handleMouseLeave, isHovered } = useHover();
+}: PlaylistToggleProps) {
+  const { handleMouseEnter, handleMouseLeave, isHovered } = useHover<Mode>();
 
   return (
     <div css={toggleContainerStyle}>

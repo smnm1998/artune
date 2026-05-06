@@ -1,84 +1,114 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import axios from 'axios';
 
-/**
- * iTunes Search API 서비스
- *
- * - 30초 preview URL 제공
- * - Rate limit: ~20 calls/min
- * - 인증 x
- */
 @Injectable()
 export class ITunesService {
-  static BASE_URL = 'https://itunes.apple.com/search';
+  static readonly BASE_URL = 'https://itunes.apple.com/search';
+  static readonly COUNTRIES = ['us', 'kr', 'jp'] as const;
+  private readonly BUCKET_HOURS = 6;
+  private readonly CONCURRENCY = 3;
+  private readonly BATCH_DELAY_MS = 300;
+
+  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
   /**
-   * 아티스트명과 트랙명으로 preview URL 검색 (국가별 순차 검색 적용)
-   * 우선순위: 한국(kr) -> 일본(jp) -> 미국(us)
-   *
-   * @param {string} artistName - 아티스트 이름
-   * @param {string} trackName - 트랙 이름
-   * @returns {Promise<string|null>} 30초 미리듣기 URL
+   * 아티스트 1명의 top track 조회 (캐시 적용)
+   * 국가 순회: us → kr → jp (첫 hit에서 종료)
    */
-  async getPreviewUrl(artistName, trackName) {
-    // 검색할 국가 순서
-    const countries = ['kr', 'jp', 'us'];
+  async getArtistTopTracks(artistName: string, limit = 3): Promise<any[]> {
+    const bucket = this.getCurrentBucket();
+    const cacheKey = `artist-tracks:${artistName}:${bucket}`;
 
-    for (const country of countries) {
-      try {
-        const response = await axios.get(ITunesService.BASE_URL, {
-          params: {
-            term: `${artistName} ${trackName}`,
-            media: 'music',
-            entity: 'song',
-            limit: 1, // 가장 연관성 높은 1개만 조회
-            country: country,
-          },
-          timeout: 5000,
-        });
+    const cached = await this.cacheManager.get<any[]>(cacheKey);
+    if (cached) return cached;
 
-        const results = response.data.results;
-        if (results && results.length > 0 && results[0].previewUrl) {
-          // 찾았으면 바로 반환 (다음 국가 검색 안 함)
-          return results[0].previewUrl;
-        }
-      } catch (error) {
-        // 해당 국가에서 에러 발생 시(404, 403 등) 무시하고 다음 국가로 진행
-        continue;
+    for (const country of ITunesService.COUNTRIES) {
+      const tracks = await this.fetchByArtist(artistName, limit, country);
+      if (tracks.length > 0) {
+        await this.cacheManager.set(cacheKey, tracks);
+        return tracks;
       }
     }
 
-    // 모든 국가에서 실패한 경우
-    console.error(
-      `iTunes API failed: ${artistName} - ${trackName} (Not found in KR, JP, US)`,
-    );
-    return null;
+    // 빈 결과도 캐시 (없는 아티스트 재시도 방지)
+    await this.cacheManager.set(cacheKey, []);
+    return [];
   }
 
-  async searchTracks(
-    keywords: string,
-    genres: string[],
-    limit = 50,
+  /**
+   * 다수 아티스트의 트랙 일괄 조회 (rate limit 고려한 throttled batch)
+   */
+  async getTracksForArtists(artists: string[]): Promise<any[]> {
+    const results: any[][] = [];
+
+    for (let i = 0; i < artists.length; i += this.CONCURRENCY) {
+      const batch = artists.slice(i, i + this.CONCURRENCY);
+      const batchResults = await Promise.all(
+        batch.map((artist) => this.getArtistTopTracks(artist)),
+      );
+      results.push(...batchResults);
+
+      if (i + this.CONCURRENCY < artists.length) {
+        await this.delay(this.BATCH_DELAY_MS);
+      }
+    }
+
+    return this.deduplicateByTrackId(results.flat());
+  }
+
+  private async fetchByArtist(
+    artist: string,
+    limit: number,
+    country: string,
   ): Promise<any[]> {
-    const queries = genres.map((genre) =>
-      this.fetchItunesTracks(`${keywords} ${genre}`, limit),
-    );
-    const results = await Promise.all(queries);
-    const merged = results.flat();
-    const unique = this.deduplicateByTrackId(merged);
-    return this.shuffleArray(unique);
-  }
-
-  private async fetchItunesTracks(term: string, limit: number): Promise<any[]> {
     try {
       const response = await axios.get(ITunesService.BASE_URL, {
-        params: { term, media: 'music', entity: 'song', limit, country: 'us' },
+        params: {
+          term: artist,
+          attribute: 'artistTerm',
+          media: 'music',
+          entity: 'song',
+          limit,
+          country,
+        },
         timeout: 8000,
       });
-      return response.data.results ?? [];
+      return this.filterQualityTracks(response.data.results ?? []);
     } catch {
       return [];
     }
+  }
+
+  private filterQualityTracks(tracks: any[]): any[] {
+    const blacklist = [
+      'playlist',
+      'compilation',
+      'various artists',
+      'karaoke',
+      'tribute',
+      'cover',
+      'best of',
+      '100 songs',
+      'hits',
+      'greatest',
+      'karaoke version',
+      'originally performed by',
+      'in the style of',
+      'workout',
+      'sleep sounds',
+      'meditation',
+    ];
+    return tracks.filter((track) => {
+      const albumName = track.collectionName?.toLowerCase() ?? '';
+      const trackName = track.trackName?.toLowerCase() ?? '';
+      return (
+        !blacklist.some(
+          (word) => albumName.includes(word) || trackName.includes(word),
+        ) && track.previewUrl != null
+      );
+    });
   }
 
   private deduplicateByTrackId(tracks: any[]): any[] {
@@ -90,37 +120,11 @@ export class ITunesService {
     });
   }
 
-  private shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+  private getCurrentBucket(): number {
+    return Math.floor(Date.now() / (this.BUCKET_HOURS * 60 * 60 * 1000));
   }
 
-  /**
-   * 여러 트랙의 preview URL을 배치로 가져옴
-   *
-   * @param {Array<{artistName: string, trackName: string, id: string}>} tracks
-   * @returns {Promise<Map<string, string>>} trackId - previewUrl 맵
-   */
-  async getPreviewUrlsBatch(tracks) {
-    const previewMap = new Map();
-
-    for (const track of tracks) {
-      const previewUrl = await this.getPreviewUrl(
-        track.artistName,
-        track.trackName,
-      );
-      if (previewUrl) {
-        previewMap.set(track.id, previewUrl);
-      }
-
-      // 국가별로 최대 3번까지 요청할 수 있으므로 딜레이를 약간 넉넉하게 조정 (권장)
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    return previewMap;
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

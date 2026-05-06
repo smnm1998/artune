@@ -57,7 +57,7 @@ export class EmotionService {
    *
    * 흐름:
    * 1. OpenAI로 감정 분석 - {emotion, emotionLabel, immerse, soothe}
-   * 2. Spotify로 음악 추천 (immerse, soothe 각각)
+   * 2. Itunes api로 음악 추천 (immerse, soothe 각각)
    * 3. DALLE로 디저트 이미지 생성
    * 4. 프론트엔드 형식으로 변환하여 반환
    */
@@ -72,16 +72,8 @@ export class EmotionService {
     // 2. 음악 추천 - immerse (병렬 처리)
     const [immerseRecommendations, sootheRecommendations, dessertImage] =
       await Promise.all([
-        // immerse 플레이리스트
-        this.musicService.getRecommendations(
-          emotion.immerse.genres,
-          emotion.immerse.keywords,
-        ),
-        // soothe 플레이리스트
-        this.musicService.getRecommendations(
-          emotion.soothe.genres,
-          emotion.soothe.keywords,
-        ),
+        this.musicService.getRecommendations(emotion.immerse.artists),
+        this.musicService.getRecommendations(emotion.soothe.artists),
         // DALLE 디저트 이미지
         this.dalleService.generateDessertImage(
           emotion.emotion,
@@ -137,19 +129,17 @@ export class EmotionService {
     const emotion = await this.openAIService.analyzeEmotion(text);
     onProgress(30, '음악 추천을 준비하고 있어요...');
 
-    // Spotify 음악 추천 - 감정 심취 (40% -> 60%)
+    // Itunes Api 음악 추천 - 감정 심취 (40% -> 60%)
     onProgress(40, '당신의 감정에 맞는 음악을 찾고 있어요...');
     const immerseRecommendations = await this.musicService.getRecommendations(
-      emotion.immerse.genres,
-      emotion.immerse.keywords,
+      emotion.immerse.artists,
     );
 
     onProgress(60, '플레이리스트를 만들기 시작했어요...');
 
-    // Spotify 음악 추천 - 감정 완화 (60% -> 80%)
+    // Itunes Api 음악 추천 - 감정 완화 (60% -> 80%)
     const sootheRecommendations = await this.musicService.getRecommendations(
-      emotion.soothe.genres,
-      emotion.soothe.keywords,
+      emotion.soothe.artists,
     );
 
     onProgress(80, '플레이리스트를 만드는 중이에요...');

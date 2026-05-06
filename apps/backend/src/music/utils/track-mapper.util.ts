@@ -9,7 +9,7 @@ export function mapItunesTrackToFrontend(track: any) {
         { url: track.artworkUrl100?.replace('100x100bb', '600x600bb') ?? '' },
       ],
     },
-    duration_ms: track.trackTimeillis,
+    duration_ms: track.trackTimeMillis,
     preview_url: track.previewUrl ?? null,
     external_urls: {
       spotify: track.trackViewUrl,

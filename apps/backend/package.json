@@ -17,11 +17,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "axios": "^1.13.2",
+    "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "dotenv": "^17.2.3",
@@ -30,19 +32,19 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/supertest": "^6.0.0",
-    "ts-jest": "^29.0.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.0.0",
-    "@nestjs/testing": "^11.0.1",
     "jest": "^30.2.0",
     "nodemon": "3.1.10",
     "prettier": "3.6.2",
     "rimraf": "^3.0.2",
-    "supertest": "7.1.4"
+    "supertest": "7.1.4",
+    "ts-jest": "^29.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -1,13 +1,6 @@
 import { post } from './client';
 import { API_ENDPOINTS, API_BASE_URL } from '@/constants/api';
-
-interface Track {
-  id: string;
-  title: string;
-  artists: string;
-  albumArt: string;
-  previewUrl: string | null;
-}
+import { Track } from '@/types/track';
 
 interface Playlist {
   modeLabel: string;

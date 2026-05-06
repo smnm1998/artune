@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
 interface UseAudioScratchOptions {
-  src: string;
+  src?: string;
   isEnabled: boolean;
   scratchDuration?: number;
 }

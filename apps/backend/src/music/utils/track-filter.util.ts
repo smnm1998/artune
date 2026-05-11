@@ -1,4 +1,6 @@
-export function deduplicateByTrackId(tracks: any[]): any[] {
+import { ITunesTrack } from 'src/itunes/itunes-track.type';
+
+export function deduplicateByTrackId(tracks: ITunesTrack[]): ITunesTrack[] {
   const seen = new Set<number>();
   return tracks.filter((track) => {
     if (seen.has(track.trackId)) return false;

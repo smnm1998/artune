@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Track } from '@/types/track';
 import { IoArrowBack } from 'react-icons/io5';
+import { BREAKPOINTS } from '@/constants/breakpoints';
 import {
   ArtworkDisplay,
   PlaylistToggle,
@@ -10,6 +11,7 @@ import {
   MobilePlayerModal,
 } from '@/components';
 import useAppStore from '@/stores/useAppStore';
+import useMediaQuery from '@/hooks/ui/useMediaQuery';
 import {
   containerStyle,
   leftSectionStyle,
@@ -37,26 +39,16 @@ function ResultPage() {
   // 뷰 상태: 'artwork' | 'music'
   const [viewMode, setViewMode] = useState<ViewMode>('artwork');
 
-  // 1024px 이하를 Compact View(Tablet/Mobile)로 취급
-  const [isCompactView, setIsCompactView] = useState(false);
-
   // 선택된 트랙 상태 (모바일 모달용)
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
 
-  useEffect(() => {
-    const checkCompact = () => setIsCompactView(window.innerWidth <= 1024);
-    checkCompact();
-
-    window.addEventListener('resize', checkCompact);
-    return () => window.removeEventListener('resize', checkCompact);
-  }, []);
-
-  // 모바일 앨범 클릭 핸들러
   const handleTrackClick = (track: Track) => {
     if (isCompactView) {
       setSelectedTrack(track);
     }
   };
+
+  const isCompactView = useMediaQuery(`(max-width: ${BREAKPOINTS.compact}px)`);
 
   const closePlayerModal = () => {
     setSelectedTrack(null);

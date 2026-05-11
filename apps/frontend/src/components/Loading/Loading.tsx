@@ -15,13 +15,6 @@ interface LoadingProps {
   onComplete?: () => void;
 }
 
-/**
- * 로딩 상태를 표시하는 컴포넌트
- * @param {number} progress - 진행률 (0-100)
- * @param {string} message - 로딩 메시지 (추가됨)
- * @param {Function} onComplete - 로딩 완료 후 호출될 콜백
- */
-// 👇 여기 인자에 'message'가 빠져 있었습니다. 추가해주세요!
 function Loading({ progress = 0, message, onComplete }: LoadingProps) {
   const isComplete = progress >= 100;
 
@@ -70,7 +63,6 @@ function Loading({ progress = 0, message, onComplete }: LoadingProps) {
         transition={{ delay: 0.8, duration: 0.5 }}
       >
         <ProgressBar value={progress} />
-        {/* 이제 message 값이 정상적으로 들어옵니다 */}
         <p css={loadingTextStyle}>{message || '감정을 분석하고 있어요...'}</p>
       </motion.div>
     </div>

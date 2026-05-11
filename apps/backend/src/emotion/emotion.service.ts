@@ -12,7 +12,7 @@ import {
 
 /**
  * Emotion Service - Orchestrator
- * OpenAI, Spotify, DALLE 서비스를 조합하여 감정 기반 추천 시스템 구현
+ * OpenAI, iTunes, DALLE 서비스를 조합하여 감정 기반 추천 시스템 구현
  */
 @Injectable()
 export class EmotionService {
@@ -22,12 +22,6 @@ export class EmotionService {
     private readonly dalleService: DalleService,
   ) {}
 
-  /**
-   * 감정에 따른 immerse 모드 설명 생성
-   *
-   * @param {string} emotionLabel - 감정 라벨 (예: '기쁨', '슬픔')
-   * @returns {string} immerse 모드 설명
-   */
   getImmerseDescription(emotionLabel) {
     return (
       IMMERSE_DESCRIPTIONS[emotionLabel] ||
@@ -35,12 +29,6 @@ export class EmotionService {
     );
   }
 
-  /**
-   * 감정에 따른 soothe 모드 설명 생성
-   *
-   * @param {string} emotionLabel - 감정 라벨
-   * @returns {string} soothe 모드 설명
-   */
   getSootheDescription(emotionLabel) {
     return (
       SOOTHE_DESCRIPTIONS[emotionLabel] ||
@@ -48,16 +36,40 @@ export class EmotionService {
     );
   }
 
+  private buildResponse(
+    emotion,
+    immerseRecommendations,
+    sootheRecommendations,
+    dessertImage,
+  ) {
+    return {
+      emotionLabel: emotion.emotionLabel,
+      description: emotion.description,
+      artwork: {
+        url: dessertImage.imageUrl,
+        prompt: dessertImage.prompt,
+      },
+      playlists: {
+        immerse: {
+          modeLabel: '감정 심취',
+          description: this.getImmerseDescription(emotion.emotionLabel),
+          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
+        },
+        soothe: {
+          modeLabel: '감정 완화',
+          description: this.getSootheDescription(emotion.emotionLabel),
+          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
+        },
+      },
+    };
+  }
+
   /**
-   * 텍스트 분석 -> 감정 및 추천 음악 & 픽셀아트 디저트 이미지 생성
-   *
-   * @param {string} text - 분석할 사용자 입력 텍스트
-   * @returns {Promise<Object>} 프론트엔드 형식의 응답
    * @throws {BadRequestException} 빈 텍스트가 입력된 경우
    *
    * 흐름:
    * 1. OpenAI로 감정 분석 - {emotion, emotionLabel, immerse, soothe}
-   * 2. Itunes api로 음악 추천 (immerse, soothe 각각)
+   * 2. iTunes API로 음악 추천 (immerse, soothe 병렬)
    * 3. DALLE로 디저트 이미지 생성
    * 4. 프론트엔드 형식으로 변환하여 반환
    */
@@ -83,38 +95,18 @@ export class EmotionService {
       ]);
 
     // 3. 프론트엔드 형식으로 변환
-    return {
-      emotionLabel: emotion.emotionLabel,
-      description: emotion.description,
-      artwork: {
-        url: dessertImage.imageUrl,
-        prompt: dessertImage.prompt,
-      },
-      playlists: {
-        immerse: {
-          modeLabel: '감정 심취',
-          description: this.getImmerseDescription(emotion.emotionLabel),
-          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
-        },
-        soothe: {
-          modeLabel: '감정 완화',
-          description: this.getSootheDescription(emotion.emotionLabel),
-          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
-        },
-      },
-    };
+    return this.buildResponse(
+      emotion,
+      immerseRecommendations,
+      sootheRecommendations,
+      dessertImage,
+    );
   }
 
   /**
-   * 텍스트 분석 -> 감정 및 추천 음악 & 픽셀아트 디저트 이미지 생성 (진행률 콜백 포함)
-   *
-   * @param {string} text - 분석할 사용자 입력 텍스트
-   * @param {Function} onProgress - 진행률 콜백 함수 (progress: number, message: string)
-   * @returns {Promise<Object>} 프론트엔드 형식의 응답
    * @throws {BadRequestException} 빈 텍스트가 입력된 경우
    *
-   * - 병렬 처리(Promise.all)를 제거하고 순차 처리(await)로 변경
-   * - 진행률이 뒤섞이지 않고 차근차근 오르도록 보장
+   * 병렬 처리 대신 순차 처리 — 진행률이 뒤섞이지 않고 순서대로 오르도록 보장
    */
   async analyzeAndRecommendWithProgress(text, onProgress) {
     if (!text || text.trim() === '') {
@@ -157,25 +149,11 @@ export class EmotionService {
     onProgress(100, '완료!');
 
     // 프론트엔드 형식으로 변환 및 반환
-    return {
-      emotionLabel: emotion.emotionLabel,
-      description: emotion.description,
-      artwork: {
-        url: dessertImage.imageUrl,
-        prompt: dessertImage.prompt,
-      },
-      playlists: {
-        immerse: {
-          modeLabel: '감정 심취',
-          description: this.getImmerseDescription(emotion.emotionLabel),
-          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
-        },
-        soothe: {
-          modeLabel: '감정 완화',
-          description: this.getSootheDescription(emotion.emotionLabel),
-          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
-        },
-      },
-    };
+    return this.buildResponse(
+      emotion,
+      immerseRecommendations,
+      sootheRecommendations,
+      dessertImage,
+    );
   }
 }

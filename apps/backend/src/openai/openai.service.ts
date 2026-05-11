@@ -9,22 +9,19 @@ import axios from 'axios';
 export class OpenAIService {
   private readonly apiKey: string;
   private readonly apiUrl: string;
-  /**
-   * @param {ConfigService} configService - NestJS ConfigService
-   */
+
   constructor(private readonly configService: ConfigService) {
     this.apiKey = configService.get('OPENAI_API_KEY');
     this.apiUrl = 'https://api.openai.com/v1/chat/completions';
   }
 
   /**
-   * 사용자 텍스트를 분석하여 감정 정보와 Spotify 파라미터를 반환
+   * 사용자 텍스트를 분석하여 감정 정보와 아티스트 목록 반환
    *
-   * @param {string} text - 분석할 텍스트
-   * @returns {Promise<Object>} 감정 분석 결과
    * @throws {BadRequestException} 텍스트가 비어있을 때
    * @throws {Error} API 호출 실패 시
    */
+
   async analyzeEmotion(text) {
     // 입력 유효성 검증
     if (!text || text.trim().length === 0) {
@@ -73,7 +70,7 @@ export class OpenAIService {
       }
 
       // API 호출 에러
-      if (error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         const status = error.response.status;
         const message =
           error.response.data?.error?.message || 'OpenAI API 오류';
@@ -86,9 +83,7 @@ export class OpenAIService {
 
   /**
    * 시스템 프롬프트 생성
-   * 감정 분석 및 Spotify 파라미터 생성 지침 포함
-   *
-   * @returns {string} 시스템 프롬프트
+   * 감정 분석 및 iTunes 아티스트 큐레이션 지침 포함
    */
   getSystemPrompt() {
     return `당신은 감정 분석 및 음악 큐레이션 전문가입니다. 사용자의 텍스트를 분석하여 다음 JSON 형식으로 반환하세요.
@@ -239,9 +234,7 @@ export class OpenAIService {
 
   /**
    * 응답 결과 유효성 검증
-   * 필수 필드가 모두 있는지 확인
    *
-   * @param {Object} result - 검증할 결과 객체
    * @throws {Error} 필수 필드가 누락된 경우
    */
   validateResult(result) {

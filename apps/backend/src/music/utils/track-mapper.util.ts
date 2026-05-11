@@ -1,4 +1,6 @@
-export function mapItunesTrackToFrontend(track: any) {
+import { ITunesTrack } from 'src/itunes/itunes-track.type';
+
+export function mapItunesTrackToFrontend(track: ITunesTrack) {
   return {
     id: String(track.trackId),
     name: track.trackName,

@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ITunesTrack } from './itunes-track.type';
 import { Cache } from 'cache-manager';
 import axios from 'axios';
 
 @Injectable()
 export class ITunesService {
   static readonly BASE_URL = 'https://itunes.apple.com/search';
-  static readonly COUNTRIES = ['us', 'kr', 'jp'] as const;
+  static readonly COUNTRIES = ['kr', 'us', 'jp'] as const;
   private readonly BUCKET_HOURS = 6;
   private readonly CONCURRENCY = 3;
   private readonly BATCH_DELAY_MS = 300;
@@ -17,11 +18,14 @@ export class ITunesService {
    * 아티스트 1명의 top track 조회 (캐시 적용)
    * 국가 순회: us → kr → jp (첫 hit에서 종료)
    */
-  async getArtistTopTracks(artistName: string, limit = 3): Promise<any[]> {
+  async getArtistTopTracks(
+    artistName: string,
+    limit = 3,
+  ): Promise<ITunesTrack[]> {
     const bucket = this.getCurrentBucket();
     const cacheKey = `artist-tracks:${artistName}:${bucket}`;
 
-    const cached = await this.cacheManager.get<any[]>(cacheKey);
+    const cached = await this.cacheManager.get<ITunesTrack[]>(cacheKey);
     if (cached) return cached;
 
     for (const country of ITunesService.COUNTRIES) {
@@ -40,8 +44,8 @@ export class ITunesService {
   /**
    * 다수 아티스트의 트랙 일괄 조회 (rate limit 고려한 throttled batch)
    */
-  async getTracksForArtists(artists: string[]): Promise<any[]> {
-    const results: any[][] = [];
+  async getTracksForArtists(artists: string[]): Promise<ITunesTrack[]> {
+    const results: ITunesTrack[][] = [];
 
     for (let i = 0; i < artists.length; i += this.CONCURRENCY) {
       const batch = artists.slice(i, i + this.CONCURRENCY);
@@ -62,7 +66,7 @@ export class ITunesService {
     artist: string,
     limit: number,
     country: string,
-  ): Promise<any[]> {
+  ): Promise<ITunesTrack[]> {
     try {
       const response = await axios.get(ITunesService.BASE_URL, {
         params: {
@@ -75,13 +79,15 @@ export class ITunesService {
         },
         timeout: 8000,
       });
-      return this.filterQualityTracks(response.data.results ?? []);
+      return this.filterQualityTracks(
+        (response.data.results ?? []) as ITunesTrack[],
+      );
     } catch {
       return [];
     }
   }
 
-  private filterQualityTracks(tracks: any[]): any[] {
+  private filterQualityTracks(tracks: ITunesTrack[]): ITunesTrack[] {
     const blacklist = [
       'playlist',
       'compilation',
@@ -111,7 +117,7 @@ export class ITunesService {
     });
   }
 
-  private deduplicateByTrackId(tracks: any[]): any[] {
+  private deduplicateByTrackId(tracks: ITunesTrack[]): ITunesTrack[] {
     const seen = new Set<number>();
     return tracks.filter((track) => {
       if (seen.has(track.trackId)) return false;

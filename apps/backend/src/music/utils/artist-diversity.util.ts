@@ -1,9 +1,11 @@
+import { ITunesTrack } from 'src/itunes/itunes-track.type';
+
 export function ensureArtistDiversity(
-  tracks: any[],
+  tracks: ITunesTrack[],
   limit = 20,
   maxSameArtist = 2,
-): any[] {
-  const selected: any[] = [];
+): ITunesTrack[] {
+  const selected: ITunesTrack[] = [];
   const artistCount = new Map<string, number>();
 
   for (const track of tracks) {

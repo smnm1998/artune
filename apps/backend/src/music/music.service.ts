@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ITunesService } from '../itunes/itunes.service';
+import { ITunesTrack } from '../itunes/itunes-track.type';
 import { ensureArtistDiversity } from './utils/artist-diversity.util';
 import { shuffleArray } from './utils/track-filter.util';
 
@@ -11,7 +12,7 @@ export class MusicService {
 
   constructor(private readonly itunesService: ITunesService) {}
 
-  async getRecommendations(artists: string[]): Promise<any[]> {
+  async getRecommendations(artists: string[]): Promise<ITunesTrack[]> {
     if (!artists || artists.length === 0) return [];
 
     // 1. 40명 풀 → shuffle → 상위 20명 추출

@@ -13,7 +13,7 @@ export interface EmotionResponse {
   description: string;
   artwork: {
     url: string;
-    prompt: string;
+    // prompt: string;
   };
   playlists: {
     immerse: Playlist;
@@ -30,12 +30,18 @@ export async function analyzeEmotion(text: string): Promise<EmotionResponse> {
 export async function analyzeEmotionWithProgress(
   text: string,
   onProgress: ProgressCallback,
+  signal?: AbortSignal,
 ): Promise<EmotionResponse> {
   return new Promise((resolve, reject) => {
     const url = `${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}?text=${encodeURIComponent(text)}`;
 
     // EventSource는 credentials를 보내지 않으므로 withCredentials 옵션 없이 생성
     const eventSource = new EventSource(url);
+
+    signal?.addEventListener('abort', () => {
+      eventSource.close();
+      reject(new DOMException('취소되었습니다.', 'AbortError'));
+    });
 
     eventSource.onmessage = (event) => {
       try {

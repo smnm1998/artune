@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { IoSend } from 'react-icons/io5';
+import useMediaQuery from '@/hooks/ui/useMediaQuery';
+import { BREAKPOINTS } from '@/constants/breakpoints';
 import useAutoResizeTextarea from '@/hooks/ui/useAutoResizeTextarea';
+import { IoSend } from 'react-icons/io5';
 import {
   textareaContainerStyle,
   textareaStyle,
@@ -29,16 +30,7 @@ function EmotionInput({
   minLength,
   maxLength,
 }: EmotionInputProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  // 모바일 감지 (768px 이하)
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.mobile}px)`);
 
   // 반응형 placeholder
   const getPlaceholder = () => {

@@ -1,6 +1,4 @@
-import { Controller, Post, Scope, Sse, Inject } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
+import { Controller, Post, Sse, Body, Query } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { EmotionService } from './emotion.service';
 
@@ -8,45 +6,17 @@ import { EmotionService } from './emotion.service';
  * Emotion Controller
  * 감정 분석 API 엔드포인트 제공
  */
-@Controller({
-  path: 'emotion',
-  scope: Scope.REQUEST,
-})
+@Controller('emotion')
 export class EmotionController {
-  constructor(
-    private readonly emotionService: EmotionService,
-    @Inject(REQUEST) private readonly request: Request,
-  ) {}
+  constructor(private readonly emotionService: EmotionService) {}
 
-  /**
-   * 텍스트 감정 분석 및 음악/디저트 추천 API
-   *
-   * @route POST /emotion/analyze
-   * @param {Object} body - { text: string }
-   * @returns {Promise<{emotion: Object, recommendations: Array, dessertImage: Object}>}
-   *
-   * 예시:
-   * POST /emotion/analyze
-   * Body: { "text": "오늘 정말 기분이 좋아!" }
-   *
-   * Response: {
-   *   emotion: { emotion: 'joy', emotionLabel: '기쁨', ... },
-   *   recommendations: [{ id: '...', name: '...', ... }],
-   *   dessertImage: { imageUrl: '...', prompt: '...' }
-   * }
-   */
   @Post('analyze')
-  async analyze() {
-    const { text } = this.request.body;
+  async analyze(@Body('text') text: string) {
     return await this.emotionService.analyzeAndRecommend(text);
   }
 
   /**
    * 텍스트 감정 분석 및 음악/디저트 추천 API (SSE - 진행률 포함)
-   *
-   * @route GET /emotion/analyze-stream?text=...
-   * @param {string} text - 분석할 텍스트 (query parameter)
-   * @returns {Observable} Server-Sent Events 스트림
    *
    * 이벤트 타입:
    * - progress: { type: 'progress', progress: number, message: string }
@@ -63,9 +33,7 @@ export class EmotionController {
    * data: {"type":"complete","data":{...}}
    */
   @Sse('analyze-stream')
-  analyzeStream() {
-    const text = this.request.query.text as string;
-
+  analyzeStream(@Query('text') text: string) {
     return new Observable((observer) => {
       (async () => {
         try {
@@ -94,7 +62,10 @@ export class EmotionController {
           observer.next({
             data: {
               type: 'error',
-              message: error.message || '감정 분석에 실패했습니다.',
+              message:
+                error instanceof Error
+                  ? error.message
+                  : '감정 분석에 실패했습니다.',
             },
           });
           observer.error(error);

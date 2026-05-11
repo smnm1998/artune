@@ -1,3 +1,4 @@
+import { deduplicateByTrackId } from '../music/utils/track-filter.util';
 import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ITunesTrack } from './itunes-track.type';
@@ -16,7 +17,7 @@ export class ITunesService {
 
   /**
    * 아티스트 1명의 top track 조회 (캐시 적용)
-   * 국가 순회: us → kr → jp (첫 hit에서 종료)
+   * 국가 순회: kr → us → jp (첫 hit에서 종료)
    */
   async getArtistTopTracks(
     artistName: string,
@@ -59,7 +60,7 @@ export class ITunesService {
       }
     }
 
-    return this.deduplicateByTrackId(results.flat());
+    return deduplicateByTrackId(results.flat());
   }
 
   private async fetchByArtist(
@@ -114,15 +115,6 @@ export class ITunesService {
           (word) => albumName.includes(word) || trackName.includes(word),
         ) && track.previewUrl != null
       );
-    });
-  }
-
-  private deduplicateByTrackId(tracks: ITunesTrack[]): ITunesTrack[] {
-    const seen = new Set<number>();
-    return tracks.filter((track) => {
-      if (seen.has(track.trackId)) return false;
-      seen.add(track.trackId);
-      return true;
     });
   }
 

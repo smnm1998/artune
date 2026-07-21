@@ -80,3 +80,22 @@
 [mode-separation] emotion=joy overlap=20%
 [mode-separation] emotion=excited overlap=10%
 # 최종: anger 0~5% / joy 20% / excited 10% / sadness 35% (baseline: joy 30%, sadness 70%)
+
+## Phase 5 — 12개 감정 전수 측정 (n=1, 이상치는 재측정)
+[mode-separation] emotion=sentimental overlap=20%
+[mode-separation] emotion=lonely overlap=50%
+[mode-separation] emotion=confident overlap=10%
+[mode-separation] emotion=romance overlap=5%
+[mode-separation] emotion=fear overlap=5%
+[mode-separation] emotion=surprise overlap=35%
+[mode-separation] emotion=neutral overlap=25%
+[mode-separation] emotion=dreamy overlap=5%
+[mode-separation] emotion=lonely overlap=5%
+[mode-separation] emotion=surprise overlap=35%
+[mode-separation] emotion=dreamy overlap=20%
+[mode-separation] emotion=lonely overlap=25%
+[mode-separation] emotion=surprise overlap=20%
+[mode-separation] emotion=surprise overlap=5%
+[mode-separation] emotion=surprise overlap=5%
+# lonely 50%는 노이즈 (재측정 5%, 25%) — 이상치는 반드시 재측정 후 조치
+# surprise만 일관되게 높음(35/35/20) → soothe indie pop→soul 교체 → 5%, 5%

@@ -1,25 +1,11 @@
 import { post } from './client';
 import { API_ENDPOINTS, API_BASE_URL } from '@/constants/api';
-import { Track } from '@/types/track';
+import type {
+  EmotionResponse,
+  EmotionStreamEvent,
+} from '@artune/shared-types';
 
-interface Playlist {
-  modeLabel: string;
-  description: string;
-  tracks: Track[];
-}
-
-export interface EmotionResponse {
-  emotionLabel: string;
-  description: string;
-  artwork: {
-    url: string;
-    // prompt: string;
-  };
-  playlists: {
-    immerse: Playlist;
-    soothe: Playlist;
-  };
-}
+export type { EmotionResponse };
 
 type ProgressCallback = (progress: number, message: string) => void;
 
@@ -45,7 +31,7 @@ export async function analyzeEmotionWithProgress(
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data: EmotionStreamEvent = JSON.parse(event.data);
 
         if (data.type === 'progress') {
           // 진행률 업데이트

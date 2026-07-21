@@ -1,0 +1,20 @@
+{
+  "name": "@artune/shared-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "프론트엔드-백엔드 API 응답 계약 (타입 전용)",
+  "types": "src/index.ts",
+  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -188,3 +188,27 @@ SSE 진행률 단조성을 보장하는 병렬화와 LLM 출력 축소로 응답
   **실패 시 error 이벤트를 먼저 방출한 뒤 observer.error로 종료**(이중 시그널이 의도임을 명시),
   Error가 아닌 값으로 reject될 때 기본 메시지 사용.
 - 테스트 56 → 69개.
+
+## 13. 프론트-백 공유 DTO 타입 패키지 (2026-07-21 완료)
+
+CLAUDE.md 로드맵의 "DTO 타입 정의로 프론트-백 응답 계약 명확화" 항목 완료.
+기존에는 백엔드 `buildResponse` 반환이 암묵적 any이고, 프론트가 같은 모양을 독립 정의해
+드리프트를 컴파일 타임에 잡을 수단이 없었음.
+
+- `packages/shared-types` (@artune/shared-types) 신설, 루트 workspaces에 `packages/*` 추가.
+  **타입 전용 패키지** — 런타임 값을 export하지 않으므로 컴파일 시 import가 제거되어
+  양쪽 번들에 영향 없음. 빌드 스텝도 불필요.
+- 소스 오브 트루스는 백엔드가 실제 반환하는 형태.
+  (기존 프론트 `Track`은 `duration_ms`/`external_urls`가 빠진 부분집합이었음)
+- 연결: 백엔드 `mapItunesTrackToFrontend(): Track`, `buildResponse(): EmotionResponse`
+  프론트 `types/track.ts`는 재export로 기존 `@/types/track` import 경로 유지(컴포넌트 5개 무수정),
+  `emotionApi.ts`는 SSE 파싱을 `EmotionStreamEvent` 판별 유니온으로 좁힘.
+- **계약 강제 장치**: 두 앱에 `check-types` 스크립트 추가 → `turbo run check-types` 한 번으로
+  3개 워크스페이스 동시 검증. 드리프트 주입 테스트로 동작 확인:
+  공유 타입에 필드 추가 시 백엔드가 `error TS2741`로 정확한 위치를 지적하며 실패.
+
+### 알려진 미해결 (프론트 테스트)
+프론트 vitest 2건 실패 — **본 작업과 무관한 기존 문제** (stash 상태에서도 동일 재현):
+- `src/test/stores/useAppStore.test.js`: "No test suite found" (빈 파일 — 백엔드와 동일한 죽은 테스트 패턴)
+- `src/test/api/client.test.js`: AbortError가 TIMEOUT_ERROR가 아닌 UNKNOWN_ERROR로 분류됨
+  → `client.ts`의 AbortError 판별 로직 회귀 가능성. 프론트 테스트 TS 이전 시 함께 처리 필요.

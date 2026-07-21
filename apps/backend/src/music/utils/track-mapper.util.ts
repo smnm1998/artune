@@ -1,6 +1,7 @@
+import { Track } from '@artune/shared-types';
 import { ITunesTrack } from 'src/itunes/itunes-track.type';
 
-export function mapItunesTrackToFrontend(track: ITunesTrack) {
+export function mapItunesTrackToFrontend(track: ITunesTrack): Track {
   return {
     id: String(track.trackId),
     name: track.trackName,

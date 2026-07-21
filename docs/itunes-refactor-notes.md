@@ -151,3 +151,64 @@ SSE 진행률 단조성을 보장하는 병렬화와 LLM 출력 축소로 응답
   → **joy 30→20%, excited 10%, sadness 70→35%** (전 감정 분노 수준 분리도, 수율 20/20 유지).
 - 교훈: 장르의 음악적 정체성과 iTunes 라벨 체계는 다른 축 — 프롬프트 장르 선정 시
   라벨 충돌 여부를 [mode-separation]으로 검증해야 함.
+
+## 11. 12개 감정 전수 측정 및 surprise 수정 (2026-07-21 완료)
+
+§10은 3개 감정만 측정한 상태였음 (sentimental은 장르를 바꿔놓고 미검증). 전수 측정 실시.
+
+| 감정 | overlap | 비고 |
+|---|---|---|
+| anger | 0~5% | 대조군 (장르 축이 원래 멀다) |
+| romance / fear | 5% | |
+| dreamy | 5%, 20% | |
+| confident / excited | 10% | |
+| joy | 20% | §10에서 30→20% |
+| sentimental | 20% | §10 변경 검증 완료 |
+| neutral | 25% | |
+| lonely | 50% → 5%, 25% | **첫 샘플은 노이즈였음** |
+| surprise | 35%, 35%, 20% → **5%, 5%** | 유일한 실제 문제, 수정함 |
+| sadness | 35% | §10에서 70→35% |
+
+- **surprise 수정**: soothe `indie pop` → `soul`. 원인은 city pop과 동일 패턴 —
+  soothe의 indie pop이 한국 인디 아티스트를 끌어오는데 iTunes가 이들을 `K-Pop`으로
+  라벨링해 immerse(electronic, k-pop)와 충돌. 라벨 분포 로그로 즉시 특정 가능했음.
+- **방법론 교훈 (중요)**: lonely의 첫 측정 50%는 노이즈였고, 재측정에서 5%/25%로 돌아옴.
+  감정당 n=1로 판단했다면 멀쩡한 설정을 "고쳐서" 오히려 망가뜨렸을 것.
+  → **이상치 발견 시 반드시 재측정으로 일관성 확인 후 조치.**
+- 측정 오염 사례: 측정 중 프로젝트 파일을 수정해 nest watch가 재시작 → SSE 연결 끊김
+  (dreamy 1회 실패). 측정 중에는 소스 수정 금지.
+
+## 12. emotion.controller 테스트 (2026-07-21 완료)
+
+유일한 커버리지 공백이었던 컨트롤러(0%) 해소. **전체 커버리지 71.5% → 80.4%, 컨트롤러 100%.**
+
+- SSE Observable은 subscribe 시점에 async IIFE를 실행하므로, 테스트에서
+  next/error/complete를 수집하는 헬퍼로 종료를 기다린 뒤 검증.
+- 잠금한 계약: 진행률 콜백 → progress 이벤트 변환, complete 이벤트 후 스트림 종료,
+  **실패 시 error 이벤트를 먼저 방출한 뒤 observer.error로 종료**(이중 시그널이 의도임을 명시),
+  Error가 아닌 값으로 reject될 때 기본 메시지 사용.
+- 테스트 56 → 69개.
+
+## 13. 프론트-백 공유 DTO 타입 패키지 (2026-07-21 완료)
+
+CLAUDE.md 로드맵의 "DTO 타입 정의로 프론트-백 응답 계약 명확화" 항목 완료.
+기존에는 백엔드 `buildResponse` 반환이 암묵적 any이고, 프론트가 같은 모양을 독립 정의해
+드리프트를 컴파일 타임에 잡을 수단이 없었음.
+
+- `packages/shared-types` (@artune/shared-types) 신설, 루트 workspaces에 `packages/*` 추가.
+  **타입 전용 패키지** — 런타임 값을 export하지 않으므로 컴파일 시 import가 제거되어
+  양쪽 번들에 영향 없음. 빌드 스텝도 불필요.
+- 소스 오브 트루스는 백엔드가 실제 반환하는 형태.
+  (기존 프론트 `Track`은 `duration_ms`/`external_urls`가 빠진 부분집합이었음)
+- 연결: 백엔드 `mapItunesTrackToFrontend(): Track`, `buildResponse(): EmotionResponse`
+  프론트 `types/track.ts`는 재export로 기존 `@/types/track` import 경로 유지(컴포넌트 5개 무수정),
+  `emotionApi.ts`는 SSE 파싱을 `EmotionStreamEvent` 판별 유니온으로 좁힘.
+- **계약 강제 장치**: 두 앱에 `check-types` 스크립트 추가 → `turbo run check-types` 한 번으로
+  3개 워크스페이스 동시 검증. 드리프트 주입 테스트로 동작 확인:
+  공유 타입에 필드 추가 시 백엔드가 `error TS2741`로 정확한 위치를 지적하며 실패.
+
+### 알려진 미해결 (프론트 테스트)
+프론트 vitest 2건 실패 — **본 작업과 무관한 기존 문제** (stash 상태에서도 동일 재현):
+- `src/test/stores/useAppStore.test.js`: "No test suite found" (빈 파일 — 백엔드와 동일한 죽은 테스트 패턴)
+- `src/test/api/client.test.js`: AbortError가 TIMEOUT_ERROR가 아닌 UNKNOWN_ERROR로 분류됨
+  → `client.ts`의 AbortError 판별 로직 회귀 가능성. 프론트 테스트 TS 이전 시 함께 처리 필요.

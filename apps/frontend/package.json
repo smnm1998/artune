@@ -9,9 +9,11 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@artune/shared-types": "*",
     "@emotion/react": "^11.14.0",
     "framer-motion": "^12.23.24",
     "react": "^19.1.1",

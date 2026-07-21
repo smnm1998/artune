@@ -182,7 +182,7 @@ export class OpenAIService {
 
     5. surprise (놀람)
       - Immerse: genres: ["electronic", "k-pop"] / keywords: "vibrant quirky playful"
-      - Soothe:  genres: ["lo-fi", "indie pop"] / keywords: "chill mellow smooth"
+      - Soothe:  genres: ["lo-fi", "soul"] / keywords: "chill mellow smooth"
 
     6. neutral (평온/중립)
       - Immerse: genres: ["indie pop", "jazz"] / keywords: "balanced moderate everyday"

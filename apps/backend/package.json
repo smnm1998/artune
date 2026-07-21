@@ -14,9 +14,11 @@
     "dev": "nest start --watch",
     "test": "jest",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@artune/shared-types": "*",
     "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",

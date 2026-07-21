@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { EmotionResponse } from '@artune/shared-types';
 import { OpenAIService } from '../openai/openai.service';
 import { MusicService } from '../music/music.service';
 import { DalleService } from '../dalle/dalle.service';
@@ -71,7 +72,7 @@ export class EmotionService {
     immerseRecommendations,
     sootheRecommendations,
     dessertImage,
-  ) {
+  ): EmotionResponse {
     return {
       emotionLabel: emotion.emotionLabel,
       description: emotion.description,

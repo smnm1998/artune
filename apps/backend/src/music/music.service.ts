@@ -15,7 +15,7 @@ export class MusicService {
   async getRecommendations(artists: string[]): Promise<ITunesTrack[]> {
     if (!artists || artists.length === 0) return [];
 
-    // 1. 40명 풀 → shuffle → 상위 20명 추출
+    // 1. 아티스트 풀 → shuffle → 상위 20명 추출
     const shuffledPool = shuffleArray(artists);
     const selected = shuffledPool.slice(0, this.INITIAL_FETCH);
 

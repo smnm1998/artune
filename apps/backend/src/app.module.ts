@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { EmotionModule } from './emotion/emotion.module';
 
 @Module({
@@ -18,7 +16,5 @@ import { EmotionModule } from './emotion/emotion.module';
     }),
     EmotionModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

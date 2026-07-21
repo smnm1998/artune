@@ -3,7 +3,7 @@
   <h3>감정에 따른 음원 추천 서비스</h3>
   <p>
     당신의 하루, 당신의 감정을 텍스트로 들려주세요.<br/>
-    <strong>AI(OPENAI)</strong>가 분석한 감정에 맞춰 <strong>음악(Spotify + Apple Music)</strong>과 <strong>디저트 아트워크(DALL-E)</strong>를 선물합니다.
+    <strong>AI(OPENAI)</strong>가 분석한 감정에 맞춰 <strong>음악(iTunes Search API)</strong>과 <strong>디저트 아트워크(DALL-E)</strong>를 선물합니다.
   </p>
 
   <br/>
@@ -11,6 +11,7 @@
   <p>
     <img src="https://img.shields.io/badge/React-19.1-61DAFB?logo=react&logoColor=black" alt="React">
     <img src="https://img.shields.io/badge/NestJS-11.0-E0234E?logo=nestjs&logoColor=white" alt="NestJS">
+    <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
     <img src="https://img.shields.io/badge/Vite-7.1-646CFF?logo=vite&logoColor=white" alt="Vite">
     <img src="https://img.shields.io/badge/Turborepo-2.6-EF4444?logo=turborepo&logoColor=white" alt="Turborepo">
     <img src="https://img.shields.io/badge/OpenAI-GPT--4.1--mini-412991?logo=openai&logoColor=white" alt="OpenAI">
@@ -25,12 +26,12 @@
 
 ## 🌟 핵심 기능
 
-- **AI 감정 분석 & 큐레이션**: OpenAI GPT 4.1 mini 모델을 활용해 텍스트의 미묘한 감정선을 분석하고, Spotify API 파라미터(Valence, Energy, Tempo)로 변환합니다.
+- **AI 감정 분석 & 큐레이션**: OpenAI GPT 4.1 mini 모델이 텍스트의 미묘한 감정선을 분석하고, 감정·모드별로 어울리는 아티스트 풀(25명/모드)을 직접 큐레이션합니다.
 - **Dual Mode Playlist**:
   - 🎶 **감정 심취 (Immerse)**: 슬플 땐 더 슬픈 음악으로, 기쁠 땐 더 신나는 음악으로 감정을 극대화합니다.
   - 🌿 **감정 완화 (Soothe)**: 격한 감정을 차분하게, 혹은 우울한 기분을 산뜻하게 전환합니다.
 - **인터랙티브 음악 청취**:
-  - Spotify 메타데이터와 **iTunes Search API**를 결합하여 **30초 미리듣기**를 제공합니다.
+  - **iTunes Search API** 기반으로 아티스트별 인기 트랙과 **30초 미리듣기**를 제공합니다.
   - **CD 바이닐 인터랙션**: 음악 재생 시 CD가 플레이어에 들어가고, 정지 시 **DJ 스크래치 효과(Fade-out & Pitch down)**와 함께 멈추는 디테일한 UX를 구현했습니다.
 - **감정 맞춤 Pixel Art**: 감정 키워드와 장르를 조합하여 DALL-E 프롬프트를 생성, 매번 다른 '오늘의 디저트' 픽셀 아트를 제공합니다. (해당 기능은 잠시 정지시켰습니다.)
 - **실시간 분석 경험**: Server-Sent Events (SSE)를 도입하여 감정 분석 → 음악 탐색 → 이미지 생성의 진행 상황을 실시간 프로그레스 바로 시각화했습니다.
@@ -61,12 +62,13 @@
 ### Backend (`apps/backend`)
 
 - **Core**: NestJS 11 (Module 기반 아키텍처)
-- **Language**: JavaScript (Babel Transpilation)
+- **Language**: TypeScript (strictNullChecks 활성화)
 - **External APIs**:
-  - **OpenAI Assistant API**: 감정 분석 및 프롬프트 엔지니어링
-  - **Spotify Web API**: 트랙 검색 및 오디오 피쳐 분석
-  - **iTunes Search API**: 미리듣기 음원(Preview URL) 확보 (Spotify API 제약 보완)
-  - **DALL-E API**: 이미지 생성
+  - **OpenAI Chat Completions API**: 감정 분석 및 아티스트 큐레이션
+  - **iTunes Search API**: 아티스트 기반 트랙 검색 및 미리듣기 음원 확보
+  - **DALL-E API**: 이미지 생성 (현재 정적 매핑으로 대체)
+- **Caching**: NestJS CacheModule (아티스트 단위 6시간 버킷 캐시)
+- **Testing**: Jest (서비스 레이어 단위 테스트)
 - **Protocol**: HTTP, SSE (Server-Sent Events)
 
 ## 📱 UI/UX 미리보기
@@ -87,8 +89,6 @@
 ```env
 PORT=3000
 OPENAI_API_KEY=your_openai_key
-SPOTIFY_CLIENT_ID=your_spotify_id
-SPOTIFY_CLIENT_SECRET=your_spotify_secret
 FRONTEND_URL=http://localhost:5173
 ```
 
@@ -121,13 +121,14 @@ artune/
 │   ├── backend/              # NestJS Server
 │   │   └── src/
 │   │       ├── emotion/      # 감정 분석 및 오케스트레이션 (Core)
-│   │       ├── spotify/      # 음악 추천 로직 (Diversity 알고리즘 등)
+│   │       ├── music/        # 음악 추천 로직 (Diversity 알고리즘 등)
+│   │       ├── itunes/       # iTunes Search API (캐시·rate limit 처리)
 │   │       ├── openai/       # GPT 프롬프트 제어
 │   │       └── dalle/        # 이미지 생성
 │   └── frontend/             # React Client
 │       └── src/
 │           ├── components/   # LP Card, Toggle, Visualizer 등
-│           ├── hooks/        # useAudioScratch, useAudioPlayer
+│           ├── hooks/        # useAudioScratch, useMediaQuery
 │           ├── stores/       # Zustand Store
 │           └── pages/
 ├── package.json
@@ -136,22 +137,30 @@ artune/
 
 ## 💡 주요 기술적 고민
 
-### 1. Spotify 미리듣기 문제 해결 (Spotify vs iTunes)
+### 1. Spotify 정책 변경 대응 — iTunes Search API 완전 이전
 
-Spotify Web API가 더 이상 `preview_url`을 안정적으로 제공하지 않는 문제를 해결하기 위해 하이브리드 방식을 채택했습니다.
+Spotify API 정책 변경(Developer Mode 유저 제한, Premium 강제)에 대응해 음악 추천 파이프라인을 iTunes Search API로 완전 이전했습니다.
 
-- **Spotify**: 방대한 메타데이터와 추천 알고리즘 활용.
-- **iTunes API**: Spotify에서 추천된 트랙 정보를 바탕으로 iTunes Search API를 병렬 조회하여 미리듣기 음원을 확보.
+- **LLM 큐레이션 전환**: 오디오 피쳐(valence/energy/tempo) 기반 필터링 대신, GPT가 감정·모드별 아티스트 풀을 직접 큐레이션하는 구조로 재설계. 추천 요청당 Spotify API 호출 65회 전부 제거.
+- **Rate Limit 방어**: 429/403을 상태별로 판별해 국가 폴백의 호출 증폭(최대 3배)을 차단하고, 일시적 차단이 6시간 캐시에 오염되는 문제를 수정. throttle 상황에서도 트랙 수율 20/20 유지.
 
-이를 통해 추천의 **정확도**와 **사용자 경험(미리듣기)** 두 마리 토끼를 잡았습니다.
+### 2. 측정 기반 응답시간 최적화 (17.9초 → 11.6초, -35%)
 
-### 2. 오디오 UX 디테일 (Web Audio API & Interaction)
+단계별 타이밍 계측을 심어 병목을 실측으로 식별한 뒤 최적화했습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing.log))
+
+| 단계 | 응답시간 | 조치 |
+| :-- | :-- | :-- |
+| Baseline | 17.9s | LLM 52% + iTunes 순차 호출 48%로 병목 분해 |
+| SSE 병렬화 | ~13.8s | iTunes 구간 8.6s → 4.5s. 완료 카운트 기반 마일스톤으로 진행률 단조 증가 보장 |
+| LLM 출력 축소 | **11.6s** | 아티스트 40→25명/모드로 출력 토큰 절감 (수율 20/20 유지 검증) |
+
+### 3. 오디오 UX 디테일 (Web Audio API & Interaction)
 
 - 단순한 play/pause가 아닌, 실제 LP판을 멈추는 듯한 경험을 주기 위해 커스텀 훅(`useAudioScratch`)을 구현했습니다.
 - 재생 속도(`playbackRate`)와 볼륨을 프레임 단위로 조절하여 Pitch Down & Fade Out 효과를 구현했습니다.
 - 탭 전환 시 자동 정지, 메모리 누수 방지를 위한 Cleanup 로직을 철저히 적용했습니다.
 
-### 3. 반응형 디자인과 Glassmorphism
+### 4. 반응형 디자인과 Glassmorphism
 
 - Emotion을 활용해 세련된 Dark Glassmorphism 테마를 구축했습니다.
 - PC에서는 한 화면에 아트워크와 리스트를, 모바일에서는 토글 방식을 적용하여 디바이스별 최적화된 레이아웃을 제공합니다.

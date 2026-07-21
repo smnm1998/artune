@@ -11,7 +11,7 @@ export class OpenAIService {
   private readonly apiUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = configService.get('OPENAI_API_KEY');
+    this.apiKey = configService.getOrThrow('OPENAI_API_KEY');
     this.apiUrl = 'https://api.openai.com/v1/chat/completions';
   }
 
@@ -92,7 +92,7 @@ export class OpenAIService {
     **[사고 흐름 — 반드시 이 순서로 처리]**
     1. 사용자 텍스트에서 emotion / emotionLabel 판별
     2. 감정에 맞는 영문 키워드 2~4개 도출 (keywords) — 사고 보조용
-    3. keywords와 어울리는 분위기의 아티스트 40명 생성
+    3. keywords와 어울리는 분위기의 아티스트 25명 생성
 
     **중요:** keywords는 iTunes 검색에 직접 사용되지 않음. 오직 artists 선정의 사고 근거 역할.
     artists가 keywords와 무관하게 안전빵 유명 아티스트만 나열되는 것 금지.
@@ -139,12 +139,12 @@ export class OpenAIService {
       "immerse": {
         "keywords": "사고 보조용 영문 감정 키워드 (공백 구분, 2~4단어)",
         "genres": ["장르1", "장르2"],
-        "artists": ["아티스트1", "아티스트2", ..., "아티스트40"]
+        "artists": ["아티스트1", "아티스트2", ..., "아티스트25"]
       },
       "soothe": {
         "keywords": "사고 보조용 영문 감정 키워드 (공백 구분, 2~4단어)",
         "genres": ["장르1", "장르2"],
-        "artists": ["아티스트1", "아티스트2", ..., "아티스트40"]
+        "artists": ["아티스트1", "아티스트2", ..., "아티스트25"]
       }
     }
 
@@ -218,17 +218,17 @@ export class OpenAIService {
       머릿속에서 떠올려 보고 모드와 일치하는지 확인. 
       불확실하면 더 일관된 톤의 다른 아티스트로 교체.
 
-    **[아티스트 40명 분포 규칙 — 모드당]**
-    - 글로벌 메인스트림: 8명 (빌보드/그래미 차트권)
-    - 한국 메인스트림: 8명 (멜론/지니 차트권)
-    - 일본/아시아 아티스트: 4명
-    - 인디/언더그라운드: 12명 (현재 년도 기준 하입받는 신예)
-    - 다른 시대 메인스트림: 8명 (90s~10s 레전드)
+    **[아티스트 25명 분포 규칙 — 모드당]**
+    - 글로벌 메인스트림: 5명 (빌보드/그래미 차트권)
+    - 한국 메인스트림: 5명 (멜론/지니 차트권)
+    - 일본/아시아 아티스트: 3명
+    - 인디/언더그라운드: 7명 (현재 년도 기준 하입받는 신예)
+    - 다른 시대 메인스트림: 5명 (90s~10s 레전드)
 
     **[중요 — 매번 다른 조합]**
     - 같은 감정에 대해 두 번 호출해도 절반 이상 다른 아티스트로 구성
     - "Adele, IU, Sam Smith" 등 안전빵을 매번 1번 자리에 박는 것 금지
-    - 인디 12명은 가장 변화 폭이 커야 함 (매 호출마다 거의 새로운 풀)
+    - 인디 7명은 가장 변화 폭이 커야 함 (매 호출마다 거의 새로운 풀)
     `;
   }
 
@@ -276,8 +276,8 @@ export class OpenAIService {
       if (!Array.isArray(result[mode].artists)) {
         throw new Error(`${mode}.artists는 배열이어야 합니다.`);
       }
-      if (result[mode].artists.length < 30) {
-        throw new Error(`${mode}.artists는 최소 30명 이상 필요합니다.`);
+      if (result[mode].artists.length < 20) {
+        throw new Error(`${mode}.artists는 최소 20명 이상 필요합니다.`);
       }
     }
   }

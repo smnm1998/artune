@@ -5,6 +5,12 @@ import { ITunesTrack } from './itunes-track.type';
 import { Cache } from 'cache-manager';
 import axios from 'axios';
 
+type FetchResult =
+  | { status: 'ok'; tracks: ITunesTrack[] }
+  | { status: 'empty' }
+  | { status: 'throttled' }
+  | { status: 'error' };
+
 @Injectable()
 export class ITunesService {
   static readonly BASE_URL = 'https://itunes.apple.com/search';
@@ -29,16 +35,25 @@ export class ITunesService {
     const cached = await this.cacheManager.get<ITunesTrack[]>(cacheKey);
     if (cached) return cached;
 
+    let sawTransientFailure = false;
+
     for (const country of ITunesService.COUNTRIES) {
-      const tracks = await this.fetchByArtist(artistName, limit, country);
-      if (tracks.length > 0) {
-        await this.cacheManager.set(cacheKey, tracks);
-        return tracks;
+      const result = await this.fetchByArtist(artistName, limit, country);
+
+      if (result.status === 'ok') {
+        await this.cacheManager.set(cacheKey, result.tracks);
+        return result.tracks;
       }
+
+      // rate limit 상태에선 남은 국가 폴백이 호출만 증폭 - 즉시 중단
+      if (result.status === 'throttled') return [];
+      if (result.status === 'error') sawTransientFailure = true;
     }
 
-    // 빈 결과도 캐시 (없는 아티스트 재시도 방지)
-    await this.cacheManager.set(cacheKey, []);
+    // 3개국 모두 '정상 응답 + 결과 없음'일 때만 빈 결과 캐시
+    if (!sawTransientFailure) {
+      await this.cacheManager.set(cacheKey, []);
+    }
     return [];
   }
 
@@ -67,7 +82,7 @@ export class ITunesService {
     artist: string,
     limit: number,
     country: string,
-  ): Promise<ITunesTrack[]> {
+  ): Promise<FetchResult> {
     try {
       const response = await axios.get(ITunesService.BASE_URL, {
         params: {
@@ -80,11 +95,17 @@ export class ITunesService {
         },
         timeout: 8000,
       });
-      return this.filterQualityTracks(
+      const tracks = this.filterQualityTracks(
         (response.data.results ?? []) as ITunesTrack[],
       );
-    } catch {
-      return [];
+      return tracks.length > 0 ? { status: 'ok', tracks } : { status: 'empty' };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        // ITunes는 rate limit 시 429 뿐만 아니라 403도 반환 (실측 확인)
+        if (status === 429 || status === 403) return { status: 'throttled' };
+      }
+      return { status: 'error' };
     }
   }
 

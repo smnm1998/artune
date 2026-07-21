@@ -1,0 +1,51 @@
+# artune 응답시간 실측 원본 로그 (2026-07-21, 로컬 PORT=3100, 요청 간 60s)
+# 계측: EmotionService [timing] 로그 / 클라이언트: curl·node fetch
+
+## Phase 0 — baseline (SSE 순차 vs POST 병렬, 3감정 × 2경로)
+[13:37:25] SSE  시작: 오늘 정말 행복한 하루였어!
+[client] sse  total=17.949201s
+[13:38:43] POST 시작: 오늘 정말 행복한 하루였어!
+[client] post total=13.530131s
+[13:39:56] POST 시작: 요즘 너무 외롭고 쓸쓸한 기분이야
+[client] post total=14.769504s
+[13:41:11] SSE  시작: 요즘 너무 외롭고 쓸쓸한 기분이야
+[client] sse  total=18.776068s
+[13:42:30] SSE  시작: 시험 결과가 불안해서 잠이 안 와
+[client] sse  total=16.975926s
+[13:43:47] POST 시작: 시험 결과가 불안해서 잠이 안 와
+[client] post total=14.301120s
+--- server ---
+[timing] path=sse total=17945ms openai=9341ms itunes_immerse=4353ms itunes_soothe=4250ms dalle=1ms tracks=20/20
+[timing] path=parallel total=13518ms openai=8510ms parallel_block=5008ms tracks=20/20
+[timing] path=parallel total=14783ms openai=10403ms parallel_block=4380ms tracks=20/20
+[timing] path=sse total=18774ms openai=9551ms itunes_immerse=5012ms itunes_soothe=4210ms dalle=1ms tracks=20/20
+[timing] path=sse total=16974ms openai=8976ms itunes_immerse=4088ms itunes_soothe=3910ms dalle=0ms tracks=20/20
+[timing] path=parallel total=14294ms openai=9972ms parallel_block=4322ms tracks=20/20
+
+## Phase 1 — SSE 병렬화 이후 (진행률 단조성 클라이언트 검증 포함)
+[13:49:24] SSE: 드디어 프로젝트가 끝나서 너무 신나!
+  client_total=12.87s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[13:50:37] SSE: 옛 친구가 갑자기 생각나서 마음이 아련해
+  client_total=17.73s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[13:51:55] SSE: 내일 발표가 있어서 너무 떨리고 무서워
+  client_total=13.72s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[measure2] DONE
+--- server ---
+[timing] path=sse total=12835ms openai=8762ms parallel_block=4073ms tracks=20/20
+[timing] path=sse total=17726ms openai=12862ms parallel_block=4864ms tracks=20/20
+[timing] path=sse total=13712ms openai=9286ms parallel_block=4426ms tracks=20/20
+
+## Phase 2 — 아티스트 40→25명 축소 이후
+[13:54:54] SSE: 월급날이라 기분이 최고야!
+  client_total=11.33s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[13:56:05] SSE: 비 오는 날 창밖을 보니 쓸쓸하네
+  client_total=11.55s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[13:57:17] SSE: 새로 시작한 운동이 재밌어서 자신감이 생겨
+  client_total=12.01s progress=[0,10,30,40,60,80,95,100] monotonic=true
+[measure3] DONE
+--- server ---
+[timing] path=sse total=11305ms openai=7174ms parallel_block=4131ms tracks=20/20
+[timing] path=sse total=11546ms openai=7833ms parallel_block=3713ms tracks=20/20
+[timing] path=sse total=12003ms openai=7542ms parallel_block=4461ms tracks=20/20
+
+## 요약: SSE 17.9s(baseline 3회 평균) → 11.6s(최종 3회 평균), -35%, 수율 20/20 유지

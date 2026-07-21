@@ -49,3 +49,20 @@
 [timing] path=sse total=12003ms openai=7542ms parallel_block=4461ms tracks=20/20
 
 ## 요약: SSE 17.9s(baseline 3회 평균) → 11.6s(최종 3회 평균), -35%, 수율 20/20 유지
+
+## Phase 3 — 모드 장르 소프트 필터 (별칭 사전: 영어 전용 → 영/한 병기)
+# 별칭 수정 전
+[genre-match] matched=10/20 genres=indie pop,acoustic
+[genre-match] matched=0/20 genres=folk,blues
+[genre-match] matched=14/20 genres=pop,r&b
+[genre-match] matched=0/20 genres=dance,edm
+[genre-match] matched=0/20 genres=jazz,lo-fi
+[genre-match] matched=0/20 genres=folk,acoustic
+# 별칭 수정 후 (한국어 라벨 반영, 동일 텍스트 3종)
+[genre-match] matched=5/20 genres=folk,blues labels=싱어송라이터:4,OST:4,얼터너티브:3,K-Pop:3
+[genre-match] matched=18/20 genres=indie pop,acoustic labels=J-Pop:5,K-Pop:4,얼터너티브:4,싱어송라이터:4
+[genre-match] matched=20/20 genres=dance,edm labels=K-Pop:14,댄스:6
+[genre-match] matched=20/20 genres=pop,r&b labels=팝:8,R&B/소울:6,K-Pop:4,J-Pop:2
+[genre-match] matched=8/20 genres=folk,acoustic labels=싱어송라이터:5,얼터너티브 포크:2,팝:2,J-Pop:2
+[genre-match] matched=8/20 genres=jazz,lo-fi labels=R&B/소울:5,재즈:4,힙합/랩:3,얼터너티브:2
+# 평균 매칭률 20% → 66%, 수율 20/20 유지, 타이밍 영향 없음

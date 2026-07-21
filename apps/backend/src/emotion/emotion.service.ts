@@ -89,8 +89,14 @@ export class EmotionService {
     // 2. 음악 추천 - immerse (병렬 처리)
     const [immerseRecommendations, sootheRecommendations, dessertImage] =
       await Promise.all([
-        this.musicService.getRecommendations(emotion.immerse.artists),
-        this.musicService.getRecommendations(emotion.soothe.artists),
+        this.musicService.getRecommendations(
+          emotion.immerse.artists,
+          emotion.immerse.genres,
+        ),
+        this.musicService.getRecommendations(
+          emotion.soothe.artists,
+          emotion.soothe.genres,
+        ),
         // DALLE 디저트 이미지
         this.dalleService.generateDessertImage(
           emotion.emotion,
@@ -161,10 +167,16 @@ export class EmotionService {
     const [immerseRecommendations, sootheRecommendations, dessertImage] =
       await Promise.all([
         withProgress(
-          this.musicService.getRecommendations(emotion.immerse.artists),
+          this.musicService.getRecommendations(
+            emotion.immerse.artists,
+            emotion.immerse.genres,
+          ),
         ),
         withProgress(
-          this.musicService.getRecommendations(emotion.soothe.artists),
+          this.musicService.getRecommendations(
+            emotion.soothe.artists,
+            emotion.soothe.genres,
+          ),
         ),
         withProgress(
           this.dalleService.generateDessertImage(

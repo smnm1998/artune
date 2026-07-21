@@ -131,14 +131,16 @@ describe('EmotionService', () => {
 
       expect(openAIService.analyzeEmotion).toHaveBeenCalledWith(text);
 
-      // 아티스트 배열로 호출 (immerse → soothe 순)
+      // 아티스트 + 모드 장르로 호출 (immerse → soothe 순)
       expect(musicService.getRecommendations).toHaveBeenNthCalledWith(
         1,
         mockEmotion.immerse.artists,
+        mockEmotion.immerse.genres,
       );
       expect(musicService.getRecommendations).toHaveBeenNthCalledWith(
         2,
         mockEmotion.soothe.artists,
+        mockEmotion.soothe.genres,
       );
 
       expect(dalleService.generateDessertImage).toHaveBeenCalledWith(

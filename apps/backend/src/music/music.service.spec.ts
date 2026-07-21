@@ -113,6 +113,31 @@ describe('MusicService', () => {
       expect(itunesService.getTracksForArtists).toHaveBeenCalledTimes(1);
     });
 
+    it('모드 장르와 매칭되는 트랙을 우선 선별한다 (소프트 필터).', async () => {
+      // Jazz 5곡 + Dance 19곡 = 24곡 (모두 다른 아티스트)
+      const jazzTracks = Array.from({ length: 5 }, (_, i) =>
+        makeTrack(i + 1, `Jazz Artist ${i}`, { primaryGenreName: 'Jazz' }),
+      );
+      const danceTracks = Array.from({ length: 19 }, (_, i) =>
+        makeTrack(100 + i, `Dance Artist ${i}`, { primaryGenreName: 'Dance' }),
+      );
+      itunesService.getTracksForArtists.mockResolvedValueOnce([
+        ...danceTracks,
+        ...jazzTracks,
+      ]);
+
+      const result = await service.getRecommendations(makeArtistPool(40), [
+        'jazz',
+      ]);
+
+      // 매칭 5곡은 전부 포함, 나머지 15곡은 비매칭으로 보충 (수율 유지)
+      expect(result).toHaveLength(20);
+      const jazzCount = result.filter(
+        (t) => t.primaryGenreName === 'Jazz',
+      ).length;
+      expect(jazzCount).toBe(5);
+    });
+
     it('아티스트당 1곡만 포함하고 최대 20곡을 반환한다.', async () => {
       // 동일 아티스트('IU') 3곡 + 서로 다른 아티스트 21곡 = 24곡
       const tracks = [

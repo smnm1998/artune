@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant User as 👤 User (Client)
+    participant Server as 🖥️ NestJS Server
+    participant OpenAI as 🧠 OpenAI (GPT-4.1-mini)
+    participant iTunes as 🎵 iTunes Search API
+
+    User->>Server: 1. 텍스트 입력 (GET /api/emotion/analyze-stream)
+    Server-->>User: 📡 SSE Connection Established (Progress: 0%)
+
+    Note over Server,OpenAI: 1단계: 감정 분석 & 아티스트 큐레이션
+    Server->>OpenAI: 텍스트 분석 요청 (Prompt Engineering)
+    OpenAI-->>Server: 감정 + 모드별 아티스트 25명 & 장르 반환
+    Server-->>User: 🔄 Event: "감정 분석 완료" (Progress: 30%)
+
+    Note over Server,iTunes: 2단계: 음악 추천 + 아트워크 (병렬 처리)
+    par 감정 심취 (Immerse)
+        Server->>iTunes: 아티스트별 트랙 검색 (동시성 3 배치, kr→us→jp 폴백)
+        iTunes-->>Server: 트랙 + 30초 미리듣기 URL
+    and 감정 완화 (Soothe)
+        Server->>iTunes: 아티스트별 트랙 검색 (6시간 캐시 + Rate Limit 방어)
+        iTunes-->>Server: 트랙 + 30초 미리듣기 URL
+    and 아트워크
+        Server->>Server: 감정별 픽셀아트 정적 매핑 (DALL-E 대체)
+    end
+    Note over Server: 장르 소프트 필터 → 아티스트 다양성 (1곡/아티스트) → 모드별 20곡 확정
+    Server-->>User: 🔄 완료 마일스톤 순차 방출 (Progress: 60% → 80% → 95%)
+
+    Server-->>User: ✅ Event: Complete (Progress: 100%, 플레이리스트 2종 + 아트워크)

@@ -66,3 +66,17 @@
 [genre-match] matched=8/20 genres=folk,acoustic labels=싱어송라이터:5,얼터너티브 포크:2,팝:2,J-Pop:2
 [genre-match] matched=8/20 genres=jazz,lo-fi labels=R&B/소울:5,재즈:4,힙합/랩:3,얼터너티브:2
 # 평균 매칭률 20% → 66%, 수율 20/20 유지, 타이밍 영향 없음
+
+## Phase 4 — 모드 분리도(mode-separation) 지표 및 soothe 장르 재설계
+# baseline (수정 전)
+[mode-separation] emotion=anger overlap=0%
+[mode-separation] emotion=joy overlap=30%
+[mode-separation] emotion=sadness overlap=70%
+# 1차 수정 (모호 감정 soothe 재배치): sadness 개선, joy는 city pop 라벨 충돌로 악화
+[mode-separation] emotion=anger overlap=5%
+[mode-separation] emotion=joy overlap=55%
+[mode-separation] emotion=sadness overlap=35%
+# 2차 수정 (city pop → jazz/soul)
+[mode-separation] emotion=joy overlap=20%
+[mode-separation] emotion=excited overlap=10%
+# 최종: anger 0~5% / joy 20% / excited 10% / sadness 35% (baseline: joy 30%, sadness 70%)

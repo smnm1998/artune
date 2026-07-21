@@ -38,6 +38,34 @@ export class EmotionService {
     );
   }
 
+  /**
+   * 모드 분리도 측정 — immerse/soothe 20곡의 장르 라벨 분포 겹침 (낮을수록 두 모드가 뚜렷)
+   * 인접 무드 감정(기쁨·슬픔)에서 모드가 모호해지는 문제의 정량 지표
+   */
+  private logModeSeparation(emotion, immerseTracks, sootheTracks) {
+    const countLabels = (tracks) => {
+      const counts = new Map<string, number>();
+      for (const track of tracks) {
+        const label = track.primaryGenreName ?? '(none)';
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+      return counts;
+    };
+
+    const immerseLabels = countLabels(immerseTracks);
+    const sootheLabels = countLabels(sootheTracks);
+    let shared = 0;
+    for (const [label, count] of immerseLabels) {
+      shared += Math.min(count, sootheLabels.get(label) ?? 0);
+    }
+    const base = Math.min(immerseTracks.length, sootheTracks.length);
+    const overlap = base > 0 ? Math.round((shared / base) * 100) : 0;
+
+    this.logger.log(
+      `[mode-separation] emotion=${emotion.emotion} overlap=${overlap}%`,
+    );
+  }
+
   private buildResponse(
     emotion,
     immerseRecommendations,
@@ -92,10 +120,12 @@ export class EmotionService {
         this.musicService.getRecommendations(
           emotion.immerse.artists,
           emotion.immerse.genres,
+          'immerse',
         ),
         this.musicService.getRecommendations(
           emotion.soothe.artists,
           emotion.soothe.genres,
+          'soothe',
         ),
         // DALLE 디저트 이미지
         this.dalleService.generateDessertImage(
@@ -110,6 +140,11 @@ export class EmotionService {
       `[timing] path=parallel total=${tEnd - t0}ms ` +
         `openai=${tOpenAI - t0}ms parallel_block=${tEnd - tOpenAI}ms ` +
         `tracks=${immerseRecommendations.length}/${sootheRecommendations.length}`,
+    );
+    this.logModeSeparation(
+      emotion,
+      immerseRecommendations,
+      sootheRecommendations,
     );
 
     // 3. 프론트엔드 형식으로 변환
@@ -170,12 +205,14 @@ export class EmotionService {
           this.musicService.getRecommendations(
             emotion.immerse.artists,
             emotion.immerse.genres,
+            'immerse',
           ),
         ),
         withProgress(
           this.musicService.getRecommendations(
             emotion.soothe.artists,
             emotion.soothe.genres,
+            'soothe',
           ),
         ),
         withProgress(
@@ -193,6 +230,11 @@ export class EmotionService {
         `openai=${tOpenAI - t0}ms ` +
         `parallel_block=${tEnd - tOpenAI}ms ` +
         `tracks=${immerseRecommendations.length}/${sootheRecommendations.length}`,
+    );
+    this.logModeSeparation(
+      emotion,
+      immerseRecommendations,
+      sootheRecommendations,
     );
 
     // 전체 완료 (100%)

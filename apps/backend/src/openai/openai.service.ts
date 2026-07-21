@@ -103,8 +103,12 @@ export class OpenAIService {
     soothe(감정 완화): 그 감정에서 부드럽게 빠져나오게 하는 음악
 
     **핵심 규칙:** 아티스트의 **대표 스타일**이 모드와 부합해야 함.
-    iTunes는 아티스트별 인기 순으로 곡을 반환하므로, 
+    iTunes는 아티스트별 인기 순으로 곡을 반환하므로,
     "차분한 곡도 있는 신나는 가수"를 soothe에 넣으면 결과는 신나는 곡이 됨.
+
+    **모드 분리 규칙 — 매우 중요:** immerse와 soothe의 아티스트들이 같은 플레이리스트에
+    섞여 있어도 어색하지 않다면 잘못된 선정. 두 목록은 장르·질감·에너지 축에서
+    듣는 순간 구분될 만큼 명확히 달라야 함.
 
     **[적합성 판단 기준]**
     1. 아티스트의 top 5 인기곡 중 80% 이상이 모드 분위기와 일치해야 함
@@ -162,11 +166,11 @@ export class OpenAIService {
 
     1. joy (기쁨)
       - Immerse: genres: ["pop", "k-pop"] / keywords: "happy upbeat energetic"
-      - Soothe:  genres: ["r&b", "indie pop"] / keywords: "uplifting positive chill"
+      - Soothe:  genres: ["jazz", "soul"] / keywords: "warm smooth positive"
 
     2. sadness (슬픔) *Pop/Dance 금지*
       - Immerse: genres: ["folk", "blues"] / keywords: "sad melancholic emotional"
-      - Soothe:  genres: ["indie pop", "acoustic"] / keywords: "comfort healing warm"
+      - Soothe:  genres: ["soul", "jazz"] / keywords: "comfort healing warm"
 
     3. anger (분노)
       - Immerse: genres: ["rock", "hip hop"] / keywords: "intense powerful aggressive"
@@ -186,11 +190,11 @@ export class OpenAIService {
 
     7. sentimental (아련함/그리움) *Pop/Dance 금지*
       - Immerse: genres: ["folk", "singer-songwriter"] / keywords: "nostalgic bittersweet longing"
-      - Soothe:  genres: ["acoustic", "indie pop"] / keywords: "warm memories gentle"
+      - Soothe:  genres: ["bossa nova", "jazz"] / keywords: "warm memories gentle"
 
     8. excited (신남/들뜸)
       - Immerse: genres: ["dance", "edm"] / keywords: "energetic upbeat dance"
-      - Soothe:  genres: ["pop", "r&b"] / keywords: "fun groovy feel good"
+      - Soothe:  genres: ["soul", "jazz"] / keywords: "smooth groovy feel good"
 
     9. lonely (고독/쓸쓸함) *Pop/Dance 금지*
       - Immerse: genres: ["jazz", "lo-fi"] / keywords: "lonely solitude quiet"
@@ -213,10 +217,12 @@ export class OpenAIService {
     2. **중요: 공백 사용!** "hip hop" (O), "hip-hop" (X) / "r&b" (O), "r-n-b" (X) / "indie pop" (O), "indie-pop" (X)
     3. **sadness, lonely, sentimental의 immerse에는 절대 pop, dance, k-pop 사용 금지**
     4. JSON 형식만 반환하세요.
-    5. **mode 미스매치 자가검증 — 매우 중요:** 
-      각 아티스트를 artists 배열에 넣기 전, 그 아티스트의 top 인기곡 1~2개를 
-      머릿속에서 떠올려 보고 모드와 일치하는지 확인. 
+    5. **mode 미스매치 자가검증 — 매우 중요:**
+      각 아티스트를 artists 배열에 넣기 전, 그 아티스트의 top 인기곡 1~2개를
+      머릿속에서 떠올려 보고 모드와 일치하는지 확인.
       불확실하면 더 일관된 톤의 다른 아티스트로 교체.
+    6. **soothe는 더 엄격하게:** soothe 아티스트는 top 3 인기곡이 **모두** 완화 무드여야 함.
+      한 곡이라도 신나는 히트곡이 섞인 아티스트라면 교체. immerse보다 기준을 높게 적용.
 
     **[아티스트 25명 분포 규칙 — 모드당]**
     - 글로벌 메인스트림: 5명 (빌보드/그래미 차트권)

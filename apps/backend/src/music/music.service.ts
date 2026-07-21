@@ -17,6 +17,7 @@ export class MusicService {
   async getRecommendations(
     artists: string[],
     genres: string[] = [],
+    mode = '',
   ): Promise<ITunesTrack[]> {
     if (!artists || artists.length === 0) return [];
 
@@ -59,7 +60,7 @@ export class MusicService {
         .map(([label, count]) => `${label}:${count}`)
         .join(',');
       this.logger.log(
-        `[genre-match] matched=${matchedCount}/${result.length} genres=${genres.join(',')} labels=${topLabels}`,
+        `[genre-match] mode=${mode || '-'} matched=${matchedCount}/${result.length} genres=${genres.join(',')} labels=${topLabels}`,
       );
     }
 

@@ -8,7 +8,7 @@ export class DalleService {
   private readonly apiUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = configService.get('OPENAI_API_KEY');
+    this.apiKey = configService.getOrThrow('OPENAI_API_KEY');
     this.apiUrl = 'https://api.openai.com/v1/images/generations';
   }
 

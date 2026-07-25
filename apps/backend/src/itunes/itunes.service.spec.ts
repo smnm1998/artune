@@ -192,4 +192,125 @@ describe('ITunesService', () => {
       expect(mockedAxios.get).toHaveBeenCalledTimes(4); // 3 + 1 배치
     });
   });
+
+  describe('resolveTrack', () => {
+    it('곡명이 일치하는 후보를 해석하고 캐시에 저장한다', async () => {
+      const target = makeTrack({ trackId: 10, trackName: 'Toxicity' });
+      const noise = makeTrack({ trackId: 11, trackName: 'Different Song' });
+      // 곡명 일치 후보가 배열 뒤에 있어도 골라내야 함
+      mockedAxios.get.mockResolvedValueOnce({
+        data: { results: [noise, target] },
+      });
+
+      const result = await service.resolveTrack({
+        artist: 'System of a Down',
+        title: 'Toxicity',
+      });
+
+      expect(result).toEqual(target);
+      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        expect.stringMatching(/^resolve:System of a Down:Toxicity:\d+$/),
+        target,
+      );
+    });
+
+    it('자유텍스트 검색을 사용한다 (attribute=artistTerm 없음)', async () => {
+      mockedAxios.get.mockResolvedValueOnce({
+        data: { results: [makeTrack({ trackName: 'Toxicity' })] },
+      });
+
+      await service.resolveTrack({ artist: 'SOAD', title: 'Toxicity' });
+
+      const params = mockedAxios.get.mock.calls[0][1]?.params;
+      expect(params.term).toBe('SOAD Toxicity');
+      expect(params.attribute).toBeUndefined();
+    });
+
+    it('곡명 불일치(조용한 실패) 시 폐기하고 null 반환', async () => {
+      // 이센스-불꽃 요청에 민광-First Love가 온 케이스
+      mockedAxios.get.mockResolvedValue({
+        data: { results: [makeTrack({ trackName: 'First Love' })] },
+      });
+
+      const result = await service.resolveTrack({
+        artist: '이센스',
+        title: '불꽃',
+      });
+
+      expect(result).toBeNull();
+      // 3개국 모두 불일치 → null 확정 캐시
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        expect.stringMatching(/^resolve:이센스:불꽃:\d+$/),
+        null,
+      );
+    });
+
+    it('캐시된 해석 결과(트랙)를 API 호출 없이 반환', async () => {
+      const cached = makeTrack({ trackName: 'Toxicity' });
+      cacheManager.get.mockResolvedValue(cached);
+
+      const result = await service.resolveTrack({
+        artist: 'SOAD',
+        title: 'Toxicity',
+      });
+
+      expect(result).toEqual(cached);
+      expect(mockedAxios.get).not.toHaveBeenCalled();
+    });
+
+    it('캐시된 해석 실패(null)를 API 호출 없이 반환', async () => {
+      cacheManager.get.mockResolvedValue(null);
+
+      const result = await service.resolveTrack({
+        artist: 'Unknown',
+        title: 'Nope',
+      });
+
+      expect(result).toBeNull();
+      expect(mockedAxios.get).not.toHaveBeenCalled();
+    });
+
+    it('429 응답 시 폴백 중단하고 캐시하지 않음', async () => {
+      mockedAxios.get.mockRejectedValue({
+        isAxiosError: true,
+        response: { status: 429 },
+      });
+
+      const result = await service.resolveTrack({
+        artist: 'IU',
+        title: 'Song',
+      });
+
+      expect(result).toBeNull();
+      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(cacheManager.set).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resolveMany', () => {
+    it('해석 성공분만 { item, track } 쌍으로 모은다', async () => {
+      const t1 = makeTrack({ trackId: 1, trackName: 'A' });
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: { results: [t1] } }) // A kr 해석 성공
+        .mockResolvedValueOnce({ data: { results: [] } }) // B kr 실패
+        .mockResolvedValueOnce({ data: { results: [] } }) // B us 실패
+        .mockResolvedValueOnce({ data: { results: [] } }); // B jp 실패
+
+      const items = [
+        { artist: 'X', title: 'A' },
+        { artist: 'Y', title: 'B' },
+      ];
+      const result = await service.resolveMany(items, (i) => i);
+
+      // B는 해석 실패로 제외, A만 원본 item과 함께 반환
+      expect(result).toEqual([{ item: items[0], track: t1 }]);
+    });
+
+    it('빈 배열은 호출 없이 빈 결과', async () => {
+      const result = await service.resolveMany([], (i) => i);
+      expect(result).toEqual([]);
+      expect(mockedAxios.get).not.toHaveBeenCalled();
+    });
+  });
 });

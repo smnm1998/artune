@@ -1,69 +1,147 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ITunesService } from '../itunes/itunes.service';
+import { ITunesService, TrackQuery } from '../itunes/itunes.service';
 import { ITunesTrack } from '../itunes/itunes-track.type';
-import { ensureArtistDiversity } from './utils/artist-diversity.util';
-import { shuffleArray } from './utils/track-filter.util';
-import { matchesGenres, preferMatchingGenres } from './utils/genre-match.util';
+import { LastfmService } from '../lastfm/lastfm.service';
+import {
+  selectByRegionQuota,
+  Region,
+  RegionedTrack,
+} from './utils/region-quota.util';
+
+/** LLM이 반환하는 지역별 시드곡 */
+export interface ModeSeeds {
+  korea: TrackQuery[];
+  pop: TrackQuery[];
+  jpop: TrackQuery[];
+}
+
+/** 지역 태그 + match를 실은 후보 (iTunes 해석 전) */
+interface Candidate extends TrackQuery {
+  region: Region;
+  match: number;
+}
 
 @Injectable()
 export class MusicService {
   private readonly logger = new Logger(MusicService.name);
-  private readonly TARGET_COUNT = 20;
-  private readonly INITIAL_FETCH = 20;
-  private readonly FALLBACK_FETCH = 10;
 
-  constructor(private readonly itunesService: ITunesService) {}
+  // 지역별로 iTunes 해석을 시도할 최대 후보 수 (쿼터의 여유분)
+  private readonly RESOLVE_CAP: Record<Region, number> = {
+    korea: 12,
+    pop: 8,
+    jpop: 5,
+  };
 
+  constructor(
+    private readonly itunesService: ITunesService,
+    private readonly lastfmService: LastfmService,
+  ) {}
+
+  /**
+   * 지역별 시드곡 → Last.fm 협업필터링 확장 → iTunes 해석 → 지역 쿼터(6:3:1) 선정
+   */
   async getRecommendations(
-    artists: string[],
-    genres: string[] = [],
+    seeds: ModeSeeds,
     mode = '',
   ): Promise<ITunesTrack[]> {
-    if (!artists || artists.length === 0) return [];
+    // 1. 지역별로 시드 + 유사곡을 후보로 수집
+    const byRegion = await this.collectCandidates(seeds);
 
-    // 1. 아티스트 풀 → shuffle → 상위 20명 추출
-    const shuffledPool = shuffleArray(artists);
-    const selected = shuffledPool.slice(0, this.INITIAL_FETCH);
-
-    // 2. iTunes 트랙 조회 (throttled + 아티스트별 캐시)
-    let tracks = await this.itunesService.getTracksForArtists(selected);
-
-    // 3. 결과 부족 시 풀 나머지에서 보충
-    if (tracks.length < this.TARGET_COUNT) {
-      const remaining = shuffledPool.slice(
-        this.INITIAL_FETCH,
-        this.INITIAL_FETCH + this.FALLBACK_FETCH,
-      );
-      const fallbackTracks =
-        await this.itunesService.getTracksForArtists(remaining);
-      tracks = [...tracks, ...fallbackTracks];
+    // 2. 지역별 후보를 match 순 상위 N개로 제한 (iTunes 호출 수 통제)
+    const capped: Candidate[] = [];
+    for (const region of ['korea', 'pop', 'jpop'] as Region[]) {
+      const sorted = byRegion[region].sort((a, b) => b.match - a.match);
+      capped.push(...sorted.slice(0, this.RESOLVE_CAP[region]));
     }
 
-    // 4. 셔플 → 모드 장르 매칭 트랙 우선 배치(소프트 필터) → 다양성 적용 (1곡/아티스트)
-    const shuffledTracks = shuffleArray(tracks);
-    const genrePreferred = preferMatchingGenres(shuffledTracks, genres);
-    const result = ensureArtistDiversity(genrePreferred, this.TARGET_COUNT, 1);
+    // 3. iTunes 해석 (region/match 보존)
+    const resolved = await this.itunesService.resolveMany(capped, (c) => ({
+      artist: c.artist,
+      title: c.title,
+    }));
 
-    if (genres.length > 0) {
-      const matchedCount = result.filter((track) =>
-        matchesGenres(track, genres),
-      ).length;
-      // 라벨 분포 top 4 — 별칭 사전 튜닝용 (매칭 실패 원인 즉시 확인)
-      const labelCounts = new Map<string, number>();
-      for (const track of result) {
-        const label = track.primaryGenreName ?? '(none)';
-        labelCounts.set(label, (labelCounts.get(label) ?? 0) + 1);
-      }
-      const topLabels = [...labelCounts.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 4)
-        .map(([label, count]) => `${label}:${count}`)
-        .join(',');
-      this.logger.log(
-        `[genre-match] mode=${mode || '-'} matched=${matchedCount}/${result.length} genres=${genres.join(',')} labels=${topLabels}`,
-      );
-    }
+    const regioned: RegionedTrack[] = resolved.map(({ item, track }) => ({
+      track,
+      region: item.region,
+      match: item.match,
+    }));
+
+    this.logger.log(
+      `[resolve] mode=${mode || '-'} resolved=${regioned.length}/${capped.length} ` +
+        `(korea/pop/jpop 후보 ${byRegion.korea.length}/${byRegion.pop.length}/${byRegion.jpop.length})`,
+    );
+
+    // 4. 지역 쿼터로 최종 10곡 선정 (부족 시 타 지역 보충)
+    const result = selectByRegionQuota(regioned);
+
+    this.logger.log(
+      `[region-quota] mode=${mode || '-'} 최종 ${result.length}곡 ` +
+        `korea=${this.countRegion(result, regioned, 'korea')} ` +
+        `pop=${this.countRegion(result, regioned, 'pop')} ` +
+        `jpop=${this.countRegion(result, regioned, 'jpop')}`,
+    );
 
     return result;
+  }
+
+  /** 시드별 Last.fm 확장 → 지역별 후보 맵. 시드 자체도 match=1.0 후보로 포함 */
+  private async collectCandidates(
+    seeds: ModeSeeds,
+  ): Promise<Record<Region, Candidate[]>> {
+    const regions: Region[] = ['korea', 'pop', 'jpop'];
+
+    const perRegion = await Promise.all(
+      regions.map(async (region) => {
+        const seedList = seeds[region] ?? [];
+        const expanded = await Promise.all(
+          seedList.map(async (seed) => {
+            const similar = await this.lastfmService.getSimilarTracks(
+              seed.artist,
+              seed.title,
+            );
+            // 시드 자체(match 1.0) + 유사곡들
+            return [
+              { ...seed, region, match: 1.0 },
+              ...similar.map((s) => ({
+                artist: s.artist,
+                title: s.title,
+                region,
+                match: s.match,
+              })),
+            ] as Candidate[];
+          }),
+        );
+        return { region, candidates: this.dedupe(expanded.flat()) };
+      }),
+    );
+
+    const map = { korea: [], pop: [], jpop: [] } as Record<Region, Candidate[]>;
+    for (const { region, candidates } of perRegion) map[region] = candidates;
+    return map;
+  }
+
+  /** artist+title 기준 중복 제거 (같은 곡이 여러 시드에서 나올 수 있음) */
+  private dedupe(candidates: Candidate[]): Candidate[] {
+    const seen = new Set<string>();
+    const out: Candidate[] = [];
+    for (const c of candidates) {
+      const key = `${c.artist}|${c.title}`.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(c);
+    }
+    return out;
+  }
+
+  /** 로그용 — 최종 결과 중 특정 지역 곡 수 */
+  private countRegion(
+    result: ITunesTrack[],
+    regioned: RegionedTrack[],
+    region: Region,
+  ): number {
+    const ids = new Set(
+      regioned.filter((r) => r.region === region).map((r) => r.track.trackId),
+    );
+    return result.filter((t) => ids.has(t.trackId)).length;
   }
 }

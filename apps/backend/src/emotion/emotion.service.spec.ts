@@ -43,14 +43,23 @@ describe('EmotionService', () => {
     intensity: 0.8,
     description: '매우 긍정적인 감정',
     immerse: {
-      keywords: 'happy upbeat energetic',
       genres: ['pop', 'k-pop'],
-      artists: ['IU', 'NewJeans'],
+      seeds: {
+        korea: [
+          { artist: 'IU', title: '좋은 날' },
+          { artist: 'NewJeans', title: 'Super Shy' },
+        ],
+        pop: [{ artist: 'Dua Lipa', title: 'Levitating' }],
+        jpop: [{ artist: 'YOASOBI', title: 'Idol' }],
+      },
     },
     soothe: {
-      keywords: 'uplifting positive chill',
       genres: ['r&b', 'indie pop'],
-      artists: ['LANY', 'Beabadoobee'],
+      seeds: {
+        korea: [{ artist: '박효신', title: '야생화' }],
+        pop: [{ artist: 'LANY', title: 'ILYSB' }],
+        jpop: [{ artist: 'Fujii Kaze', title: 'Shinunoga E-Wa' }],
+      },
     },
   };
 
@@ -131,24 +140,16 @@ describe('EmotionService', () => {
 
       expect(openAIService.analyzeEmotion).toHaveBeenCalledWith(text);
 
-      // 아티스트 + 모드 장르 + 모드 라벨로 호출 (immerse → soothe 순)
+      // 지정 시드 + 모드 라벨로 호출 (immerse → soothe 순)
       expect(musicService.getRecommendations).toHaveBeenNthCalledWith(
         1,
-        mockEmotion.immerse.artists,
-        mockEmotion.immerse.genres,
+        mockEmotion.immerse.seeds,
         'immerse',
       );
       expect(musicService.getRecommendations).toHaveBeenNthCalledWith(
         2,
-        mockEmotion.soothe.artists,
-        mockEmotion.soothe.genres,
+        mockEmotion.soothe.seeds,
         'soothe',
-      );
-
-      expect(dalleService.generateDessertImage).toHaveBeenCalledWith(
-        'joy',
-        '기쁨',
-        mockEmotion.immerse.genres,
       );
     });
 

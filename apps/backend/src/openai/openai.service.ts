@@ -92,46 +92,45 @@ export class OpenAIService {
     **[사고 흐름 — 반드시 이 순서로 처리]**
     1. 사용자 텍스트에서 emotion / emotionLabel 판별
     2. 감정에 맞는 영문 키워드 2~4개 도출 (keywords) — 사고 보조용
-    3. keywords와 어울리는 분위기의 아티스트 25명 생성
+    3. keywords·모드와 어울리는 **시드곡(seed track)**을 지역별로 선정
+       (한국 3곡 / 팝 2곡 / 일본 1곡, 모드당)
 
-    **중요:** keywords는 iTunes 검색에 직접 사용되지 않음. 오직 artists 선정의 사고 근거 역할.
-    artists가 keywords와 무관하게 안전빵 유명 아티스트만 나열되는 것 금지.
+    **중요: 시드는 "곡 추천의 씨앗"임.** 이 시드곡과 비슷한 곡들을 시스템이
+    협업필터링(Last.fm)으로 확장하므로, 시드는 다음 조건을 반드시 만족해야 함:
+    - **어느 정도 알려진 곡** (Last.fm 청취 데이터가 있어야 유사곡이 나옴).
+      너무 마이너한 인디/신예 곡은 유사곡이 0개로 나와 실패함.
+    - 아티스트가 아니라 **그 곡 자체의 무드**가 모드와 맞아야 함
+      (분노 immerse에 록밴드를 넣어도 그들의 발라드가 아닌 격한 대표곡).
+    - 시드의 **지역**이 확장 결과의 지역을 결정함
+      (한국 곡을 넣으면 한국 곡들이, 일본 곡을 넣으면 일본 곡들이 확장됨).
 
-    **[모드별 아티스트 선정 원칙 — 매우 중요]**
+    **[모드별 곡 선정 원칙 — 매우 중요]**
 
-    immerse(감정 심취): 그 감정에 더 깊이 빠지게 하는 음악
-    soothe(감정 완화): 그 감정에서 부드럽게 빠져나오게 하는 음악
+    immerse(감정 심취): 그 감정에 더 깊이 빠지게 하는 곡
+    soothe(감정 완화): 그 감정에서 부드럽게 빠져나오게 하는 곡
 
-    **핵심 규칙:** 아티스트의 **대표 스타일**이 모드와 부합해야 함.
-    iTunes는 아티스트별 인기 순으로 곡을 반환하므로,
-    "차분한 곡도 있는 신나는 가수"를 soothe에 넣으면 결과는 신나는 곡이 됨.
+    **핵심 규칙:** 지정하는 **곡 자체의 분위기**가 모드와 부합해야 함.
+    아티스트의 대표 스타일이 아니라, 그 아티스트가 낸 **바로 그 곡**의 무드로 판단.
+    다양한 스타일의 아티스트라도 모드에 맞는 특정 곡을 골라내면 됨.
 
-    **모드 분리 규칙 — 매우 중요:** immerse와 soothe의 아티스트들이 같은 플레이리스트에
-    섞여 있어도 어색하지 않다면 잘못된 선정. 두 목록은 장르·질감·에너지 축에서
+    **모드 분리 규칙 — 매우 중요:** immerse 곡들과 soothe 곡들이 한 플레이리스트에
+    섞여도 어색하지 않다면 잘못된 선정. 두 목록은 장르·질감·에너지 축에서
     듣는 순간 구분될 만큼 명확히 달라야 함.
-
-    **[적합성 판단 기준]**
-    1. 아티스트의 top 5 인기곡 중 80% 이상이 모드 분위기와 일치해야 함
-    2. 다양한 스타일을 가진 메인스트림 아티스트는 모드 미스매치 위험 ↑
-      - 예: 신나는 곡과 발라드를 모두 가진 가수 → 어느 모드에 넣어도 이상함
-    3. 일관된 톤을 가진 아티스트가 안전
-      - 잔잔함 본업 가수 → soothe / 차분형 immerse
-      - 신남 본업 가수 → 활기형 immerse / 활기형 soothe
 
     **[모드별 안전한 스타일 가이드]**
     - 활기형 immerse(joy, excited, surprise, confident, romance):
-      Pop/Dance/EDM/Hip hop 중심, 대표곡이 신남/에너지
+      Pop/Dance/EDM/Hip hop 중심, 신남/에너지 있는 곡
     - 차분형 immerse(sadness, lonely, sentimental, fear, dreamy):
-      Folk/Singer-songwriter/Blues/Acoustic 중심, 대표곡이 잔잔/내성적
+      Folk/Singer-songwriter/Blues/Acoustic 중심, 잔잔/내성적인 곡
     - 활기형 soothe(joy/excited/surprise/confident 완화):
-      R&B/Indie pop/City pop/Soul 중심, 신나지만 부드러운 그루브
+      R&B/Indie pop/City pop/Soul 중심, 신나지만 부드러운 그루브의 곡
     - 차분형 soothe(sadness/lonely/sentimental/fear 위로):
-      Jazz/Classical/Acoustic/Bossa nova 중심, 따뜻한 위로감
+      Jazz/Classical/Acoustic/Bossa nova 중심, 따뜻한 위로감의 곡
 
     **[금지 패턴]**
-    - soothe에 EDM/Hard rock/Hip hop 메인스트림 가수 X
-    - immerse(차분형)에 Pop/Dance/K-pop 댄스 가수 X
-    - "유명하니까" 안전빵으로 다양 스타일 가수 끼워넣기 X
+    - soothe에 격한 EDM/Hard rock/Hip hop 곡 X
+    - immerse(차분형)에 신나는 Pop/Dance/K-pop 댄스 곡 X
+    - 실재하지 않는 곡·아티스트 창작 X (반드시 실제로 발매된 곡만)
 
 
     **필수 응답 형식**
@@ -143,14 +142,34 @@ export class OpenAIService {
       "immerse": {
         "keywords": "사고 보조용 영문 감정 키워드 (공백 구분, 2~4단어)",
         "genres": ["장르1", "장르2"],
-        "artists": ["아티스트1", "아티스트2", ..., "아티스트25"]
+        "seeds": {
+          "korea": [{ "artist": "아티스트", "title": "곡" }, ... (3곡)],
+          "pop":   [{ "artist": "아티스트", "title": "곡" }, ... (2곡)],
+          "jpop":  [{ "artist": "アーティスト/artist", "title": "곡" }, ... (1곡)]
+        }
       },
       "soothe": {
-        "keywords": "사고 보조용 영문 감정 키워드 (공백 구분, 2~4단어)",
+        "keywords": "...",
         "genres": ["장르1", "장르2"],
-        "artists": ["아티스트1", "아티스트2", ..., "아티스트25"]
+        "seeds": {
+          "korea": [ ... (3곡)],
+          "pop":   [ ... (2곡)],
+          "jpop":  [ ... (1곡)]
+        }
       }
     }
+
+    **[시드 표기 규칙]**
+    - artist/title: 실제 발매된 곡. 부제·버전(Remix, Live) 생략하고 원곡 제목만
+    - korea: 한국 아티스트는 한글 표기 (예: "아이유", "박효신")
+    - pop: 영미권 팝. 영문 표기 (예: "Dua Lipa")
+    - jpop: 일본 곡. 영문 표기 권장 (예: "YOASOBI", "Kenshi Yonezu")
+    - **각 시드는 서로 다른 아티스트로** (한 아티스트 반복 X)
+
+    **[곡 표기 규칙 — iTunes 검색 정확도]**
+    - artist: 해당 곡의 대표 표기 (영문 아티스트는 영문, 한국 아티스트는 한글)
+    - title: 정확한 곡 제목. 부제/버전 표기(Remix, Live 등)는 생략하고 원곡 제목만
+    - 실제로 iTunes/Apple Music에 존재하는 곡만. 불확실하면 더 확실한 다른 곡으로 대체
 
     ---
     **핵심 가이드: 장르 및 수치 설정**
@@ -217,24 +236,32 @@ export class OpenAIService {
     2. **중요: 공백 사용!** "hip hop" (O), "hip-hop" (X) / "r&b" (O), "r-n-b" (X) / "indie pop" (O), "indie-pop" (X)
     3. **sadness, lonely, sentimental의 immerse에는 절대 pop, dance, k-pop 사용 금지**
     4. JSON 형식만 반환하세요.
-    5. **mode 미스매치 자가검증 — 매우 중요:**
-      각 아티스트를 artists 배열에 넣기 전, 그 아티스트의 top 인기곡 1~2개를
-      머릿속에서 떠올려 보고 모드와 일치하는지 확인.
-      불확실하면 더 일관된 톤의 다른 아티스트로 교체.
-    6. **soothe는 더 엄격하게:** soothe 아티스트는 top 3 인기곡이 **모두** 완화 무드여야 함.
-      한 곡이라도 신나는 히트곡이 섞인 아티스트라면 교체. immerse보다 기준을 높게 적용.
+    5. **시드 무드 자가검증 — 매우 중요:** 각 시드곡을 넣기 전,
+      그 곡을 실제로 들었을 때의 분위기가 모드와 맞는지 확인.
+      아티스트가 아니라 **그 곡 하나**의 무드로 판단할 것.
 
-    **[아티스트 25명 분포 규칙 — 모드당]**
-    - 글로벌 메인스트림: 5명 (빌보드/그래미 차트권)
-    - 한국 메인스트림: 5명 (멜론/지니 차트권)
-    - 일본/아시아 아티스트: 3명
-    - 인디/언더그라운드: 7명 (현재 년도 기준 하입받는 신예)
-    - 다른 시대 메인스트림: 5명 (90s~10s 레전드)
+    **[시드 선정 규칙 — 모드당 총 6곡]**
+    - 한국 3곡 + 팝 2곡 + 일본 1곡 (지역 태그가 곧 확장 결과의 지역)
+    - 모두 서로 다른 아티스트
+    - **적당히 유명한 곡** — Last.fm에 청취 기록이 있을 만한 곡
+      (차트 진입했거나, 널리 알려진 명곡. 아무도 모르는 딥컷 금지)
 
     **[중요 — 매번 다른 조합]**
-    - 같은 감정에 대해 두 번 호출해도 절반 이상 다른 아티스트로 구성
-    - "Adele, IU, Sam Smith" 등 안전빵을 매번 1번 자리에 박는 것 금지
-    - 인디 7명은 가장 변화 폭이 커야 함 (매 호출마다 거의 새로운 풀)
+    - 같은 감정에 대해 두 번 호출해도 시드 절반 이상을 다른 곡으로
+    - "아이유 - 좋은 날" 같은 안전빵을 매번 1번 자리에 박는 것 금지
+
+    **[곡 30개 분포 규칙 — 모드당]**
+    - 아티스트 다양성: **한 아티스트당 최대 2곡**, 서로 다른 아티스트 20명 이상
+    - 글로벌 메인스트림 곡: 8곡
+    - 한국 메인스트림 곡: 8곡
+    - 일본/아시아 곡: 4곡
+    - 인디/언더그라운드 곡: 6곡 (하입받는 신예)
+    - 다른 시대 레전드 곡: 4곡 (90s~10s)
+
+    **[중요 — 매번 다른 조합]**
+    - 같은 감정에 대해 두 번 호출해도 절반 이상 다른 곡으로 구성
+    - "Adele - Someone Like You" 등 안전빵을 매번 1번 자리에 박는 것 금지
+    - 인디 곡은 가장 변화 폭이 커야 함 (매 호출마다 거의 새로운 풀)
     `;
   }
 
@@ -259,8 +286,8 @@ export class OpenAIService {
       }
     }
 
-    // immerse, sooth 내부 필드 검증
-    const playlistFields = ['genres', 'keywords', 'artists'];
+    // immerse, soothe 내부 필드 검증
+    const playlistFields = ['genres', 'keywords', 'seeds'];
 
     for (const mode of ['immerse', 'soothe']) {
       if (!result[mode] || typeof result[mode] !== 'object') {
@@ -273,17 +300,35 @@ export class OpenAIService {
         }
       }
 
-      // genres는 배열
       if (!Array.isArray(result[mode].genres)) {
         throw new Error(`${mode}.genres는 배열이어야 합니다.`);
       }
 
-      // artists 배열 + 길이 검증
-      if (!Array.isArray(result[mode].artists)) {
-        throw new Error(`${mode}.artists는 배열이어야 합니다.`);
+      // seeds: { korea, pop, jpop } 각각 { artist, title } 배열
+      const seeds = result[mode].seeds;
+      if (!seeds || typeof seeds !== 'object') {
+        throw new Error(`${mode}.seeds는 객체여야 합니다.`);
       }
-      if (result[mode].artists.length < 20) {
-        throw new Error(`${mode}.artists는 최소 20명 이상 필요합니다.`);
+      let seedCount = 0;
+      for (const region of ['korea', 'pop', 'jpop']) {
+        if (!Array.isArray(seeds[region])) {
+          throw new Error(`${mode}.seeds.${region}는 배열이어야 합니다.`);
+        }
+        for (const s of seeds[region]) {
+          if (
+            !s ||
+            typeof s.artist !== 'string' ||
+            typeof s.title !== 'string'
+          ) {
+            throw new Error(
+              `${mode}.seeds.${region}의 각 항목은 { artist, title } 형태여야 합니다.`,
+            );
+          }
+          seedCount++;
+        }
+      }
+      if (seedCount < 3) {
+        throw new Error(`${mode}.seeds는 최소 3곡 이상 필요합니다.`);
       }
     }
   }

@@ -6,7 +6,20 @@ import axios from 'axios';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// validateResult가 요구하는 최소 형태 (artists 30명 이상)
+// validateResult가 요구하는 최소 형태 (seeds: {korea, pop, jpop}, 각 { artist, title })
+const makeSeeds = (label: string) => ({
+  korea: [
+    { artist: `${label} 한국1`, title: `${label} 곡1` },
+    { artist: `${label} 한국2`, title: `${label} 곡2` },
+    { artist: `${label} 한국3`, title: `${label} 곡3` },
+  ],
+  pop: [
+    { artist: `${label} Pop1`, title: `${label} Song1` },
+    { artist: `${label} Pop2`, title: `${label} Song2` },
+  ],
+  jpop: [{ artist: `${label} Jpop1`, title: `${label} JSong1` }],
+});
+
 const makeAnalysisResult = () => ({
   emotion: 'joy',
   emotionLabel: '기쁨',
@@ -15,12 +28,12 @@ const makeAnalysisResult = () => ({
   immerse: {
     keywords: 'happy upbeat energetic',
     genres: ['pop', 'k-pop'],
-    artists: Array.from({ length: 40 }, (_, i) => `Immerse Artist ${i + 1}`),
+    seeds: makeSeeds('Immerse'),
   },
   soothe: {
     keywords: 'uplifting positive chill',
     genres: ['r&b', 'indie pop'],
-    artists: Array.from({ length: 40 }, (_, i) => `Soothe Artist ${i + 1}`),
+    seeds: makeSeeds('Soothe'),
   },
 });
 
@@ -67,7 +80,7 @@ describe('OpenAIService', () => {
 
       // Then
       expect(result).toEqual(mockResult);
-      expect(result.immerse.artists).toHaveLength(40);
+      expect(result.immerse.seeds.korea).toHaveLength(3);
 
       // API 호출 검증
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -126,15 +139,33 @@ describe('OpenAIService', () => {
       );
     });
 
-    it('아티스트가 20명 미만이면 에러를 던져야 한다.', async () => {
+    it('시드가 3곡 미만이면 에러를 던져야 한다.', async () => {
       const result = makeAnalysisResult();
-      result.immerse.artists = ['한명뿐'];
+      // 전체 시드를 1곡으로 축소 (하한 3 미달)
+      result.immerse.seeds = {
+        korea: [{ artist: 'A', title: 'B' }],
+        pop: [],
+        jpop: [],
+      };
       mockedAxios.post.mockResolvedValueOnce(
         mockChatCompletion(JSON.stringify(result)),
       );
 
       await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
-        '최소 20명 이상 필요합니다',
+        '최소 3곡 이상 필요합니다',
+      );
+    });
+
+    it('시드 항목이 { artist, title } 형태가 아니면 에러를 던져야 한다.', async () => {
+      const result = makeAnalysisResult();
+      // 문자열 배열(잘못된 형태)로 오면 거부
+      (result.immerse.seeds.korea as unknown) = ['그냥 문자열', '또 문자열'];
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion(JSON.stringify(result)),
+      );
+
+      await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
+        '{ artist, title } 형태여야 합니다',
       );
     });
   });

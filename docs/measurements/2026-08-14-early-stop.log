@@ -1,0 +1,70 @@
+# artune Last.fm 파이프라인 수율 실측 원본 로그 (2026-08-14, 로컬 PORT=3100)
+# 서버: nest build 후 `node dist/main` (watch 없음, 재기동 시 in-memory 캐시 초기화)
+# 클라이언트: POST /api/emotion/analyze, 4감정 순차, 요청 간 12초 (연속 요청 스트레스 조건)
+# 출처: Claude Code 세션 출력에서 옮겨 적음 (측정 스크립트는 세션 스크래치패드에 있었고 현재 유실)
+
+## Run 1 — 개선 전 (resolveMany: 후보를 CAP 12/8/5 = 모드당 25개까지 전부 해석), 16:35~16:36
+[1] 기쁨  11.31s  immerse=10/10 soothe=9/10
+[2] 고독  12.03s  immerse=5/10  soothe=7/10
+[3] 분노  11.92s  immerse=3/10  soothe=1/10
+[4] 중립   8.88s  immerse=1/10  soothe=4/10
+# 응답시간 avg=11.04s min=8.88s max=12.03s / 수율 immerse avg=4.8 soothe avg=5.3 / 양쪽 10곡 0/4건
+--- server ---
+[resolve] mode=soothe  resolved=16/16 (korea/pop/jpop 후보 3/62/31)
+[resolve] mode=immerse resolved=16/16 (korea/pop/jpop 후보 3/61/31)
+[resolve] mode=immerse resolved=10/12 (korea/pop/jpop 후보 3/62/1)
+[resolve] mode=soothe  resolved=12/16 (korea/pop/jpop 후보 3/62/27)
+[resolve] mode=soothe  resolved=3/21  (korea/pop/jpop 후보 33/62/1)
+[resolve] mode=immerse resolved=4/25  (korea/pop/jpop 후보 61/62/31)
+[resolve] mode=immerse resolved=3/12  (korea/pop/jpop 후보 3/62/1)
+[resolve] mode=soothe  resolved=6/16  (korea/pop/jpop 후보 3/53/31)
+# 관측: 요청 순서대로 수율 하락 (immerse 10→5→3→1). 마지막 요청이 가장 빠르고 수율이 가장 낮음
+
+## Run 2 — 붕괴 감정 재측정 (75초 대기 후, 요청 간 75초, 같은 서버 프로세스), 16:40~16:41
+[재측정 1] 분노  11.80s  immerse=1/10 soothe=2/10
+[재측정 2] 중립  12.13s  immerse=2/10 soothe=5/10
+--- server ---
+[resolve] mode=immerse resolved=2/25 (korea/pop/jpop 후보 33/62/31)
+[resolve] mode=soothe  resolved=4/25 (korea/pop/jpop 후보 33/62/31)
+[resolve] mode=soothe  resolved=9/16 (korea/pop/jpop 후보 3/57/31)
+[resolve] mode=immerse resolved=5/25 (korea/pop/jpop 후보 33/62/31)
+# 이 시점의 가설(오진): "한국 롱테일 후보가 많은 감정(분노·중립)은 iTunes에서 구조적으로 해석되지 않는다"
+#                      + titleMatches 과잉 거부 의심
+
+## Run 3 — 진단 (서버 재기동, resolveTrack에 임시 진단 로그 추가, 분노 2회, 요청 간 30초), 17:02~17:03
+[진단 1] 분노 12.70s 수율 10/8
+[진단 2] 분노 10.52s 수율 10/7
+--- server ---
+[resolve] mode=soothe  resolved=15/16 (korea/pop/jpop 후보 3/62/31)
+[resolve] mode=immerse resolved=24/25 (korea/pop/jpop 후보 33/62/31)
+[resolve] mode=soothe  resolved=12/16 (korea/pop/jpop 후보 3/62/31)
+[resolve] mode=immerse resolved=24/25 (korea/pop/jpop 후보 55/62/31)
+[resolve-diag] THROTTLED 6건 / 비-throttle FAIL 1건
+[resolve-diag] FAIL "윤한 | 봄비" sawResults=true rejected=[kr:위하여 / 눈사람 / 내일이 오면 (feat. 기리보이 & 서동현)]
+# 결론: 같은 분노 감정도 첫 요청에선 해석률 96%(24/25). 비-throttle 실패 1건은 iTunes가 엉뚱한 곡을
+#       반환한 경우로 titleMatches가 정상 거부 → 오진 기각. 원인은 과잉 해석으로 인한 누적 throttle
+# 한계: Run 2→3 사이에 서버 재기동(캐시 초기화)과 약 20분 경과가 겹쳐 있어 둘의 효과는 분리하지 않음
+
+## Run 4 — 개선 후 (resolveUntil: match 순 3개 배치, 지역별 NEED 8/5/3 도달 시 중단, CAP 유지), 17:17~17:18
+# Run 1과 동일 스크립트·동일 조건, 서버 재기동 후 실행 (진단 로그는 동작에 영향 없는 로깅만 남은 상태)
+[1] 기쁨   9.86s  immerse=10/10 soothe=10/10
+[2] 고독  10.27s  immerse=5/10  soothe=10/10
+[3] 분노   9.60s  immerse=8/10  soothe=9/10
+[4] 중립   7.92s  immerse=8/10  soothe=4/10
+# 응답시간 avg=9.41s min=7.92s max=10.27s / 수율 immerse avg=7.8 soothe avg=8.3 / 양쪽 10곡 1/4건
+--- server ---
+[resolve] mode=soothe  resolved=18/18시도 (korea/pop/jpop 후보 62/61/31)
+[resolve] mode=immerse resolved=18/18시도 (korea/pop/jpop 후보 33/62/31)
+[resolve] mode=immerse resolved=9/10시도  (korea/pop/jpop 후보 3/62/1)
+[resolve] mode=soothe  resolved=16/16시도 (korea/pop/jpop 후보 33/62/1)
+[resolve] mode=immerse resolved=14/23시도 (korea/pop/jpop 후보 58/51/31)
+[resolve] mode=soothe  resolved=13/23시도 (korea/pop/jpop 후보 33/62/31)
+[resolve] mode=soothe  resolved=10/12시도 (korea/pop/jpop 후보 3/57/31)
+[resolve] mode=immerse resolved=15/16시도 (korea/pop/jpop 후보 33/62/1)
+[resolve-diag] THROTTLED 22건 / 비-throttle FAIL 1건 (sawResults=false, iTunes에 곡 없음)
+
+## 요약 (Run 1 → Run 4)
+# 수율 immerse 4.8 → 7.8 / 10, soothe 5.3 → 8.3 / 10 (두 모드 평균 5.05 → 8.05)
+# 응답시간 11.04s → 9.41s
+# 목표 10곡을 양쪽 모두 채운 요청: 0/4 → 1/4 — 목표 달성이 아니라 개선
+# 연속 요청에서 THROTTLED는 여전히 발생 (iTunes rate limit은 외부 하드 리밋)

@@ -1,0 +1,25 @@
+# artune 곡 단위 큐레이션(A안) 실측 원본 로그 (2026-07-22, 로컬 PORT=3100)
+# A안: LLM이 모드당 (아티스트, 곡) 30쌍 지정 → iTunes resolveTrack으로 해석 → 모드당 20곡 목표
+# 계측: MusicService [resolve] / EmotionService [timing] 로그, 클라이언트는 SSE 3감정 순차 호출
+# 출처: Claude Code 세션 출력에서 옮겨 적음 (측정 스크립트는 세션 스크래치패드에 있었고 현재 유실)
+
+## 클라이언트 (최종 곡 수)
+━━━ 분노 (22.6s) ━━━  [감정 심취] 6곡   [감정 완화] 13곡
+━━━ 기쁨 (21.1s) ━━━  [감정 심취] 13곡  [감정 완화] 11곡
+━━━ 슬픔 (20.6s) ━━━  [감정 심취] 11곡  [감정 완화] 7곡
+
+## 서버 지표
+[resolve] mode=soothe resolved=13/30
+[resolve] mode=immerse resolved=6/30
+[timing] path=sse total=22566ms openai=16117ms parallel_block=6449ms tracks=6/13
+[resolve] mode=immerse resolved=13/30
+[resolve] mode=soothe resolved=11/30
+[timing] path=sse total=21101ms openai=14326ms parallel_block=6775ms tracks=13/11
+[resolve] mode=immerse resolved=11/30
+[resolve] mode=soothe resolved=7/30
+[timing] path=sse total=20628ms openai=14855ms parallel_block=5773ms tracks=11/7
+
+## 요약
+# 응답시간 평균 21.4s (20.6~22.6s), OpenAI 구간 14.3~16.1s
+# 수율 6~13곡 / 목표 20곡 (직전 아티스트 방식은 20/20)
+# 해석률 6~13/30 = 20~43% (같은 날 프로토타입 표본에서는 25/30 = 83%)

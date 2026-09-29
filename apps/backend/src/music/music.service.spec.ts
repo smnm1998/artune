@@ -22,6 +22,25 @@ const makeTrack = (
 
 const emptySeeds = (): ModeSeeds => ({ korea: [], pop: [], jpop: [] });
 
+// 각 지역 1시드 (유사곡은 각 테스트에서 getSimilarTracks 목으로 주입)
+const seedsPerRegion = (): ModeSeeds => ({
+  korea: [{ artist: 'KRseed', title: 'k' }],
+  pop: [{ artist: 'POPseed', title: 'p' }],
+  jpop: [{ artist: 'JPseed', title: 'j' }],
+});
+
+// artist 이름을 받아 고유 아티스트 유사곡 n개 생성하는 목 구현
+const similarFactory =
+  (n: number) =>
+  (artist: string) =>
+    Promise.resolve(
+      Array.from({ length: n }, (_, i) => ({
+        artist: `${artist}-s${i}`,
+        title: `t${i}`,
+        match: 0.9 - i * 0.001,
+      })),
+    );
+
 describe('MusicService', () => {
   let service: MusicService;
   let itunesService: jest.Mocked<ITunesService>;
@@ -31,7 +50,7 @@ describe('MusicService', () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         MusicService,
-        { provide: ITunesService, useValue: { resolveMany: jest.fn() } },
+        { provide: ITunesService, useValue: { resolveTrack: jest.fn() } },
         {
           provide: LastfmService,
           useValue: { getSimilarTracks: jest.fn().mockResolvedValue([]) },
@@ -49,105 +68,92 @@ describe('MusicService', () => {
   });
 
   describe('getRecommendations', () => {
-    it('빈 시드는 Last.fm 확장 없이 빈 결과를 반환한다.', async () => {
-      itunesService.resolveMany.mockResolvedValueOnce([]);
-
+    it('빈 시드는 iTunes 해석 없이 빈 결과를 반환한다.', async () => {
       const result = await service.getRecommendations(emptySeeds());
 
       expect(result).toEqual([]);
+      expect(itunesService.resolveTrack).not.toHaveBeenCalled();
       expect(lastfmService.getSimilarTracks).not.toHaveBeenCalled();
     });
 
     it('각 시드곡마다 Last.fm 유사곡을 조회한다.', async () => {
-      const seeds: ModeSeeds = {
-        korea: [{ artist: 'IU', title: 'Love wins all' }],
-        pop: [{ artist: 'Dua Lipa', title: 'Levitating' }],
-        jpop: [{ artist: 'YOASOBI', title: 'Idol' }],
-      };
-      itunesService.resolveMany.mockResolvedValueOnce([]);
+      itunesService.resolveTrack.mockResolvedValue(null);
 
-      await service.getRecommendations(seeds);
+      await service.getRecommendations(seedsPerRegion());
 
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
-        'IU',
-        'Love wins all',
-      );
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
-        'Dua Lipa',
-        'Levitating',
-      );
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
-        'YOASOBI',
-        'Idol',
-      );
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('KRseed', 'k');
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('POPseed', 'p');
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('JPseed', 'j');
       expect(lastfmService.getSimilarTracks).toHaveBeenCalledTimes(3);
     });
 
     it('지역 쿼터(6:3:1)로 최종 10곡을 구성한다.', async () => {
-      const resolved = [
-        ...Array.from({ length: 8 }, (_, i) => ({
-          item: { region: 'korea' as const, match: 1 - i * 0.01 },
-          track: makeTrack(i + 1, `KR ${i}`),
-        })),
-        ...Array.from({ length: 6 }, (_, i) => ({
-          item: { region: 'pop' as const, match: 1 - i * 0.01 },
-          track: makeTrack(100 + i, `POP ${i}`),
-        })),
-        ...Array.from({ length: 3 }, (_, i) => ({
-          item: { region: 'jpop' as const, match: 1 - i * 0.01 },
-          track: makeTrack(200 + i, `JP ${i}`),
-        })),
-      ];
-      itunesService.resolveMany.mockResolvedValueOnce(resolved);
+      lastfmService.getSimilarTracks.mockImplementation(similarFactory(10));
+      let id = 0;
+      itunesService.resolveTrack.mockImplementation(({ artist }) =>
+        Promise.resolve(makeTrack(++id, artist)),
+      );
 
-      const result = await service.getRecommendations(emptySeeds());
+      const result = await service.getRecommendations(seedsPerRegion());
 
       expect(result).toHaveLength(10);
     });
 
-    it('한 지역이 부족하면 다른 지역으로 보충해 10곡을 채운다 (곡 수 우선).', async () => {
-      // jpop 후보 0개 → korea/pop으로 보충
-      const resolved = [
-        ...Array.from({ length: 12 }, (_, i) => ({
-          item: { region: 'korea' as const, match: 1 - i * 0.01 },
-          track: makeTrack(i + 1, `KR ${i}`),
-        })),
-        ...Array.from({ length: 6 }, (_, i) => ({
-          item: { region: 'pop' as const, match: 1 - i * 0.01 },
-          track: makeTrack(100 + i, `POP ${i}`),
-        })),
-      ];
-      itunesService.resolveMany.mockResolvedValueOnce(resolved);
+    it('해석률이 좋으면 목표(NEED)에서 조기 종료해 후보 전부를 해석하지 않는다.', async () => {
+      // korea 시드 1개 + 유사곡 50개, 나머지 지역 없음
+      lastfmService.getSimilarTracks.mockImplementation(similarFactory(50));
+      let id = 0;
+      itunesService.resolveTrack.mockImplementation(({ artist }) =>
+        Promise.resolve(makeTrack(++id, artist)),
+      );
 
-      const result = await service.getRecommendations(emptySeeds());
+      await service.getRecommendations({
+        korea: [{ artist: 'K', title: 'k' }],
+        pop: [],
+        jpop: [],
+      });
+
+      // korea NEED=8, 배치 3 → 최대 9회에서 멈춤 (50개·CAP 12 전부 해석하지 않음)
+      expect(itunesService.resolveTrack.mock.calls.length).toBeLessThanOrEqual(9);
+    });
+
+    it('한 지역이 해석 실패로 비어도 타 지역으로 보충해 10곡을 채운다.', async () => {
+      lastfmService.getSimilarTracks.mockImplementation(similarFactory(15));
+      let id = 0;
+      // jpop 후보만 해석 실패(null)
+      itunesService.resolveTrack.mockImplementation(({ artist }) =>
+        Promise.resolve(artist.startsWith('JP') ? null : makeTrack(++id, artist)),
+      );
+
+      const result = await service.getRecommendations(seedsPerRegion());
 
       expect(result).toHaveLength(10);
     });
 
     it('같은 아티스트는 1곡만 포함한다.', async () => {
-      const resolved = [
-        {
-          item: { region: 'korea' as const, match: 1.0 },
-          track: makeTrack(1, 'IU'),
-        },
-        {
-          item: { region: 'korea' as const, match: 0.9 },
-          track: makeTrack(2, 'IU'),
-        },
-        {
-          item: { region: 'korea' as const, match: 0.8 },
-          track: makeTrack(3, 'IU'),
-        },
-        ...Array.from({ length: 10 }, (_, i) => ({
-          item: { region: 'korea' as const, match: 0.7 - i * 0.01 },
-          track: makeTrack(10 + i, `Unique ${i}`),
-        })),
-      ];
-      itunesService.resolveMany.mockResolvedValueOnce(resolved);
+      // 유사곡이 전부 동일 아티스트(SoloArtist)인 상황
+      lastfmService.getSimilarTracks.mockImplementation((artist: string) =>
+        Promise.resolve(
+          Array.from({ length: 10 }, (_, i) => ({
+            artist,
+            title: `t${i}`,
+            match: 0.9,
+          })),
+        ),
+      );
+      let id = 0;
+      itunesService.resolveTrack.mockImplementation(({ artist }) =>
+        Promise.resolve(makeTrack(++id, artist)),
+      );
 
-      const result = await service.getRecommendations(emptySeeds());
+      const result = await service.getRecommendations({
+        korea: [{ artist: 'SoloArtist', title: 'x' }],
+        pop: [],
+        jpop: [],
+      });
 
-      expect(result.filter((t) => t.artistName === 'IU')).toHaveLength(1);
+      expect(result.filter((t) => t.artistName === 'SoloArtist')).toHaveLength(1);
+      expect(result).toHaveLength(1);
     });
   });
 });

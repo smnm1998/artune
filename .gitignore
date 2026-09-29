@@ -39,4 +39,4 @@ yarn-error.log*
 *.pem
 
 # CLAUDE CODE
-CLAUDE.md
+.claude

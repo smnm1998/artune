@@ -4,6 +4,9 @@ import { ERROR_MESSAGES } from '@/constants/errorMessages';
 
 type Page = 'input' | 'loading' | 'result';
 
+// SSE 전체 제한 시간 (파이프라인 평균 ~10초의 여유분)
+const ANALYZE_TIMEOUT_MS = 60_000;
+
 interface AppState {
   currentPage: Page;
   isLoading: boolean;
@@ -33,6 +36,13 @@ const useAppStore = create<AppState>((set, get) => ({
   analyzeEmotion: async (text) => {
     get().abortController?.abort();
     const abortController = new AbortController();
+    const timeoutId = setTimeout(
+      () =>
+        abortController.abort(new DOMException('시간 초과', 'TimeoutError')),
+      ANALYZE_TIMEOUT_MS,
+    );
+    // 새 요청/reset 에 밀려났다면 false — 늦게 도착한 응답이 최신 상태를 덮어쓰는 것을 막는다
+    const isCurrent = () => get().abortController === abortController;
 
     // 1. 초기화 및 로딩 페이지로 전환
     set({
@@ -50,13 +60,16 @@ const useAppStore = create<AppState>((set, get) => ({
       const result = await analyzeEmotionWithProgress(
         text,
         (progress, message) => {
+          if (!isCurrent()) return;
           // 현재 progress보다 큰 값일 때만 업데이트 (Math.max 활용)
           set((state) => ({
             progress: Math.max(state.progress, progress), // 진행률 역행 방지
             loadingMessage: message || state.loadingMessage,
           }));
         },
+        abortController.signal,
       );
+      if (!isCurrent()) return;
 
       // 3. 완료
       set({
@@ -67,29 +80,38 @@ const useAppStore = create<AppState>((set, get) => ({
       });
       // 페이지 전환은 Loading 컴포넌트의 애니메이션 완료 후 onComplete에서 처리
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+      // 밀려난(교체·reset) 요청의 에러는 무시. 단, 타임아웃은 현재 요청의 실패이므로 아래로 진행
+      if (!isCurrent()) return;
+      const timedOut = abortController.signal.reason?.name === 'TimeoutError';
       set({
-        error:
-          err instanceof Error
+        error: timedOut
+          ? ERROR_MESSAGES.TIMEOUT_ERROR
+          : err instanceof Error
             ? err.message
             : ERROR_MESSAGES.EMOTION_ANALYSIS_FAILED,
         progress: 0,
         isLoading: false,
         currentPage: 'input',
       });
+    } finally {
+      clearTimeout(timeoutId);
     }
   },
 
   clearError: () => set({ error: null }),
 
-  reset: () =>
+  reset: () => {
+    get().abortController?.abort();
     set({
       currentPage: 'input',
       isLoading: false,
       progress: 0,
+      loadingMessage: '',
       emotionResult: null,
       error: null,
-    }),
+      abortController: null,
+    });
+  },
 }));
 
 export default useAppStore;

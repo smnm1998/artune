@@ -85,23 +85,6 @@ export const albumCoverStyle = css`
   }
 `;
 
-// 앨범 텍스트 정보 스타일 생략 (기존 유지)
-export const albumNameStyle = css`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${colors.text.primary};
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 12px;
-  }
-`;
-
 export const artistNameStyle = css`
   font-size: 12px;
   font-weight: 400;

@@ -63,34 +63,6 @@ export class LastfmService {
     return tracks;
   }
 
-  /**
-   * 무드 태그(예: "aggresive", "chill")로 인기곡 조회
-   */
-  async getTagTopTracks(tag: string, limit = 30): Promise<SimilarTrack[]> {
-    const bucket = this.getCurrentBucket();
-    const cacheKey = `last-fm-tag:${tag}:${bucket}`;
-
-    const cached = await this.cacheManager.get<SimilarTrack[]>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.call('tag.getTopTracks', {
-      tag,
-      limit: String(limit),
-    });
-
-    const raw = data?.tracks?.track ?? [];
-    const tracks: SimilarTrack[] = raw
-      .filter((t: any) => t?.name && t?.artist?.name)
-      .map((t: any) => ({
-        artist: t.artist.name,
-        title: t.name,
-        match: 0, // 태그 조회는 match 없음 (인기순)
-      }));
-
-    await this.cacheManager.set(cacheKey, tracks);
-    return tracks;
-  }
-
   private async call(
     method: string,
     params: Record<string, string>,

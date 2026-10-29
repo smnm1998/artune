@@ -1,4 +1,3 @@
-import { deduplicateByTrackId } from '../music/utils/track-filter.util';
 import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ITunesTrack } from './itunes-track.type';
@@ -22,97 +21,8 @@ export class ITunesService {
   static readonly BASE_URL = 'https://itunes.apple.com/search';
   static readonly COUNTRIES = ['kr', 'us', 'jp'] as const;
   private readonly BUCKET_HOURS = 6;
-  private readonly CONCURRENCY = 3;
-  private readonly BATCH_DELAY_MS = 300;
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
-
-  /**
-   * 아티스트 1명의 top track 조회 (캐시 적용)
-   * 국가 순회: kr → us → jp (첫 hit에서 종료)
-   */
-  async getArtistTopTracks(
-    artistName: string,
-    limit = 3,
-  ): Promise<ITunesTrack[]> {
-    const bucket = this.getCurrentBucket();
-    const cacheKey = `artist-tracks:${artistName}:${bucket}`;
-
-    const cached = await this.cacheManager.get<ITunesTrack[]>(cacheKey);
-    if (cached) return cached;
-
-    let sawTransientFailure = false;
-
-    for (const country of ITunesService.COUNTRIES) {
-      const result = await this.fetchByArtist(artistName, limit, country);
-
-      if (result.status === 'ok') {
-        await this.cacheManager.set(cacheKey, result.tracks);
-        return result.tracks;
-      }
-
-      // rate limit 상태에선 남은 국가 폴백이 호출만 증폭 - 즉시 중단
-      if (result.status === 'throttled') return [];
-      if (result.status === 'error') sawTransientFailure = true;
-    }
-
-    // 3개국 모두 '정상 응답 + 결과 없음'일 때만 빈 결과 캐시
-    if (!sawTransientFailure) {
-      await this.cacheManager.set(cacheKey, []);
-    }
-    return [];
-  }
-
-  /**
-   * 다수 아티스트의 트랙 일괄 조회 (rate limit 고려한 throttled batch)
-   */
-  async getTracksForArtists(artists: string[]): Promise<ITunesTrack[]> {
-    const results: ITunesTrack[][] = [];
-
-    for (let i = 0; i < artists.length; i += this.CONCURRENCY) {
-      const batch = artists.slice(i, i + this.CONCURRENCY);
-      const batchResults = await Promise.all(
-        batch.map((artist) => this.getArtistTopTracks(artist)),
-      );
-      results.push(...batchResults);
-
-      if (i + this.CONCURRENCY < artists.length) {
-        await this.delay(this.BATCH_DELAY_MS);
-      }
-    }
-
-    return deduplicateByTrackId(results.flat());
-  }
-
-  /**
-   * 다수 항목을 병렬 배치로 해석하되, 각 항목의 메타데이터(region/match 등)를 보존한다.
-   * @param items 해석할 항목들
-   * @param toQuery 항목 → (artist, title) 추출 함수
-   * @returns 해석 성공한 { item, track } 쌍만 (실패분 제외)
-   */
-  async resolveMany<T>(
-    items: T[],
-    toQuery: (item: T) => TrackQuery,
-  ): Promise<Array<{ item: T; track: ITunesTrack }>> {
-    const out: Array<{ item: T; track: ITunesTrack }> = [];
-
-    for (let i = 0; i < items.length; i += this.CONCURRENCY) {
-      const batch = items.slice(i, i + this.CONCURRENCY);
-      const tracks = await Promise.all(
-        batch.map((item) => this.resolveTrack(toQuery(item))),
-      );
-      batch.forEach((item, j) => {
-        const track = tracks[j];
-        if (track) out.push({ item, track });
-      });
-
-      if (i + this.CONCURRENCY < items.length) {
-        await this.delay(this.BATCH_DELAY_MS);
-      }
-    }
-
-    return out;
-  }
 
   /**
    * LLM이 지정한 (아티스트, 곡) 쌍을 iTunes 재생 가능 트랙으로 해석
@@ -172,21 +82,6 @@ export class ITunesService {
     });
   }
 
-  private async fetchByArtist(
-    artist: string,
-    limit: number,
-    country: string,
-  ): Promise<FetchResult> {
-    return this.fetchTracks({
-      term: artist,
-      attribute: 'artistTerm',
-      media: 'music',
-      entity: 'song',
-      limit,
-      country,
-    });
-  }
-
   private async fetchTracks(
     params: Record<string, string | number>,
   ): Promise<FetchResult> {
@@ -241,9 +136,5 @@ export class ITunesService {
 
   private getCurrentBucket(): number {
     return Math.floor(Date.now() / (this.BUCKET_HOURS * 60 * 60 * 1000));
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

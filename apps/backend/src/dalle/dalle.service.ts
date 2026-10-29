@@ -1,17 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
 
 @Injectable()
 export class DalleService {
-  private readonly apiKey: string;
-  private readonly apiUrl: string;
-
-  constructor(private readonly configService: ConfigService) {
-    this.apiKey = configService.getOrThrow('OPENAI_API_KEY');
-    this.apiUrl = 'https://api.openai.com/v1/images/generations';
-  }
-
   /**
    * 감정과 장르 정보를 기반으로 디저트 이미지를 생성합니다.
    *
@@ -55,32 +45,6 @@ export class DalleService {
       imageUrl: imageUrl,
       prompt: prompt,
     };
-
-    // try {
-    //   // DALL-E API
-    //   const response = await axios.post(
-    //     this.apiUrl,
-    //     {
-    //       model: 'dall-e-2',
-    //       prompt: prompt,
-    //       n: 1,
-    //       size: '1024x1024',
-    //     },
-    //     {
-    //       headers: {
-    //         Authorization: `Bearer ${this.apiKey}`,
-    //         'Content-Type': 'application/json',
-    //       },
-    //     },
-    //   );
-
-    //   return {
-    //     imageUrl: response.data.data[0].url,
-    //     prompt: prompt,
-    //   };
-    // } catch (error) {
-    //   throw new Error(`DALL-E 이미지 생성 실패: ${error.message}`);
-    // }
   }
 
   /**

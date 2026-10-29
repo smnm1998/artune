@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { DalleService } from './dalle.service';
 
 describe('DalleService', () => {
@@ -9,12 +8,6 @@ describe('DalleService', () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         DalleService,
-        {
-          provide: ConfigService,
-          useValue: {
-            getOrThrow: jest.fn(() => 'test-api-key'),
-          },
-        },
       ],
     }).compile();
 

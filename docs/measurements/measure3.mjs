@@ -10,7 +10,9 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 for (let i = 0; i < texts.length; i++) {
   const url = `${BASE}/api/emotion/analyze-stream?text=${encodeURIComponent(texts[i])}`;
   const t0 = performance.now();
-  process.stdout.write(`[${new Date().toTimeString().slice(0, 8)}] SSE: ${texts[i]}\n`);
+  process.stdout.write(
+    `[${new Date().toTimeString().slice(0, 8)}] SSE: ${texts[i]}\n`,
+  );
 
   const res = await fetch(url, { signal: AbortSignal.timeout(120000) });
   const progressLog = [];
@@ -30,8 +32,12 @@ for (let i = 0; i < texts.length; i++) {
     }
   }
   const wall = ((performance.now() - t0) / 1000).toFixed(2);
-  const monotonic = progressLog.every((p, j) => j === 0 || p >= progressLog[j - 1]);
-  console.log(`  client_total=${wall}s progress=[${progressLog.join(',')}] monotonic=${monotonic}`);
+  const monotonic = progressLog.every(
+    (p, j) => j === 0 || p >= progressLog[j - 1],
+  );
+  console.log(
+    `  client_total=${wall}s progress=[${progressLog.join(',')}] monotonic=${monotonic}`,
+  );
 
   if (i < texts.length - 1) await delay(60000);
 }

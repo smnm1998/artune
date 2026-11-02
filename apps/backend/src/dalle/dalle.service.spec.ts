@@ -6,9 +6,7 @@ describe('DalleService', () => {
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
-      providers: [
-        DalleService,
-      ],
+      providers: [DalleService],
     }).compile();
 
     service = moduleRef.get(DalleService);
@@ -34,11 +32,9 @@ describe('DalleService', () => {
     });
 
     it('매핑에 없는 감정은 플레이스홀더 이미지를 반환해야 한다.', async () => {
-      const result = await service.generateDessertImage(
-        'unknown',
-        '알수없음',
-        ['pop'],
-      );
+      const result = await service.generateDessertImage('unknown', '알수없음', [
+        'pop',
+      ]);
 
       expect(result.imageUrl).toContain('placeholder');
     });
@@ -69,11 +65,9 @@ describe('DalleService', () => {
       expect(joyResult.prompt).toMatch(/bright|colorful|sweet/i);
 
       // 슬픔 → warm/comfort/soft 계열
-      const sadResult = await service.generateDessertImage(
-        'sadness',
-        '슬픔',
-        ['ballad'],
-      );
+      const sadResult = await service.generateDessertImage('sadness', '슬픔', [
+        'ballad',
+      ]);
       expect(sadResult.prompt).toMatch(/warm|comfort|soft/i);
 
       // 스타일 미정의 감정 → 기본 스타일

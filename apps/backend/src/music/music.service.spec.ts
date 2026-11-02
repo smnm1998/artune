@@ -30,16 +30,14 @@ const seedsPerRegion = (): ModeSeeds => ({
 });
 
 // artist 이름을 받아 고유 아티스트 유사곡 n개 생성하는 목 구현
-const similarFactory =
-  (n: number) =>
-  (artist: string) =>
-    Promise.resolve(
-      Array.from({ length: n }, (_, i) => ({
-        artist: `${artist}-s${i}`,
-        title: `t${i}`,
-        match: 0.9 - i * 0.001,
-      })),
-    );
+const similarFactory = (n: number) => (artist: string) =>
+  Promise.resolve(
+    Array.from({ length: n }, (_, i) => ({
+      artist: `${artist}-s${i}`,
+      title: `t${i}`,
+      match: 0.9 - i * 0.001,
+    })),
+  );
 
 describe('MusicService', () => {
   let service: MusicService;
@@ -81,9 +79,18 @@ describe('MusicService', () => {
 
       await service.getRecommendations(seedsPerRegion());
 
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('KRseed', 'k');
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('POPseed', 'p');
-      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith('JPseed', 'j');
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
+        'KRseed',
+        'k',
+      );
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
+        'POPseed',
+        'p',
+      );
+      expect(lastfmService.getSimilarTracks).toHaveBeenCalledWith(
+        'JPseed',
+        'j',
+      );
       expect(lastfmService.getSimilarTracks).toHaveBeenCalledTimes(3);
     });
 
@@ -114,7 +121,9 @@ describe('MusicService', () => {
       });
 
       // korea NEED=8, 배치 3 → 최대 9회에서 멈춤 (50개·CAP 12 전부 해석하지 않음)
-      expect(itunesService.resolveTrack.mock.calls.length).toBeLessThanOrEqual(9);
+      expect(itunesService.resolveTrack.mock.calls.length).toBeLessThanOrEqual(
+        9,
+      );
     });
 
     it('한 지역이 해석 실패로 비어도 타 지역으로 보충해 10곡을 채운다.', async () => {
@@ -122,7 +131,9 @@ describe('MusicService', () => {
       let id = 0;
       // jpop 후보만 해석 실패(null)
       itunesService.resolveTrack.mockImplementation(({ artist }) =>
-        Promise.resolve(artist.startsWith('JP') ? null : makeTrack(++id, artist)),
+        Promise.resolve(
+          artist.startsWith('JP') ? null : makeTrack(++id, artist),
+        ),
       );
 
       const result = await service.getRecommendations(seedsPerRegion());
@@ -152,7 +163,9 @@ describe('MusicService', () => {
         jpop: [],
       });
 
-      expect(result.filter((t) => t.artistName === 'SoloArtist')).toHaveLength(1);
+      expect(result.filter((t) => t.artistName === 'SoloArtist')).toHaveLength(
+        1,
+      );
       expect(result).toHaveLength(1);
     });
   });

@@ -145,7 +145,9 @@ describe('EmotionController', () => {
         'string rejection',
       );
 
-      const { events } = await collectStream(controller.analyzeStream('테스트'));
+      const { events } = await collectStream(
+        controller.analyzeStream('테스트'),
+      );
 
       expect(events).toEqual([
         {

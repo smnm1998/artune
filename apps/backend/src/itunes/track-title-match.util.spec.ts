@@ -23,9 +23,9 @@ describe('titleMatches', () => {
   });
 
   it('feat 표기가 달라도 매칭한다', () => {
-    expect(titleMatches('Born Hater', 'BORN HATER (feat. B.I, BOBBY & MINO)')).toBe(
-      true,
-    );
+    expect(
+      titleMatches('Born Hater', 'BORN HATER (feat. B.I, BOBBY & MINO)'),
+    ).toBe(true);
   });
 
   it('한글 곡명도 매칭한다', () => {

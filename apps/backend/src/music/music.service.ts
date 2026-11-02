@@ -65,7 +65,11 @@ export class MusicService {
       const pool = [...byRegion[region]]
         .sort((a, b) => b.match - a.match)
         .slice(0, this.RESOLVE_CAP[region]);
-      const r = await this.resolveUntil(pool, region, this.RESOLVE_NEED[region]);
+      const r = await this.resolveUntil(
+        pool,
+        region,
+        this.RESOLVE_NEED[region],
+      );
       regioned.push(...r.resolved);
       tried += r.tried;
     }

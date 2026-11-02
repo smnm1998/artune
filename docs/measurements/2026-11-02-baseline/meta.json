@@ -1,0 +1,60 @@
+{
+  "label": "baseline",
+  "status": "done",
+  "startedAt": "2026-11-02T08:45:11.831Z",
+  "endedAt": "2026-11-02T09:52:02.288Z",
+  "git": {
+    "head": "56dd4dd",
+    "dirty": false,
+    "dirtyFiles": [],
+    "appCode": {
+      "baseline": "e4cda32",
+      "same": true
+    }
+  },
+  "node": "v22.23.4",
+  "harness": {
+    "interval": 120,
+    "seed": 20261102,
+    "mock": false,
+    "limit": null,
+    "runs": 32,
+    "order": [
+      "context-sarcasm#1",
+      "neutral-clear#1",
+      "fear-ambig#1",
+      "dreamy-clear#1",
+      "neutral-ambig#1",
+      "excited-clear#1",
+      "lonely-clear#1",
+      "surprise-clear#1",
+      "joy-clear#1",
+      "lonely-ambig#1",
+      "sadness-ambig#1",
+      "confident-clear#1",
+      "excited-ambig#1",
+      "context-resigned#1",
+      "dreamy-ambig#1",
+      "joy-ambig#1",
+      "fear-clear#1",
+      "romance-ambig#1",
+      "romance-clear#1",
+      "confident-ambig#1",
+      "sentimental-ambig#1",
+      "anger-ambig#1",
+      "surprise-ambig#1",
+      "anger-clear#1",
+      "sentimental-clear#1",
+      "sadness-clear#1",
+      "lonely-clear#2",
+      "joy-clear#2",
+      "romance-clear#2",
+      "neutral-clear#2",
+      "anger-clear#2",
+      "sadness-clear#2"
+    ]
+  },
+  "models": [
+    "gpt-4.1-mini"
+  ]
+}

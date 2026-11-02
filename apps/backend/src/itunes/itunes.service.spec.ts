@@ -59,7 +59,7 @@ describe('ITunesService', () => {
       expect(result).toEqual(target);
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
       expect(cacheManager.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^resolve:System of a Down:Toxicity:\d+$/),
+        'resolve:System of a Down:Toxicity',
         target,
       );
     });
@@ -90,7 +90,7 @@ describe('ITunesService', () => {
       expect(result).toBeNull();
       // 3개국 모두 불일치 → null 확정 캐시
       expect(cacheManager.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^resolve:이센스:불꽃:\d+$/),
+        'resolve:이센스:불꽃',
         null,
       );
     });
@@ -135,5 +135,48 @@ describe('ITunesService', () => {
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
       expect(cacheManager.set).not.toHaveBeenCalled();
     });
+  });
+
+  describe('품질 필터', () => {
+    // filterQualityTracks 는 private 이라 resolveTrack 경유로 검증한다
+    const resolveWith = (overrides: Partial<ITunesTrack>) => {
+      const track = makeTrack(overrides);
+      mockedAxios.get.mockResolvedValue({ data: { results: [track] } });
+      return service.resolveTrack({ artist: 'A', title: track.trackName });
+    };
+
+    it.each([
+      {
+        name: 'Discovery',
+        overrides: { trackName: 'One More Time', collectionName: 'Discovery' },
+      },
+      {
+        name: 'Recovery',
+        overrides: { trackName: 'Lose Yourself', collectionName: 'Recovery' },
+      },
+      { name: 'The Greatest', overrides: { trackName: 'The Greatest' } },
+      { name: 'Undercover', overrides: { trackName: 'Undercover Martyn' } },
+      { name: 'Whitsunday', overrides: { trackName: 'Whitsunday' } },
+    ])(
+      '블랙리스트 단어가 다른 단어의 일부일 뿐이면 통과시킨다: $name',
+      async ({ overrides }) => {
+        expect(await resolveWith(overrides)).not.toBeNull();
+      },
+    );
+
+    it.each([
+      { name: 'cover', overrides: { collectionName: 'Cover Songs' } },
+      { name: 'karaoke', overrides: { trackName: 'Hello (Karaoke Version)' } },
+      { name: 'hits', overrides: { collectionName: 'Greatest Hits' } },
+      { name: 'best of', overrides: { collectionName: 'The Best Of IU' } },
+      { name: 'tribute', overrides: { collectionName: 'Tribute to Queen' } },
+      { name: 'sleep sounds', overrides: { collectionName: 'Sleep Sounds' } },
+      { name: 'previewUrl 없음', overrides: { previewUrl: null } },
+    ])(
+      '블랙리스트 단어·미리듣기 없음은 걸러낸다: $name',
+      async ({ overrides }) => {
+        expect(await resolveWith(overrides)).toBeNull();
+      },
+    );
   });
 });

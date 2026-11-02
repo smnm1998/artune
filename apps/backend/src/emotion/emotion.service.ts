@@ -96,58 +96,12 @@ export class EmotionService {
   }
 
   /**
+   * SSE 경로(analyzeAndRecommendWithProgress)와 같은 파이프라인을 진행률 콜백 없이 실행한다.
+   * 구현을 하나로 두어 두 경로의 동작이 어긋나지 않게 한다.
    * @throws {BadRequestException} 빈 텍스트가 입력된 경우
-   *
-   * 흐름:
-   * 1. OpenAI로 감정 분석 - {emotion, emotionLabel, immerse, soothe}
-   * 2. iTunes API로 음악 추천 (immerse, soothe 병렬)
-   * 3. DALLE로 디저트 이미지 생성
-   * 4. 프론트엔드 형식으로 변환하여 반환
    */
   async analyzeAndRecommend(text) {
-    if (!text || text.trim() === '') {
-      throw new BadRequestException('분석할 텍스트가 필요합니다.');
-    }
-
-    const t0 = Date.now();
-
-    // 1. OpenAI로 감정 분석
-    const emotion = await this.openAIService.analyzeEmotion(text);
-    const tOpenAI = Date.now();
-
-    // 2. 음악 추천 - immerse (병렬 처리)
-    const [immerseRecommendations, sootheRecommendations, dessertImage] =
-      await Promise.all([
-        this.musicService.getRecommendations(emotion.immerse.seeds, 'immerse'),
-        this.musicService.getRecommendations(emotion.soothe.seeds, 'soothe'),
-
-        // DALLE 디저트 이미지
-        this.dalleService.generateDessertImage(
-          emotion.emotion,
-          emotion.emotionLabel,
-          emotion.immerse.genres,
-        ),
-      ]);
-    const tEnd = Date.now();
-
-    this.logger.log(
-      `[timing] path=parallel total=${tEnd - t0}ms ` +
-        `openai=${tOpenAI - t0}ms parallel_block=${tEnd - tOpenAI}ms ` +
-        `tracks=${immerseRecommendations.length}/${sootheRecommendations.length}`,
-    );
-    this.logModeSeparation(
-      emotion,
-      immerseRecommendations,
-      sootheRecommendations,
-    );
-
-    // 3. 프론트엔드 형식으로 변환
-    return this.buildResponse(
-      emotion,
-      immerseRecommendations,
-      sootheRecommendations,
-      dessertImage,
-    );
+    return this.analyzeAndRecommendWithProgress(text, () => {});
   }
 
   /**
@@ -216,7 +170,7 @@ export class EmotionService {
     const tEnd = Date.now();
 
     this.logger.log(
-      `[timing] path=sse total=${tEnd - t0}ms ` +
+      `[timing] total=${tEnd - t0}ms ` +
         `openai=${tOpenAI - t0}ms ` +
         `parallel_block=${tEnd - tOpenAI}ms ` +
         `tracks=${immerseRecommendations.length}/${sootheRecommendations.length}`,

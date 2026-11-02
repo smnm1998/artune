@@ -20,7 +20,25 @@ export interface TrackQuery {
 export class ITunesService {
   static readonly BASE_URL = 'https://itunes.apple.com/search';
   static readonly COUNTRIES = ['kr', 'us', 'jp'] as const;
-  private readonly BUCKET_HOURS = 6;
+  // 부분 문자열이 아니라 '단어' 단위로 매칭한다 (cover가 Discovery·Recovery·Undercover를 막지 않도록).
+  // greatest는 정상 곡명('The Greatest')을 막아 뺐다 — 'Greatest Hits' 앨범은 hits로 걸러진다.
+  // g 플래그를 쓰지 않으므로 test()를 재사용해도 lastIndex 상태가 남지 않는다.
+  private static readonly BLOCKED_PATTERNS = [
+    'playlist',
+    'compilation',
+    'various artists',
+    'karaoke',
+    'tribute',
+    'cover',
+    'best of',
+    '100 songs',
+    'hits',
+    'originally performed by',
+    'in the style of',
+    'workout',
+    'sleep sounds',
+    'meditation',
+  ].map((word) => new RegExp(`\\b${word}\\b`, 'i'));
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
@@ -33,8 +51,7 @@ export class ITunesService {
     artist,
     title,
   }: TrackQuery): Promise<ITunesTrack | null> {
-    const bucket = this.getCurrentBucket();
-    const cacheKey = `resolve:${artist}:${title}:${bucket}`;
+    const cacheKey = `resolve:${artist}:${title}`;
 
     const cached = await this.cacheManager.get<ITunesTrack | null>(cacheKey);
     if (cached !== undefined) return cached;
@@ -105,36 +122,15 @@ export class ITunesService {
   }
 
   private filterQualityTracks(tracks: ITunesTrack[]): ITunesTrack[] {
-    const blacklist = [
-      'playlist',
-      'compilation',
-      'various artists',
-      'karaoke',
-      'tribute',
-      'cover',
-      'best of',
-      '100 songs',
-      'hits',
-      'greatest',
-      'karaoke version',
-      'originally performed by',
-      'in the style of',
-      'workout',
-      'sleep sounds',
-      'meditation',
-    ];
-    return tracks.filter((track) => {
-      const albumName = track.collectionName?.toLowerCase() ?? '';
-      const trackName = track.trackName?.toLowerCase() ?? '';
-      return (
-        !blacklist.some(
-          (word) => albumName.includes(word) || trackName.includes(word),
-        ) && track.previewUrl != null
-      );
-    });
-  }
+    const isBlocked = (text?: string) =>
+      text != null &&
+      ITunesService.BLOCKED_PATTERNS.some((pattern) => pattern.test(text));
 
-  private getCurrentBucket(): number {
-    return Math.floor(Date.now() / (this.BUCKET_HOURS * 60 * 60 * 1000));
+    return tracks.filter(
+      (track) =>
+        track.previewUrl != null &&
+        !isBlocked(track.collectionName) &&
+        !isBlocked(track.trackName),
+    );
   }
 }

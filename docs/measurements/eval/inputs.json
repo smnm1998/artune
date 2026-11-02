@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "description": "추천 재설계 전후 비교용 평가 입력. 12감정 × (명확 1 + 애매 1) + 문맥 함정 2. expected 는 정답으로 인정할 감정 목록, repeat=true 는 반복도 측정을 위해 2회 실행.",
+  "inputs": [
+    {
+      "id": "joy-clear",
+      "kind": "clear",
+      "expected": ["joy"],
+      "repeat": true,
+      "text": "드디어 최종 합격 문자 받았어!! 오늘은 뭘 해도 웃음이 나와"
+    },
+    {
+      "id": "joy-ambig",
+      "kind": "ambiguous",
+      "expected": ["joy", "neutral"],
+      "why": "들뜬 기쁨이 아니라 잔잔한 만족",
+      "text": "별일 없었는데 하루가 무난하게 잘 풀려서 기분이 좋다"
+    },
+
+    {
+      "id": "sadness-clear",
+      "kind": "clear",
+      "expected": ["sadness"],
+      "repeat": true,
+      "text": "오래 키운 강아지가 오늘 무지개다리를 건넜어. 아무것도 손에 안 잡혀"
+    },
+    {
+      "id": "sadness-ambig",
+      "kind": "ambiguous",
+      "expected": ["sadness", "lonely"],
+      "why": "슬픔과 혼자 견디는 외로움이 겹침",
+      "text": "괜찮은 척 출근했는데 화장실에서 갑자기 눈물이 났어"
+    },
+
+    {
+      "id": "anger-clear",
+      "kind": "clear",
+      "expected": ["anger"],
+      "repeat": true,
+      "text": "팀플에서 나만 일했는데 발표 때 다른 애가 자기가 다 한 것처럼 말했어. 진짜 열받아"
+    },
+    {
+      "id": "anger-ambig",
+      "kind": "ambiguous",
+      "expected": ["anger", "sadness"],
+      "why": "짜증에 무력감이 섞임",
+      "text": "택배가 또 분실됐대. 짜증 나는데 따질 힘도 없다"
+    },
+
+    {
+      "id": "fear-clear",
+      "kind": "clear",
+      "expected": ["fear"],
+      "text": "내일 건강검진 결과 나오는 날인데 자꾸 안 좋은 생각만 들어서 잠이 안 와"
+    },
+    {
+      "id": "fear-ambig",
+      "kind": "ambiguous",
+      "expected": ["fear", "excited"],
+      "why": "불안과 기대가 섞인 긴장",
+      "text": "다음 달부터 새 회사 출근인데 잘할 수 있을지 모르겠어"
+    },
+
+    {
+      "id": "surprise-clear",
+      "kind": "clear",
+      "expected": ["surprise"],
+      "text": "10년 동안 연락 없던 친구한테서 갑자기 결혼한다는 전화가 왔어 ㅋㅋ 이게 무슨 일이야"
+    },
+    {
+      "id": "surprise-ambig",
+      "kind": "ambiguous",
+      "expected": ["surprise", "joy"],
+      "why": "놀람과 기쁨이 동시에",
+      "text": "출근했더니 내 자리에 생일 케이크가 있었어. 아무도 모를 줄 알았는데"
+    },
+
+    {
+      "id": "neutral-clear",
+      "kind": "clear",
+      "expected": ["neutral"],
+      "repeat": true,
+      "text": "오늘은 그냥 평범한 하루였어. 일하고 밥 먹고 이제 쉬는 중"
+    },
+    {
+      "id": "neutral-ambig",
+      "kind": "ambiguous",
+      "expected": ["neutral", "sadness"],
+      "why": "짧고 정보가 적은 입력 — 피로를 슬픔으로 과해석하는지 확인",
+      "text": "피곤하다 진짜"
+    },
+
+    {
+      "id": "sentimental-clear",
+      "kind": "clear",
+      "expected": ["sentimental"],
+      "text": "옛날 사진첩 정리하다가 고등학교 때 친구들 사진을 봤는데 그때가 너무 그립다"
+    },
+    {
+      "id": "sentimental-ambig",
+      "kind": "ambiguous",
+      "expected": ["sentimental", "romance", "lonely"],
+      "why": "그리움의 대상이 불분명",
+      "text": "첫눈 오는 거 보니까 작년 이맘때 생각이 나네"
+    },
+
+    {
+      "id": "excited-clear",
+      "kind": "clear",
+      "expected": ["excited"],
+      "text": "다음 주에 처음으로 해외여행 간다!! 벌써 짐 싸고 있어 ㅋㅋ"
+    },
+    {
+      "id": "excited-ambig",
+      "kind": "ambiguous",
+      "expected": ["excited", "joy"],
+      "why": "들뜸과 기쁨의 경계",
+      "text": "콘서트 티켓팅 성공했는데 떨려서 잠이 안 와"
+    },
+
+    {
+      "id": "lonely-clear",
+      "kind": "clear",
+      "expected": ["lonely"],
+      "repeat": true,
+      "text": "자취한 지 3년째인데 오늘따라 불 꺼진 방에 들어오는 게 너무 쓸쓸하다"
+    },
+    {
+      "id": "lonely-ambig",
+      "kind": "ambiguous",
+      "expected": ["lonely", "sadness"],
+      "why": "소외감과 서운함",
+      "text": "다들 단톡방에서 약속 잡는데 나만 아무도 안 불러줬네"
+    },
+
+    {
+      "id": "dreamy-clear",
+      "kind": "clear",
+      "expected": ["dreamy"],
+      "text": "새벽 3시, 창밖에 가로등만 켜져 있고 모든 게 꿈속 같아"
+    },
+    {
+      "id": "dreamy-ambig",
+      "kind": "ambiguous",
+      "expected": ["dreamy", "sentimental", "neutral"],
+      "why": "멍한 상태 — 몽환·아련함·평온 어느 쪽으로도 읽힘",
+      "text": "비 오는 날 카페 창가에 앉아서 멍하니 있는 중"
+    },
+
+    {
+      "id": "confident-clear",
+      "kind": "clear",
+      "expected": ["confident"],
+      "text": "6개월 준비한 발표를 오늘 완벽하게 해냈어. 이제 뭐든 할 수 있을 것 같아"
+    },
+    {
+      "id": "confident-ambig",
+      "kind": "ambiguous",
+      "expected": ["confident", "joy"],
+      "why": "자신감과 소소한 기쁨",
+      "text": "헬스 3개월 차, 거울 보는 게 좀 즐거워졌어"
+    },
+
+    {
+      "id": "romance-clear",
+      "kind": "clear",
+      "expected": ["romance"],
+      "repeat": true,
+      "text": "좋아하는 사람이 먼저 같이 영화 보자고 했어. 심장 터질 것 같아"
+    },
+    {
+      "id": "romance-ambig",
+      "kind": "ambiguous",
+      "expected": ["romance", "dreamy"],
+      "why": "설렘이 몽환적으로 이어짐",
+      "text": "오늘 그 사람이랑 우연히 눈이 마주쳤는데 하루 종일 그 장면만 생각나"
+    },
+
+    {
+      "id": "context-sarcasm",
+      "kind": "context",
+      "expected": ["sadness", "anger"],
+      "why": "웃음 표기(ㅋㅋ)가 있지만 비꼼 — 표면 단서가 아니라 문맥으로 판단하는지",
+      "text": "ㅋㅋ 나만 빼고 다 붙었네 진짜 웃기다"
+    },
+    {
+      "id": "context-resigned",
+      "kind": "context",
+      "expected": ["sadness", "neutral"],
+      "why": "웃음 표기(ㅎㅎ)가 있지만 체념 — 표면 단서가 아니라 문맥으로 판단하는지",
+      "text": "ㅎㅎ 괜찮아 이제 다 끝났으니까"
+    }
+  ]
+}

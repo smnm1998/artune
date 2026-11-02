@@ -71,7 +71,9 @@ describe('ITunesService', () => {
 
       await service.resolveTrack({ artist: 'SOAD', title: 'Toxicity' });
 
-      const params = mockedAxios.get.mock.calls[0][1]?.params;
+      // axios 1.21부터 params가 제네릭 타입이라 mock 호출 기록에선 unknown으로 추론된다
+      const [, config] = mockedAxios.get.mock.calls[0];
+      const params = config?.params as Record<string, unknown>;
       expect(params.term).toBe('SOAD Toxicity');
       expect(params.attribute).toBeUndefined();
     });

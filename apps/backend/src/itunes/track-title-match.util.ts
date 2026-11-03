@@ -1,12 +1,10 @@
 /**
  * LLM이 지정한 곡명과 iTunes가 반환한 곡명의 일치 여부 판정
  *
- * 왜 곡명 기반인가 (실측 근거):
- * - iTunes KR 스토어는 서양 아티스트를 한글 음차명으로 반환 (Bill Evans → 빌 에반스,
- *   류이치 사카모토 → 사카모토 류이치). 아티스트명으로 검증하면 오탐이 대량 발생.
- * - 곡명은 대부분 원어/영문 그대로라 검증 신호로 더 안정적.
  * - iTunes는 곡을 못 찾으면 빈 결과가 아니라 엉뚱한 곡을 반환(조용한 실패)하므로,
  *   반환 곡명을 반드시 대조해 폐기해야 함.
+ * - 스토어마다 곡명이 현지화된다(US 'Through the Night' ↔ KR '밤편지').
+ *   호출부(track-select.util)가 US·KR·JP 표기를 모두 대조한다.
  */
 export function normalizeTitle(value: string): string {
   return (value ?? '')
@@ -21,12 +19,9 @@ export function titleMatches(requested: string, returned: string): boolean {
   const g = normalizeTitle(returned);
   if (!r || !g) return false;
 
-  // 완전 포함 (버전 표기 차이 흡수: "Toxicity" ⊂ "Toxicity (Live)")
-  if (g.includes(r) || r.includes(g)) return true;
-
-  // 앞부분 일치 (짧은 쪽 기준 70% 접두 일치, 최소 4자)
   const [short, long] = r.length <= g.length ? [r, g] : [g, r];
-  if (short.length < 4) return false;
-  const prefixLen = Math.max(4, Math.floor(short.length * 0.7));
-  return long.startsWith(short.slice(0, prefixLen));
+  // 앞부분 일치: 버전·부제 표기 차이 흡수 ("Toxicity" ⊂ "Toxicity (Live)", "괴짜" ⊂ "괴짜 (Freak)")
+  if (long.startsWith(short)) return true;
+  // 중간 포함은 절반 이상 겹칠 때만: 긴 곡명 속 짧은 단어("Woman")와의 오매칭 방지
+  return long.includes(short) && short.length * 2 >= long.length;
 }

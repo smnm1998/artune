@@ -8,6 +8,7 @@
  *   node scripts/eval/probe-picks.cjs resolve --label pick-probe   # iTunes 해석 (분당 15회, 이어서 실행 가능)
  *   node scripts/eval/probe-picks.cjs summary --label pick-probe
  * 옵션: --models a,b  --per-minute <n>  --limit <입력 수>  --out <폴더>  --mock(키·네트워크 없이 자체 검증)
+ *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json — 홀드아웃 입력 등)
  */
 const fs = require('node:fs');
 const os = require('node:os');
@@ -102,6 +103,7 @@ function parseArgs(argv) {
     perMinute: null,
     limit: null,
     out: null,
+    inputs: INPUTS,
     mock: false,
   };
   for (let i = 0; i < rest.length; i++) {
@@ -112,6 +114,7 @@ function parseArgs(argv) {
     else if (key === '--per-minute') args.perMinute = Number(next());
     else if (key === '--limit') args.limit = Number(next());
     else if (key === '--out') args.out = next();
+    else if (key === '--inputs') args.inputs = path.resolve(REPO, next());
     else if (key === '--mock') args.mock = true;
     else throw new Error(`알 수 없는 옵션: ${key}`);
   }
@@ -190,7 +193,7 @@ function setupAxios(args) {
 
 async function pick(args, outDir) {
   const axios = setupAxios(args);
-  const { inputs } = JSON.parse(fs.readFileSync(INPUTS, 'utf8'));
+  const { inputs } = JSON.parse(fs.readFileSync(args.inputs, 'utf8'));
   const targets = inputs.slice(0, args.limit ?? undefined);
   const file = path.join(outDir, 'picks.jsonl');
   const done = new Set(readJsonl(file).map((r) => `${r.model}|${r.id}`));
@@ -220,6 +223,7 @@ async function pick(args, outDir) {
         .digest('hex')
         .slice(0, 12),
       inputs: targets.length,
+      inputsFile: path.relative(REPO, args.inputs),
     };
     fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
   }
@@ -285,7 +289,7 @@ async function resolve(args, outDir) {
   const axios = setupAxios(args);
   if (!fs.existsSync(path.join(DIST, 'itunes/itunes.service.js')))
     throw new Error('dist 없음 — 먼저 npm run build');
-  // 앱과 같은 해석 로직(국가 kr→us→jp, 품질 필터, 곡명 대조)을 그대로 쓴다
+  // 앱과 같은 해석 로직(US 검색 → KR·JP 표기 lookup → JP 검색, 품질 필터, 곡명·아티스트 대조)을 그대로 쓴다
   const { ITunesService } = require(path.join(DIST, 'itunes/itunes.service'));
   const memory = new Map();
   const itunes = new ITunesService({
@@ -295,10 +299,12 @@ async function resolve(args, outDir) {
 
   let calls = 0;
   let throttled = false;
+  let failed = false;
   axios.interceptors.response.use(
     (res) => (calls++, res),
     (err) => {
       calls++;
+      failed = true;
       if ([403, 429].includes(err.response?.status)) throttled = true;
       return Promise.reject(err);
     },
@@ -326,16 +332,31 @@ async function resolve(args, outDir) {
   // 모의 어댑터도 403 을 섞어 보내므로, 모의 모드에선 대기 단위를 분 → ms 로 줄여 경로만 검증한다
   const minuteMs = args.mock ? 1 : 60000;
   let cooldown = 5;
+  let retries = 0;
   for (const [index, [k, t]] of todo.entries()) {
     for (;;) {
       const before = calls;
       throttled = false;
+      failed = false;
       const track = await itunes.resolveTrack({
         artist: t.artist,
         title: t.title,
       });
       await sleep((calls - before) * gapMs);
-      if (!throttled) {
+      // 네트워크 오류(ECONNRESET 등)도 '없는 곡'이 아니다 — 해석기는 캐시하지 않고 null 을 돌려주므로 다시 시도
+      if (failed && !throttled) {
+        if (++retries > 5)
+          throw new Error(
+            '네트워크 오류가 계속됨 — 나중에 같은 명령으로 이어서 실행',
+          );
+        console.log(
+          `[resolve] 네트워크 오류 — 30초 대기 후 재시도 ${retries}/5`,
+        );
+        await sleep(minuteMs / 2);
+        continue;
+      }
+      if (!failed) {
+        retries = 0;
         results[k] = track
           ? {
               found: true,

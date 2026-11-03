@@ -1,0 +1,21 @@
+{
+  "startedAt": "2026-11-03T05:10:17.219Z",
+  "git": "8931b78",
+  "mock": false,
+  "models": {
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    },
+    "gpt-4.1-mini": {
+      "temperature": 0.7
+    }
+  },
+  "perMode": {
+    "korea": 7,
+    "pop": 4,
+    "jpop": 1
+  },
+  "promptSha1": "eb886af1b088",
+  "inputs": 40,
+  "inputsFile": "docs/measurements/eval/holdout-inputs.json"
+}

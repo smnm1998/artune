@@ -89,7 +89,8 @@ export class MusicService {
         `jpop=${this.countRegion(result, regioned, 'jpop')}`,
     );
 
-    return result;
+    // 4. 한국어 서비스라 KR 스토어 표기(한글 곡명·아티스트명, KR 링크)로 바꿔 반환 — lookup 1회
+    return this.itunesService.localizeTracks(result);
   }
 
   /**

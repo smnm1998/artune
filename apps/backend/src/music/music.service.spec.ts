@@ -48,7 +48,16 @@ describe('MusicService', () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         MusicService,
-        { provide: ITunesService, useValue: { resolveTrack: jest.fn() } },
+        {
+          provide: ITunesService,
+          useValue: {
+            resolveTrack: jest.fn(),
+            // 기본은 그대로 통과 — 현지화 자체는 ITunesService 테스트에서 검증
+            localizeTracks: jest.fn((tracks: ITunesTrack[]) =>
+              Promise.resolve(tracks),
+            ),
+          },
+        },
         {
           provide: LastfmService,
           useValue: { getSimilarTracks: jest.fn().mockResolvedValue([]) },
@@ -104,6 +113,25 @@ describe('MusicService', () => {
       const result = await service.getRecommendations(seedsPerRegion());
 
       expect(result).toHaveLength(10);
+    });
+
+    it('최종 곡을 KR 스토어 표기로 바꿔 반환한다.', async () => {
+      lastfmService.getSimilarTracks.mockImplementation(similarFactory(10));
+      let id = 0;
+      itunesService.resolveTrack.mockImplementation(({ artist }) =>
+        Promise.resolve(makeTrack(++id, artist)),
+      );
+      itunesService.localizeTracks.mockImplementation((tracks) =>
+        Promise.resolve(
+          tracks.map((t) => ({ ...t, trackName: `KR ${t.trackName}` })),
+        ),
+      );
+
+      const result = await service.getRecommendations(seedsPerRegion());
+
+      // 최종 선정 후 1회만 호출
+      expect(itunesService.localizeTracks).toHaveBeenCalledTimes(1);
+      expect(result.every((t) => t.trackName.startsWith('KR '))).toBe(true);
     });
 
     it('해석률이 좋으면 목표(NEED)에서 조기 종료해 후보 전부를 해석하지 않는다.', async () => {

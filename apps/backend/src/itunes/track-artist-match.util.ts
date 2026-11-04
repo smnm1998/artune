@@ -13,12 +13,17 @@ const SEPARATOR =
   /\s*(?:,|&|×|\/|\(|\)|\[|\]|\bx\b|\bfeat\.?|\bft\.?|\bwith\b|\band\b)\s*/i;
 // 곡명 속 피처링 표기 ('Uptown Funk (feat. Bruno Mars)'의 아티스트 필드는 Mark Ronson)
 const FEATURING = /[([](?:feat\.?|ft\.?|with)\s+([^)\]]+)[)\]]/gi;
+// 'The Black Eyed Peas' ↔ 'Black Eyed Peas'
+const LEADING_THE = /^\s*the\s+/;
+// 문자·숫자만 남긴다. 'ʻ'(Kamakawiwoʻole)는 유니코드상 수식 문자(Lm)라 따로 뺀다
+const NON_NAME_CHAR = /[^\p{L}\p{N}]|\p{Lm}/gu;
 
 export function normalizeArtist(value: string): string {
   return (value ?? '')
     .normalize('NFKC')
     .toLowerCase()
-    .replace(/[\s'’!:,.\-&·()[\]/]/g, '');
+    .replace(LEADING_THE, '')
+    .replace(NON_NAME_CHAR, '');
 }
 
 // 어순 무관 비교용 키 ('Baek Yerin' ↔ 'Yerin Baek')

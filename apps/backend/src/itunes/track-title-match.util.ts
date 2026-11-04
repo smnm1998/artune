@@ -6,15 +6,29 @@
  * - 스토어마다 곡명이 현지화된다(US 'Through the Night' ↔ KR '밤편지').
  *   호출부(track-select.util)가 US·KR·JP 표기를 모두 대조한다.
  */
+// 앞에 붙은 괄호 부제: '(They Long To Be) Close To You' ↔ 'Close to You'
+const LEADING_PAREN = /^\s*[([][^)\]]*[)\]]\s*/;
+const NON_TITLE_CHAR = /[^\p{L}\p{N}]|\p{Lm}/gu;
+
 export function normalizeTitle(value: string): string {
   return (value ?? '')
+    .normalize('NFKC') // 전각 괄호 '奏（かなで）' → '奏(かなで)'
     .toLowerCase()
     .replace(/\(feat[^)]*\)/g, '') // (feat. ...) 제거
     .replace(/feat\..*$/g, '')
-    .replace(/[\s'’!:,.\-()&[\]]/g, '');
+    .replace(NON_TITLE_CHAR, '');
 }
 
 export function titleMatches(requested: string, returned: string): boolean {
+  const withoutSubtitle = (value: string) =>
+    (value ?? '').normalize('NFKC').replace(LEADING_PAREN, '');
+  return (
+    normalizedMatches(requested, returned) ||
+    normalizedMatches(withoutSubtitle(requested), withoutSubtitle(returned))
+  );
+}
+
+function normalizedMatches(requested: string, returned: string): boolean {
   const r = normalizeTitle(requested);
   const g = normalizeTitle(returned);
   if (!r || !g) return false;

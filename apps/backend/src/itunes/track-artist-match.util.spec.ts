@@ -45,6 +45,24 @@ describe('artistMatches', () => {
     expect(artistMatches('백현 (BAEKHYUN)', ['BAEKHYUN'])).toBe(true);
   });
 
+  it("앞의 'The'는 있어도 없어도 같은 아티스트로 본다", () => {
+    // The Black Eyed Peas 요청에 US 표기 'Black Eyed Peas' (11/3 홀드아웃)
+    expect(artistMatches('The Black Eyed Peas', ['Black Eyed Peas'])).toBe(
+      true,
+    );
+    expect(artistMatches('Black Eyed Peas', ['The Black Eyed Peas'])).toBe(
+      true,
+    );
+    expect(artistMatches('Theory', ['Ory'])).toBe(false);
+  });
+
+  it('문자·숫자가 아닌 기호는 종류와 관계없이 무시한다', () => {
+    // 'ʻ'(오키나)는 유니코드상 수식 문자라 기호 목록 방식으로는 남았다 (11/3 홀드아웃)
+    expect(
+      artistMatches('Israel Kamakawiwoʻole', ["Israel Kamakawiwo'ole"]),
+    ).toBe(true);
+  });
+
   it('곡명이 같은 커버·연주 아티스트는 거부한다', () => {
     expect(artistMatches('Green Day', ['Rockabye Baby!'])).toBe(false);
     expect(artistMatches('Lana Del Rey', ['Vitamin String Quartet'])).toBe(

@@ -64,6 +64,21 @@ describe('titleMatches', () => {
     expect(titleMatches('Mommae', 'Keep It Sexy (MOMMAE 2)')).toBe(false);
   });
 
+  it('전각 괄호도 같은 표기로 본다', () => {
+    // スキマスイッチ - 奏（かなで） 요청, JP 표기는 '奏(かなで)' (11/3 홀드아웃)
+    expect(titleMatches('奏（かなで）', '奏(かなで)')).toBe(true);
+  });
+
+  it('앞에 붙은 괄호 부제를 빼고도 비교한다', () => {
+    // Carpenters - Close to You 요청, 스토어 표기는 '(They Long To Be) Close To You' (11/3 홀드아웃)
+    expect(titleMatches('Close to You', '(They Long To Be) Close To You')).toBe(
+      true,
+    );
+    expect(titleMatches('(They Long To Be) Close To You', 'Close to You')).toBe(
+      true,
+    );
+  });
+
   it('절반 이상 겹치는 중간 포함은 일치로 본다', () => {
     // JP 스토어 표기
     expect(titleMatches('Kick It', '英雄; Kick It')).toBe(true);

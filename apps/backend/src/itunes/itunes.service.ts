@@ -30,23 +30,27 @@ export class ITunesService {
   private static readonly HANGUL = /[가-힣]/;
   private static readonly JAPANESE = /[ぁ-んァ-ン一-龯]/;
   // 부분 문자열이 아니라 '단어' 단위로 매칭한다 (cover가 Discovery·Recovery·Undercover를 막지 않도록).
-  // greatest는 정상 곡명('The Greatest')을 막아 뺐다 — 'Greatest Hits' 앨범은 hits로 걸러진다.
+  // greatest는 정상 곡명('The Greatest')을 막아 뺐다 — 'Greatest Hits' 앨범은 아래 hits로 모음집 처리된다.
   // g 플래그를 쓰지 않으므로 test()를 재사용해도 lastIndex 상태가 남지 않는다.
   private static readonly BLOCKED_PATTERNS = [
-    'playlist',
-    'compilation',
-    'various artists',
     'karaoke',
     'tribute',
     'cover',
-    'best of',
-    '100 songs',
-    'hits',
     'originally performed by',
     'in the style of',
     'workout',
     'sleep sounds',
     'meditation',
+  ].map((word) => new RegExp(`\\b${word}\\b`, 'i'));
+  // 모음집 앨범은 원곡과 같은 녹음일 수 있어 빼지 않고 원 앨범 수록본보다 뒤로 미룬다
+  // (차단하던 때 'HOSPITAL PLAYLIST' OST 원곡이 빠져 Sleep Mix가 채택됨, 11/3 실측)
+  private static readonly COMPILATION_PATTERNS = [
+    'playlist',
+    'compilation',
+    'various artists',
+    'best of',
+    '100 songs',
+    'hits',
   ].map((word) => new RegExp(`\\b${word}\\b`, 'i'));
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
@@ -132,10 +136,7 @@ export class ITunesService {
       );
       const fromLocalized = selectTrack(
         query,
-        usTracks.map((t) => ({
-          track: t,
-          names: [t, ...localized.filter((l) => l.trackId === t.trackId)],
-        })),
+        this.asCandidates(usTracks, localized),
       );
       if (fromLocalized) return { status: 'done', track: fromLocalized };
     }
@@ -156,8 +157,14 @@ export class ITunesService {
     return { status: 'done', track: null };
   }
 
-  private asCandidates(tracks: ITunesTrack[]) {
-    return tracks.map((t) => ({ track: t, names: [t] }));
+  private asCandidates(tracks: ITunesTrack[], localized: ITunesTrack[] = []) {
+    return tracks.map((t) => ({
+      track: t,
+      names: [t, ...localized.filter((l) => l.trackId === t.trackId)],
+      compilation: ITunesService.COMPILATION_PATTERNS.some((pattern) =>
+        pattern.test(t.collectionName ?? ''),
+      ),
+    }));
   }
 
   private async search(term: string, country: string): Promise<FetchResult> {

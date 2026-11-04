@@ -75,6 +75,74 @@ describe('selectTrack', () => {
     ).toBe(2);
   });
 
+  it('Mix·THE FIRST TAKE도 대체 버전으로 보고 원곡을 먼저 고른다', () => {
+    // Sleep Mix가 원곡보다 먼저 채택된 케이스 (11/3 홀드아웃)
+    const mix = [
+      cand(
+        1,
+        ['Beautiful My Love (Sleep Mix)', 'Urban Zakapa'],
+        ['그대 고운 내사랑 (Sleep Mix)', '어반자카파'],
+      ),
+      cand(
+        2,
+        ['Beautiful My Love', 'Urban Zakapa'],
+        ['그대 고운 내사랑', '어반자카파'],
+      ),
+    ];
+    // 같은 가수의 라이브 녹음 (11/2 프로브)
+    const firstTake = [
+      cand(
+        1,
+        ['Kataomoi - From THE FIRST TAKE', 'Aimer'],
+        ['カタオモイ - From THE FIRST TAKE', 'Aimer'],
+      ),
+      cand(2, ['Kataomoi', 'Aimer'], ['カタオモイ', 'Aimer']),
+    ];
+
+    expect(
+      selectTrack({ artist: '어반자카파', title: '그대 고운 내사랑' }, mix),
+    ).toBe(2);
+    expect(
+      selectTrack({ artist: 'Aimer', title: 'カタオモイ' }, firstTake),
+    ).toBe(2);
+  });
+
+  it("'Original Mix'는 원곡 표기로 본다", () => {
+    // 실측 사례 없음 — 댄스 음원의 스토어 표기 관례
+    const candidates = [
+      cand(1, ['Strobe (Club Mix)', 'deadmau5']),
+      cand(2, ['Strobe (Original Mix)', 'deadmau5']),
+    ];
+
+    expect(
+      selectTrack({ artist: 'deadmau5', title: 'Strobe' }, candidates),
+    ).toBe(2);
+  });
+
+  it('모음집 수록본은 원 앨범 수록본보다 뒤, 대체 버전보다 앞에 둔다', () => {
+    // 태연 - 사계: 1순위가 베스트 앨범, 4순위가 싱글 (11/2 프로브)
+    const withAlbum = [
+      {
+        ...cand(1, ['Four Seasons', 'TAEYEON'], ['사계', '태연']),
+        compilation: true,
+      },
+      cand(2, ['Four Seasons', 'TAEYEON'], ['사계', '태연']),
+    ];
+    // Eric Clapton - Tears in Heaven: 스튜디오 원곡은 베스트 앨범에만 있음 (11/2 프로브)
+    const onlyCompilation = [
+      { ...cand(1, ['Tears in Heaven', 'Eric Clapton']), compilation: true },
+      cand(2, ['Tears In Heaven (Acoustic Live)', 'Eric Clapton']),
+    ];
+
+    expect(selectTrack({ artist: '태연', title: '사계' }, withAlbum)).toBe(2);
+    expect(
+      selectTrack(
+        { artist: 'Eric Clapton', title: 'Tears in Heaven' },
+        onlyCompilation,
+      ),
+    ).toBe(1);
+  });
+
   it('요청 곡명에 버전 표기가 있으면 그 버전을 고른다', () => {
     const candidates = [
       cand(1, ['Dynamite (Live)', 'BTS']),

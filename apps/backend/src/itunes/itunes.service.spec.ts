@@ -267,8 +267,6 @@ describe('ITunesService', () => {
     it.each([
       { name: 'cover', overrides: { collectionName: 'Cover Songs' } },
       { name: 'karaoke', overrides: { trackName: 'Hello (Karaoke Version)' } },
-      { name: 'hits', overrides: { collectionName: 'Greatest Hits' } },
-      { name: 'best of', overrides: { collectionName: 'The Best Of IU' } },
       { name: 'tribute', overrides: { collectionName: 'Tribute to Queen' } },
       { name: 'sleep sounds', overrides: { collectionName: 'Sleep Sounds' } },
       { name: 'previewUrl 없음', overrides: { previewUrl: null } },
@@ -278,6 +276,35 @@ describe('ITunesService', () => {
         expect(await resolveWith(overrides)).toBeNull();
       },
     );
+
+    it.each([
+      { name: 'hits', overrides: { collectionName: 'Greatest Hits' } },
+      { name: 'best of', overrides: { collectionName: 'The Best Of IU' } },
+      {
+        name: 'playlist',
+        overrides: {
+          collectionName: 'HOSPITAL PLAYLIST (Original Television Soundtrack)',
+        },
+      },
+    ])(
+      '모음집 앨범은 거르지 않는다 (다른 후보가 없으면 채택): $name',
+      async ({ overrides }) => {
+        expect(await resolveWith(overrides)).not.toBeNull();
+      },
+    );
+
+    it('모음집 수록본보다 원 앨범 수록본을 고른다', async () => {
+      const best = makeTrack({ trackId: 1, collectionName: 'The Best Of IU' });
+      const album = makeTrack({ trackId: 2 });
+      mockedAxios.get.mockResolvedValue({ data: { results: [best, album] } });
+
+      const result = await service.resolveTrack({
+        artist: album.artistName,
+        title: album.trackName,
+      });
+
+      expect(result?.trackId).toBe(2);
+    });
   });
 
   describe('localizeTracks', () => {

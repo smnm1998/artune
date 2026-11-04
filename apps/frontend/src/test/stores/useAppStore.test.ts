@@ -13,6 +13,7 @@ const mockedAnalyze = vi.mocked(analyzeEmotionWithProgress);
 const mockResult: EmotionResponse = {
   emotionLabel: '기쁨',
   description: '즐거운 하루였군요.',
+  crisis: false,
   artwork: { url: '/artwork/joy.png', prompt: '' },
   playlists: {
     immerse: { modeLabel: '감정 심취', description: '', tracks: [] },

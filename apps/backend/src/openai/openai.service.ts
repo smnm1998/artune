@@ -1,12 +1,20 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { EMOTION_LABELS } from '../emotion/constants/emotions.constant';
+import {
+  EMOTION_ANALYSIS_FORMAT,
+  EmotionAnalysis,
+  EmotionAnalysisOutput,
+} from './emotion-analysis.schema';
 
 /**
  * OpenAI Chat Completions API를 활용한 감정 분석 서비스
  */
 @Injectable()
 export class OpenAIService {
+  // gpt-4.1-mini는 2027-01-14 종료. 추론은 끈다(none) — 프로브(11/2·11/3)가 이 설정으로 측정됨
+  static readonly MODEL = 'gpt-6-luna';
   private readonly apiKey: string;
   private readonly apiUrl: string;
 
@@ -16,13 +24,12 @@ export class OpenAIService {
   }
 
   /**
-   * 사용자 텍스트를 분석하여 감정 정보와 아티스트 목록 반환
+   * 사용자 텍스트를 분석하여 감정 정보와 모드별 시드곡 반환
    *
    * @throws {BadRequestException} 텍스트가 비어있을 때
-   * @throws {Error} API 호출 실패 시
+   * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림 시
    */
-
-  async analyzeEmotion(text) {
+  async analyzeEmotion(text): Promise<EmotionAnalysis> {
     // 입력 유효성 검증
     if (!text || text.trim().length === 0) {
       throw new BadRequestException('분석할 텍스트를 입력해주세요.');
@@ -33,7 +40,7 @@ export class OpenAIService {
       const response = await axios.post(
         this.apiUrl,
         {
-          model: 'gpt-4.1-mini',
+          model: OpenAIService.MODEL,
           messages: [
             {
               role: 'system',
@@ -44,8 +51,8 @@ export class OpenAIService {
               content: text,
             },
           ],
-          response_format: { type: 'json_object' },
-          temperature: 0.7,
+          response_format: EMOTION_ANALYSIS_FORMAT,
+          reasoning_effort: 'none',
         },
         {
           headers: {
@@ -55,14 +62,18 @@ export class OpenAIService {
         },
       );
 
-      // 응답 파싱
-      const content = response.data.choices[0].message.content;
-      const result = JSON.parse(content);
-
-      // 필수 필드 검증
+      // strict 스키마는 형태를 보장하지만, 거절·토큰 한도 잘림은 스키마 밖 결과로 온다
+      const choice = response.data.choices[0];
+      if (choice.message.refusal) {
+        throw new Error(`OpenAI 응답 거절: ${choice.message.refusal}`);
+      }
+      if (choice.finish_reason === 'length') {
+        throw new Error('OpenAI 응답이 토큰 한도에서 잘렸습니다.');
+      }
+      const result: EmotionAnalysisOutput = JSON.parse(choice.message.content);
       this.validateResult(result);
 
-      return result;
+      return { ...result, emotionLabel: EMOTION_LABELS[result.emotion] };
     } catch (error) {
       // JSON 파싱 에러
       if (error instanceof SyntaxError) {
@@ -90,7 +101,7 @@ export class OpenAIService {
 
 
     **[사고 흐름 — 반드시 이 순서로 처리]**
-    1. 사용자 텍스트에서 emotion / emotionLabel 판별
+    1. 사용자 텍스트에서 emotion 판별, 위기 신호(crisis) 확인
     2. 감정에 맞는 영문 키워드 2~4개 도출 (keywords) — 사고 보조용
     3. keywords·모드와 어울리는 **시드곡(seed track)**을 지역별로 선정
        (한국 3곡 / 팝 2곡 / 일본 1곡, 모드당)
@@ -132,12 +143,16 @@ export class OpenAIService {
     - immerse(차분형)에 신나는 Pop/Dance/K-pop 댄스 곡 X
     - 실재하지 않는 곡·아티스트 창작 X (반드시 실제로 발매된 곡만)
 
+    **[위기 신호 — crisis]**
+    - 스스로를 해치거나 삶을 끝내고 싶다는 뜻(자해·자살 생각이나 계획, "사라지고 싶다", "다 끝내고 싶다")이 직접 드러나거나 분명히 읽히면 true
+    - "배고파 죽겠다", "웃겨 죽겠네"처럼 정도를 강조하는 관용 표현, 슬픔·지침만 있는 글은 false
+    - 어느 쪽인지 애매하면 true (안내가 한 번 더 보이는 비용이 놓치는 비용보다 작다)
+    - true여도 감정 분석과 플레이리스트는 그대로 만든다. description은 판단하거나 훈계하지 말고 곁에 있어 주는 어조로
 
     **필수 응답 형식**
     {
       "emotion": "joy|sadness|anger|fear|surprise|neutral|sentimental|excited|lonely|dreamy|confident|romance",
-      "emotionLabel": "기쁨|슬픔|분노|두려움|놀람|중립|아련함|신남|고독|몽환|자신감|설렘",
-      "intensity": 0.0~1.0,
+      "crisis": true|false,
       "description": "감정에 대한 공감적 설명 (한국어, 1~2문장, 따뜻한 어조)",
       "immerse": {
         "keywords": "사고 보조용 영문 감정 키워드 (공백 구분, 2~4단어)",
@@ -266,68 +281,14 @@ export class OpenAIService {
   }
 
   /**
-   * 응답 결과 유효성 검증
+   * 스키마로 표현할 수 없는 조건만 검사한다 (형태는 json_schema strict가 보장)
    *
-   * @throws {Error} 필수 필드가 누락된 경우
+   * @throws {Error} 모드의 시드가 3곡 미만인 경우
    */
-  validateResult(result) {
-    const requiredFields = [
-      'emotion',
-      'emotionLabel',
-      'intensity',
-      'description',
-      'immerse',
-      'soothe',
-    ];
-
-    for (const field of requiredFields) {
-      if (!(field in result)) {
-        throw new Error(`필수 필드 누락: ${field}`);
-      }
-    }
-
-    // immerse, soothe 내부 필드 검증
-    const playlistFields = ['genres', 'keywords', 'seeds'];
-
-    for (const mode of ['immerse', 'soothe']) {
-      if (!result[mode] || typeof result[mode] !== 'object') {
-        throw new Error(`필수 필드 누락: ${mode}`);
-      }
-
-      for (const field of playlistFields) {
-        if (!(field in result[mode])) {
-          throw new Error(`필수 필드 누락: ${mode}.${field}`);
-        }
-      }
-
-      if (!Array.isArray(result[mode].genres)) {
-        throw new Error(`${mode}.genres는 배열이어야 합니다.`);
-      }
-
-      // seeds: { korea, pop, jpop } 각각 { artist, title } 배열
-      const seeds = result[mode].seeds;
-      if (!seeds || typeof seeds !== 'object') {
-        throw new Error(`${mode}.seeds는 객체여야 합니다.`);
-      }
-      let seedCount = 0;
-      for (const region of ['korea', 'pop', 'jpop']) {
-        if (!Array.isArray(seeds[region])) {
-          throw new Error(`${mode}.seeds.${region}는 배열이어야 합니다.`);
-        }
-        for (const s of seeds[region]) {
-          if (
-            !s ||
-            typeof s.artist !== 'string' ||
-            typeof s.title !== 'string'
-          ) {
-            throw new Error(
-              `${mode}.seeds.${region}의 각 항목은 { artist, title } 형태여야 합니다.`,
-            );
-          }
-          seedCount++;
-        }
-      }
-      if (seedCount < 3) {
+  validateResult(result: EmotionAnalysisOutput) {
+    for (const mode of ['immerse', 'soothe'] as const) {
+      const { korea, pop, jpop } = result[mode].seeds;
+      if (korea.length + pop.length + jpop.length < 3) {
         throw new Error(`${mode}.seeds는 최소 3곡 이상 필요합니다.`);
       }
     }

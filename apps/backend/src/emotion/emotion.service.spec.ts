@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmotionService } from './emotion.service';
 import { OpenAIService } from '../openai/openai.service';
+import { EmotionAnalysis } from '../openai/emotion-analysis.schema';
 import { MusicService } from '../music/music.service';
 import { DalleService } from '../dalle/dalle.service';
 import { ITunesTrack } from '../itunes/itunes-track.type';
@@ -37,12 +38,13 @@ describe('EmotionService', () => {
   let musicService: jest.Mocked<MusicService>;
   let dalleService: jest.Mocked<DalleService>;
 
-  const mockEmotion = {
+  const mockEmotion: EmotionAnalysis = {
     emotion: 'joy',
     emotionLabel: '기쁨',
-    intensity: 0.8,
+    crisis: false,
     description: '매우 긍정적인 감정',
     immerse: {
+      keywords: 'happy upbeat',
       genres: ['pop', 'k-pop'],
       seeds: {
         korea: [
@@ -54,6 +56,7 @@ describe('EmotionService', () => {
       },
     },
     soothe: {
+      keywords: 'warm smooth',
       genres: ['r&b', 'indie pop'],
       seeds: {
         korea: [{ artist: '박효신', title: '야생화' }],
@@ -120,6 +123,7 @@ describe('EmotionService', () => {
       expect(result).toEqual({
         emotionLabel: '기쁨',
         description: '매우 긍정적인 감정',
+        crisis: false,
         artwork: {
           url: 'https://example.com/dessert.png',
           prompt: 'A pixel_art style dessert...',
@@ -189,6 +193,21 @@ describe('EmotionService', () => {
 
       await expect(service.analyzeAndRecommend('테스트')).rejects.toThrow();
     });
+
+    it('위기 신호를 응답에 그대로 싣는다 (화면의 상담 안내 조건)', async () => {
+      openAIService.analyzeEmotion.mockResolvedValueOnce({
+        ...mockEmotion,
+        crisis: true,
+      });
+      musicService.getRecommendations
+        .mockResolvedValueOnce([immerseTrack])
+        .mockResolvedValueOnce([sootheTrack]);
+      dalleService.generateDessertImage.mockResolvedValueOnce(mockDessertImage);
+
+      const result = await service.analyzeAndRecommend('테스트');
+
+      expect(result.crisis).toBe(true);
+    });
   });
 
   describe('analyzeAndRecommendWithProgress', () => {
@@ -246,28 +265,29 @@ describe('EmotionService', () => {
 
   describe('getImmerseDescription', () => {
     it('기쁨 감정에 대한 immerse 설명을 반환해야 한다.', () => {
-      expect(service.getImmerseDescription('기쁨')).toBe(
+      expect(service.getImmerseDescription('joy')).toBe(
         '이 기쁨을 더 깊이 느껴보세요',
       );
     });
 
-    it('등록되지 않은 감정은 기본 템플릿을 사용해야 한다.', () => {
-      expect(service.getImmerseDescription('알수없는감정')).toBe(
-        '이 알수없는감정을 더 깊이 느껴보세요',
+    it('두려움·중립·놀람도 전용 설명을 반환해야 한다.', () => {
+      // 설명 키(불안·평온)와 LLM 라벨(두려움·중립)이 어긋나 기본 문구가 나가던 감정 (11/4)
+      expect(service.getImmerseDescription('fear')).toBe(
+        '지금 느끼는 불안을 인정해보세요',
+      );
+      expect(service.getImmerseDescription('neutral')).toBe(
+        '이 평온함을 더 깊이 만끽해보세요',
+      );
+      expect(service.getImmerseDescription('surprise')).toBe(
+        '이 짜릿한 순간을 생생하게 느껴보세요',
       );
     });
   });
 
   describe('getSootheDescription', () => {
     it('기쁨 감정에 대한 soothe 설명을 반환해야 한다.', () => {
-      expect(service.getSootheDescription('기쁨')).toBe(
+      expect(service.getSootheDescription('joy')).toBe(
         '차분히 마음을 정리해보세요',
-      );
-    });
-
-    it('등록되지 않은 감정은 기본 템플릿을 사용해야 한다.', () => {
-      expect(service.getSootheDescription('알수없는감정')).toBe(
-        '차분히 알수없는감정을 정리해보세요',
       );
     });
   });

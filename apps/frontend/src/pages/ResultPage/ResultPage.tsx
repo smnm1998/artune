@@ -5,6 +5,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import { BREAKPOINTS } from '@/constants/breakpoints';
 import {
   ArtworkDisplay,
+  CrisisNotice,
   PlaylistToggle,
   AlbumGrid,
   ActionButtons,
@@ -72,6 +73,7 @@ function ResultPage() {
       */}
       {(!isCompactView || viewMode === 'artwork') && (
         <div css={leftSectionStyle}>
+          {emotionResult.crisis && <CrisisNotice />}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

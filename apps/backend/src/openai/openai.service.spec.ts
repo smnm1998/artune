@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai.service';
+import {
+  EMOTION_ANALYSIS_FORMAT,
+  EmotionAnalysisOutput,
+} from './emotion-analysis.schema';
 import axios from 'axios';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// validateResult가 요구하는 최소 형태 (seeds: {korea, pop, jpop}, 각 { artist, title })
+// 응답 스키마(emotion-analysis.schema)를 따르는 형태 (seeds: {korea, pop, jpop}, 각 { artist, title })
 const makeSeeds = (label: string) => ({
   korea: [
     { artist: `${label} 한국1`, title: `${label} 곡1` },
@@ -20,10 +24,9 @@ const makeSeeds = (label: string) => ({
   jpop: [{ artist: `${label} Jpop1`, title: `${label} JSong1` }],
 });
 
-const makeAnalysisResult = () => ({
+const makeAnalysisResult = (): EmotionAnalysisOutput => ({
   emotion: 'joy',
-  emotionLabel: '기쁨',
-  intensity: 0.85,
+  crisis: false,
   description: '오늘 하루 정말 행복한 일들이 가득했네요!',
   immerse: {
     keywords: 'happy upbeat energetic',
@@ -37,9 +40,20 @@ const makeAnalysisResult = () => ({
   },
 });
 
-const mockChatCompletion = (content: string) => ({
+const mockChatCompletion = (
+  content: string | null,
+  {
+    refusal = null,
+    finishReason = 'stop',
+  }: { refusal?: string | null; finishReason?: string } = {},
+) => ({
   data: {
-    choices: [{ message: { role: 'assistant', content } }],
+    choices: [
+      {
+        finish_reason: finishReason,
+        message: { role: 'assistant', content, refusal },
+      },
+    ],
   },
 });
 
@@ -78,16 +92,17 @@ describe('OpenAIService', () => {
       // When
       const result = await service.analyzeEmotion(mockText);
 
-      // Then
-      expect(result).toEqual(mockResult);
+      // Then — 화면 라벨은 LLM이 아니라 enum에서 붙는다
+      expect(result).toEqual({ ...mockResult, emotionLabel: '기쁨' });
       expect(result.immerse.seeds.korea).toHaveLength(3);
 
       // API 호출 검증
       expect(mockedAxios.post).toHaveBeenCalledWith(
         'https://api.openai.com/v1/chat/completions',
         expect.objectContaining({
-          model: 'gpt-4.1-mini',
-          response_format: { type: 'json_object' },
+          model: 'gpt-6-luna',
+          response_format: EMOTION_ANALYSIS_FORMAT,
+          reasoning_effort: 'none',
           messages: expect.arrayContaining([
             expect.objectContaining({ role: 'system' }),
             expect.objectContaining({ role: 'user', content: mockText }),
@@ -129,13 +144,27 @@ describe('OpenAIService', () => {
       );
     });
 
-    it('필수 필드가 누락된 응답을 받으면 에러를 던져야 한다.', async () => {
+    it('모델이 응답을 거절하면 에러를 던져야 한다.', async () => {
+      // strict 스키마여도 거절은 content 없이 refusal로 온다
       mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion(JSON.stringify({ emotion: 'joy' })),
+        mockChatCompletion(null, { refusal: 'I can’t help with that.' }),
       );
 
       await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
-        '필수 필드 누락',
+        'OpenAI 응답 거절',
+      );
+    });
+
+    it('토큰 한도에서 잘린 응답은 파싱하지 않고 에러를 던져야 한다.', async () => {
+      // 잘린 JSON은 스키마를 지키지 못한다
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion('{"emotion": "joy", "cri', {
+          finishReason: 'length',
+        }),
+      );
+
+      await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
+        '토큰 한도',
       );
     });
 
@@ -153,19 +182,6 @@ describe('OpenAIService', () => {
 
       await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
         '최소 3곡 이상 필요합니다',
-      );
-    });
-
-    it('시드 항목이 { artist, title } 형태가 아니면 에러를 던져야 한다.', async () => {
-      const result = makeAnalysisResult();
-      // 문자열 배열(잘못된 형태)로 오면 거부
-      (result.immerse.seeds.korea as unknown) = ['그냥 문자열', '또 문자열'];
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion(JSON.stringify(result)),
-      );
-
-      await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
-        '{ artist, title } 형태여야 합니다',
       );
     });
   });

@@ -49,8 +49,7 @@ function openaiResponse(config) {
   const emotion = EMOTIONS[h % EMOTIONS.length];
   const content = {
     emotion,
-    emotionLabel: '모의',
-    intensity: 0.5,
+    crisis: false,
     description: '모의 응답',
     immerse: { keywords: 'mock', genres: ['pop'], seeds: seedsFor('im', h) },
     soothe: { keywords: 'mock', genres: ['jazz'], seeds: seedsFor('so', h) },

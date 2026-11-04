@@ -41,6 +41,8 @@ export interface Artwork {
 export interface EmotionResponse {
   emotionLabel: string;
   description: string;
+  /** 자해·자살 위기 신호 — true면 화면에 상담 안내(109)를 띄운다 */
+  crisis: boolean;
   artwork: Artwork;
   playlists: {
     immerse: Playlist;

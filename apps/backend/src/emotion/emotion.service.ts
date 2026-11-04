@@ -7,9 +7,9 @@ import { mapItunesTrackToFrontend } from '../music/utils/track-mapper.util';
 import {
   IMMERSE_DESCRIPTIONS,
   SOOTHE_DESCRIPTIONS,
-  DEFAULT_IMMERSE_DESCRIPTION,
-  DEFAULT_SOOTHE_DESCRIPTION,
 } from './constants/emotion-descriptions.constant';
+import { Emotion } from './constants/emotions.constant';
+import { EmotionAnalysis } from '../openai/emotion-analysis.schema';
 
 /**
  * Emotion Service - Orchestrator
@@ -25,18 +25,12 @@ export class EmotionService {
     private readonly dalleService: DalleService,
   ) {}
 
-  getImmerseDescription(emotionLabel) {
-    return (
-      IMMERSE_DESCRIPTIONS[emotionLabel] ||
-      DEFAULT_IMMERSE_DESCRIPTION(emotionLabel)
-    );
+  getImmerseDescription(emotion: Emotion) {
+    return IMMERSE_DESCRIPTIONS[emotion];
   }
 
-  getSootheDescription(emotionLabel) {
-    return (
-      SOOTHE_DESCRIPTIONS[emotionLabel] ||
-      DEFAULT_SOOTHE_DESCRIPTION(emotionLabel)
-    );
+  getSootheDescription(emotion: Emotion) {
+    return SOOTHE_DESCRIPTIONS[emotion];
   }
 
   /**
@@ -68,7 +62,7 @@ export class EmotionService {
   }
 
   private buildResponse(
-    emotion,
+    emotion: EmotionAnalysis,
     immerseRecommendations,
     sootheRecommendations,
     dessertImage,
@@ -76,6 +70,7 @@ export class EmotionService {
     return {
       emotionLabel: emotion.emotionLabel,
       description: emotion.description,
+      crisis: emotion.crisis,
       artwork: {
         url: dessertImage.imageUrl,
         prompt: dessertImage.prompt,
@@ -83,12 +78,12 @@ export class EmotionService {
       playlists: {
         immerse: {
           modeLabel: '감정 심취',
-          description: this.getImmerseDescription(emotion.emotionLabel),
+          description: this.getImmerseDescription(emotion.emotion),
           tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
         },
         soothe: {
           modeLabel: '감정 완화',
-          description: this.getSootheDescription(emotion.emotionLabel),
+          description: this.getSootheDescription(emotion.emotion),
           tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
         },
       },

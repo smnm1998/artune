@@ -30,6 +30,7 @@ describe('EmotionController', () => {
   const mockResult = {
     emotionLabel: '기쁨',
     description: '즐거운 하루였군요.',
+    crisis: false,
     artwork: { url: '/artwork/joy.png', prompt: 'test' },
     playlists: {
       immerse: { modeLabel: '감정 심취', description: 'd', tracks: [] },

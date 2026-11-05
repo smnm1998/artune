@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ITunesTrack } from './itunes-track.type';
 import { selectTrack } from './track-select.util';
+import { artistMatches } from './track-artist-match.util';
 import { Cache } from 'cache-manager';
 import axios from 'axios';
 
@@ -27,6 +28,8 @@ export class ITunesService {
   static readonly LOOKUP_URL = 'https://itunes.apple.com/lookup';
   // 11/3 실측: limit 5와 10의 정답률 차이 없음, 3은 원곡이 Live·Remix 뒤로 밀려 손해
   static readonly SEARCH_LIMIT = 5;
+  // 아티스트 곡 목록 조회 상한 (API 최대값) — 검색이 실패했을 때만 부른다
+  static readonly CATALOG_LIMIT = 200;
   private static readonly HANGUL = /[가-힣]/;
   private static readonly JAPANESE = /[ぁ-んァ-ン一-龯]/;
   // 부분 문자열이 아니라 '단어' 단위로 매칭한다 (cover가 Discovery·Recovery·Undercover를 막지 않도록).
@@ -58,7 +61,7 @@ export class ITunesService {
   /**
    * LLM이 지정한 (아티스트, 곡) 쌍을 iTunes 재생 가능 트랙으로 해석
    * 곡명·아티스트를 모두 대조해 조용한 실패(커버·MR·엉뚱한 곡)를 폐기. 캐시 적용.
-   * @returns 해석 성공 시 ITunesTrack(US 스토어 표기), 실패 시 null
+   * @returns 해석 성공 시 ITunesTrack(대개 US 스토어 표기, JP 검색·곡 목록 단계면 그 스토어 표기), 실패 시 null
    */
   async resolveTrack(query: TrackQuery): Promise<ITunesTrack | null> {
     const cacheKey = `resolve:${query.artist}:${query.title}`;
@@ -95,7 +98,8 @@ export class ITunesService {
   }
 
   /**
-   * US 검색 → (요청에 한글·일본어가 있으면) KR·JP 표기 lookup → (일본 곡이면) JP 검색 순으로 대조.
+   * US 검색 → (요청에 한글·일본어가 있으면) KR·JP 표기 lookup → (일본 곡이면) JP 검색
+   * → 아티스트 곡 목록 순으로 대조.
    * KR 스토어 검색은 결과가 항상 0건이라 쓰지 않는다 (11/3 실측, lookup은 정상).
    */
   private async findTrack(query: TrackQuery): Promise<Resolution> {
@@ -142,19 +146,88 @@ export class ITunesService {
     }
 
     // 3차: US 스토어에 없는 일본 곡 (スピッツ, ONE OK ROCK 초기곡 등) — JP 검색은 정상 동작
+    let jpTracks: ITunesTrack[] = [];
     if (ITunesService.JAPANESE.test(text)) {
       const jp = await this.search(term, 'jp');
       if (jp.status === 'throttled' || jp.status === 'error') {
         return { status: 'transient' };
       }
-      const jpTracks = jp.status === 'ok' ? jp.tracks : [];
-      return {
-        status: 'done',
-        track: selectTrack(query, this.asCandidates(jpTracks)),
-      };
+      jpTracks = jp.status === 'ok' ? jp.tracks : [];
+      const fromJp = selectTrack(query, this.asCandidates(jpTracks));
+      if (fromJp) return { status: 'done', track: fromJp };
     }
 
-    return { status: 'done', track: null };
+    // 4차: 검색이 원곡을 돌려주지 않는 곡 — 그 아티스트의 곡 목록에서 찾는다
+    return this.findInArtistCatalog(query, [...usTracks, ...jpTracks]);
+  }
+
+  /**
+   * 검색에 원곡이 없을 때 아티스트의 곡 목록(lookup)에서 찾는다 (11/5 실측).
+   * - 검색 API는 explicit 곡을 돌려주지 않는다 (Green Day 'American Idiot' — explicit=Yes도 무효, lookup에는 있음)
+   * - 한국 곡은 US·KR trackId가 달라 KR 표기 lookup이 0건일 수 있다 (US 'Time of Our Life' ↔ KR '한 페이지가 될 수 있게')
+   * 아티스트는 검색 결과 중 이름이 맞는 쪽을 쓰고(추가 호출 없음), 없으면 아티스트 검색 1위를 쓴다.
+   */
+  private async findInArtistCatalog(
+    query: TrackQuery,
+    searched: ITunesTrack[],
+  ): Promise<Resolution> {
+    let artistId = searched.find((t) =>
+      artistMatches(query.artist, [t.artistName]),
+    )?.artistId;
+
+    if (artistId == null) {
+      // musicArtist 결과도 artistId·artistName 필드는 곡 결과와 같다
+      const result = await this.request(ITunesService.SEARCH_URL, {
+        term: query.artist,
+        media: 'music',
+        entity: 'musicArtist',
+        limit: 1,
+        country: 'us',
+      });
+      if (result.status === 'throttled' || result.status === 'error') {
+        return { status: 'transient' };
+      }
+      const found = result.status === 'ok' ? result.tracks[0] : undefined;
+      // 한글·일본어 이름을 라틴 표기로 이어 준 결과(싸이 → PSY, 자이언티 → Zion.T)는 같은 아티스트로 본다.
+      // 표기를 우리가 음차로 추측하는 게 아니라 Apple 검색 색인의 별칭을 따르는 것이다.
+      const local = (name: string) =>
+        ITunesService.HANGUL.test(name) || ITunesService.JAPANESE.test(name);
+      if (
+        found &&
+        (artistMatches(query.artist, [found.artistName]) ||
+          (local(query.artist) && !local(found.artistName)))
+      ) {
+        artistId = found.artistId;
+      }
+    }
+    if (artistId == null) return { status: 'done', track: null };
+
+    const text = query.artist + query.title;
+    const result = await this.request(ITunesService.LOOKUP_URL, {
+      id: artistId,
+      entity: 'song',
+      limit: ITunesService.CATALOG_LIMIT,
+      country: ITunesService.HANGUL.test(text)
+        ? 'kr'
+        : ITunesService.JAPANESE.test(text)
+          ? 'jp'
+          : 'us',
+    });
+    if (result.status === 'throttled' || result.status === 'error') {
+      return { status: 'transient' };
+    }
+    // 첫 항목은 아티스트 정보라 미리듣기가 없어 품질 필터에서 빠진다
+    const songs =
+      result.status === 'ok' ? this.filterQualityTracks(result.tracks) : [];
+    // 곡 목록은 이미 그 아티스트의 곡이므로 요청 표기를 아티스트 후보로 더해 곡명·버전만 대조한다
+    const asRequested = songs.map((song) => ({
+      ...song,
+      artistName: query.artist,
+    }));
+    return {
+      status: 'done',
+      track: selectTrack(query, this.asCandidates(songs, asRequested)),
+    };
   }
 
   private asCandidates(tracks: ITunesTrack[], localized: ITunesTrack[] = []) {

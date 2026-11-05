@@ -11,6 +11,7 @@ const makeTrack = (overrides: Partial<ITunesTrack> = {}): ITunesTrack => ({
   trackId: 1,
   trackName: 'Test Song',
   artistName: 'IU',
+  artistId: 1,
   collectionName: 'Test Album',
   artworkUrl100: 'https://test.com/100x100bb.jpg',
   trackTimeMillis: 200000,
@@ -101,8 +102,8 @@ describe('ITunesService', () => {
       });
 
       expect(result).toBeNull();
-      // US 표기·KR 표기 모두 불일치 → null 확정 캐시
-      expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+      // US 표기 → KR 표기 → 아티스트 검색 → 곡 목록까지 모두 곡명 불일치 → null 확정 캐시
+      expect(mockedAxios.get).toHaveBeenCalledTimes(4);
       expect(cacheManager.set).toHaveBeenCalledWith(
         'resolve:이센스:불꽃',
         null,
@@ -127,8 +128,9 @@ describe('ITunesService', () => {
       });
 
       expect(result).toBeNull();
-      // 요청에 한글·일본어가 없으면 현지화 lookup을 하지 않는다
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      // 요청에 한글·일본어가 없으면 현지화 lookup을 하지 않는다.
+      // 아티스트 검색 결과도 Green Day가 아니면 곡 목록은 조회하지 않는다
+      expect(mockedAxios.get).toHaveBeenCalledTimes(2);
     });
 
     it('한글 요청은 US 표기로 실패하면 KR 스토어 표기로 대조한다', async () => {
@@ -171,6 +173,169 @@ describe('ITunesService', () => {
       expect(result).toEqual(jp);
       const [, config] = mockedAxios.get.mock.calls[1];
       expect((config?.params as Record<string, unknown>).country).toBe('jp');
+    });
+
+    describe('검색에 원곡이 없으면 아티스트 곡 목록에서 찾는다', () => {
+      // 아티스트 lookup 결과의 첫 항목은 아티스트 정보(미리듣기 없음)
+      const artistInfo = (artistId: number, artistName: string) => ({
+        wrapperType: 'artist',
+        artistId,
+        artistName,
+      });
+
+      it('explicit 곡: 검색 결과에서 이름이 맞는 아티스트의 곡 목록을 본다', async () => {
+        // 검색 API는 explicit 원곡을 빼고 같은 앨범의 다른 곡·자장가 커버만 돌려준다 (11/5 실측)
+        const lullaby = makeTrack({
+          trackId: 11,
+          trackName: 'American Idiot',
+          artistName: 'Rockabye Baby!',
+          artistId: 2,
+        });
+        const holiday = makeTrack({
+          trackId: 10,
+          trackName: 'Holiday',
+          artistName: 'Green Day',
+          artistId: 954266,
+        });
+        const original = makeTrack({
+          trackId: 12,
+          trackName: 'American Idiot',
+          artistName: 'Green Day',
+          artistId: 954266,
+        });
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: { results: [lullaby, holiday] } })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(954266, 'Green Day'), original] },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'Green Day',
+          title: 'American Idiot',
+        });
+
+        expect(result).toEqual(original);
+        // 이름이 맞는 아티스트가 검색 결과에 있으면 아티스트 검색은 하지 않는다
+        expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+        const [url, config] = mockedAxios.get.mock.calls[1];
+        expect(url).toBe(ITunesService.LOOKUP_URL);
+        expect(config?.params).toEqual({
+          id: 954266,
+          entity: 'song',
+          limit: ITunesService.CATALOG_LIMIT,
+          country: 'us',
+        });
+      });
+
+      it('US·KR trackId가 다른 한국 곡: KR 스토어 곡 목록에서 한글 곡명으로 찾는다', async () => {
+        const us = makeTrack({
+          trackId: 10,
+          trackName: 'Time of Our Life',
+          artistName: 'DAY6',
+          artistId: 100,
+        });
+        const kr = makeTrack({
+          trackId: 20,
+          trackName: '한 페이지가 될 수 있게',
+          artistName: '데이식스',
+          artistId: 100,
+        });
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: { results: [us] } })
+          // US trackId는 KR 스토어에 없다
+          .mockResolvedValueOnce({ data: { results: [] } })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(100, '데이식스'), kr] },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'DAY6',
+          title: '한 페이지가 될 수 있게',
+        });
+
+        expect(result).toEqual(kr);
+        const [, config] = mockedAxios.get.mock.calls[2];
+        expect(config?.params).toMatchObject({ id: 100, country: 'kr' });
+      });
+
+      it('한글 아티스트명은 아티스트 검색이 이어 준 공식 표기로 받아들인다', async () => {
+        const us = makeTrack({
+          trackId: 10,
+          trackName: 'Yanghwa BRDG',
+          artistName: 'Zion.T',
+          artistId: 7,
+        });
+        // KR 스토어도 곡명만 한글이고 아티스트는 라틴 표기
+        const kr = makeTrack({
+          trackId: 10,
+          trackName: '양화대교',
+          artistName: 'Zion.T',
+          artistId: 7,
+        });
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: { results: [us] } })
+          .mockResolvedValueOnce({ data: { results: [kr] } })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(7, 'Zion.T')] },
+          })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(7, 'Zion.T'), kr] },
+          });
+
+        const result = await service.resolveTrack({
+          artist: '자이언티',
+          title: '양화대교',
+        });
+
+        expect(result).toEqual(kr);
+        const [, config] = mockedAxios.get.mock.calls[2];
+        expect(config?.params).toMatchObject({
+          term: '자이언티',
+          entity: 'musicArtist',
+          country: 'us',
+        });
+      });
+
+      it('같은 문자로 쓴 다른 아티스트가 검색되면 곡 목록을 보지 않는다', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({
+            data: { results: [makeTrack({ trackName: 'Other Song' })] },
+          })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(9, 'Some Other Band')] },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'Some Band',
+          title: 'Some Song',
+        });
+
+        expect(result).toBeNull();
+        expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+      });
+
+      it('곡 목록 조회가 throttle되면 캐시하지 않고 null', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({
+            data: {
+              results: [
+                makeTrack({ trackName: 'Holiday', artistName: 'Green Day' }),
+              ],
+            },
+          })
+          .mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 429 },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'Green Day',
+          title: 'American Idiot',
+        });
+
+        expect(result).toBeNull();
+        expect(cacheManager.set).not.toHaveBeenCalled();
+      });
     });
 
     it('현지화 lookup이 throttle되면 캐시하지 않고 null', async () => {

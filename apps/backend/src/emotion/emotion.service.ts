@@ -17,6 +17,9 @@ import { EmotionAnalysis } from '../openai/emotion-analysis.schema';
  */
 @Injectable()
 export class EmotionService {
+  /** 프론트 입력창과 같은 상한 — 화면 검증은 요청을 직접 보내면 우회되고, 긴 입력은 그대로 LLM 비용이 된다 */
+  static readonly MAX_TEXT_LENGTH = 500;
+
   private readonly logger = new Logger(EmotionService.name);
 
   constructor(
@@ -100,14 +103,20 @@ export class EmotionService {
   }
 
   /**
-   * @throws {BadRequestException} 빈 텍스트가 입력된 경우
+   * @throws {BadRequestException} 빈 텍스트이거나 상한을 넘는 경우
    *
    * 추천/이미지 생성은 병렬 처리하되, 진행률은 "완료 카운트 → 마일스톤" 매핑으로
    * 방출해 어떤 작업이 먼저 끝나도 단조 증가를 보장 (프론트 Math.max 가드와 이중 안전망)
    */
   async analyzeAndRecommendWithProgress(text, onProgress) {
-    if (!text || text.trim() === '') {
+    // 쿼리에 text가 두 번 오면 배열이다 (?text=a&text=b)
+    if (typeof text !== 'string' || text.trim() === '') {
       throw new BadRequestException('분석할 텍스트가 필요합니다.');
+    }
+    if (text.trim().length > EmotionService.MAX_TEXT_LENGTH) {
+      throw new BadRequestException(
+        `최대 ${EmotionService.MAX_TEXT_LENGTH}자까지 입력 가능합니다.`,
+      );
     }
 
     const t0 = Date.now();

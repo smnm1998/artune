@@ -164,6 +164,32 @@ describe('EmotionService', () => {
       expect(openAIService.analyzeEmotion).not.toHaveBeenCalled();
     });
 
+    it('상한을 넘는 텍스트는 LLM을 부르지 않고 거절한다 (프론트와 같은 500자)', async () => {
+      const max = EmotionService.MAX_TEXT_LENGTH;
+
+      await expect(
+        service.analyzeAndRecommend('가'.repeat(max + 1)),
+      ).rejects.toThrow(`최대 ${max}자까지 입력 가능합니다.`);
+      expect(openAIService.analyzeEmotion).not.toHaveBeenCalled();
+    });
+
+    it('앞뒤 공백을 뺀 길이가 상한 이내면 LLM까지 진행한다', async () => {
+      openAIService.analyzeEmotion.mockRejectedValueOnce(new Error('LLM 도달'));
+
+      await expect(
+        service.analyzeAndRecommend(
+          `  ${'가'.repeat(EmotionService.MAX_TEXT_LENGTH)}  `,
+        ),
+      ).rejects.toThrow('LLM 도달');
+    });
+
+    it('쿼리로 text가 여러 번 오면(배열) 빈 입력처럼 거절한다', async () => {
+      await expect(
+        service.analyzeAndRecommend(['가', '나'] as unknown as string),
+      ).rejects.toThrow('분석할 텍스트가 필요합니다.');
+      expect(openAIService.analyzeEmotion).not.toHaveBeenCalled();
+    });
+
     it('OpenAI 서비스 실패 시 에러를 전파해야 한다.', async () => {
       openAIService.analyzeEmotion.mockRejectedValueOnce(
         new Error('OpenAI API Error'),

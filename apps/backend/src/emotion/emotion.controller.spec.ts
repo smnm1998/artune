@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { APP_GUARD } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { Observable } from 'rxjs';
+import * as request from 'supertest';
 import { EmotionController } from './emotion.controller';
 import { EmotionService } from './emotion.service';
+import { THROTTLE_OPTIONS, TRUSTED_PROXY_HOPS } from '../throttle.config';
 
 /**
  * SSE Observable의 방출을 수집한다.
@@ -171,5 +176,50 @@ describe('EmotionController', () => {
       ]);
       expect(completed).toBe(true);
     });
+  });
+});
+
+// 운영과 같은 제한 값·프록시 설정으로 실제 HTTP 요청을 보낸다 (AppModule은 .env를 불러와서 쓰지 않는다)
+describe('요청 제한 (IP당)', () => {
+  let app: NestExpressApplication;
+  const [{ limit }] = THROTTLE_OPTIONS.throttlers;
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot(THROTTLE_OPTIONS)],
+      controllers: [EmotionController],
+      providers: [
+        {
+          provide: EmotionService,
+          useValue: { analyzeAndRecommend: jest.fn().mockResolvedValue({}) },
+        },
+        { provide: APP_GUARD, useClass: ThrottlerGuard },
+      ],
+    }).compile();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
+    app.set('trust proxy', TRUSTED_PROXY_HOPS);
+    await app.init();
+  });
+
+  afterEach(() => app.close());
+
+  // Railway 프록시가 붙이는 것처럼 클라이언트 IP를 X-Forwarded-For로 보낸다
+  const analyze = (ip: string) =>
+    request(app.getHttpServer())
+      .post('/emotion/analyze')
+      .set('X-Forwarded-For', ip)
+      .send({ text: '오늘 좋았어' });
+
+  it('같은 IP가 분당 한도를 넘으면 429와 안내 문구를 돌려준다', async () => {
+    for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
+
+    const res = await analyze('203.0.113.1').expect(429);
+    expect(res.body.message).toBe(THROTTLE_OPTIONS.errorMessage);
+  });
+
+  it('프록시가 전달한 클라이언트 IP별로 따로 센다', async () => {
+    for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
+
+    await analyze('203.0.113.2').expect(201);
   });
 });

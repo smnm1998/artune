@@ -331,6 +331,46 @@ describe('ITunesService', () => {
         expect(result).toEqual(original);
       });
 
+      it('검색에 라이브만 있으면 곡 목록에서 라이브 앨범이 아닌 원곡을 찾는다', async () => {
+        // 원곡(Nimrod)이 explicit이라 검색에는 라이브만 나온다 (11/5 실측)
+        const searchedLive = makeTrack({
+          trackId: 10,
+          trackName:
+            'Good Riddance (Time of Your Life) [Live at the Electric Factory, Philadelphia 11/14/97]',
+          artistName: 'Green Day',
+          artistId: 954266,
+        });
+        const albumLive = makeTrack({
+          trackId: 21,
+          trackName: 'Good Riddance (Time of Your Life)',
+          artistName: 'Green Day',
+          artistId: 954266,
+          collectionName: 'Bullet In a Bible (Live)',
+        });
+        const original = makeTrack({
+          trackId: 22,
+          trackName: 'Good Riddance (Time of Your Life)',
+          artistName: 'Green Day',
+          artistId: 954266,
+          collectionName: 'Nimrod',
+        });
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: { results: [searchedLive] } })
+          .mockResolvedValueOnce({
+            data: {
+              results: [artistInfo(954266, 'Green Day'), albumLive, original],
+            },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'Green Day',
+          title: 'Good Riddance (Time of Your Life)',
+        });
+
+        expect(result).toEqual(original);
+        expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+      });
+
       it('같은 문자로 쓴 다른 아티스트가 검색되면 곡 목록을 보지 않는다', async () => {
         mockedAxios.get
           .mockResolvedValueOnce({

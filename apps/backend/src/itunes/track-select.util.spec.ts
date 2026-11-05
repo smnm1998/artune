@@ -54,7 +54,16 @@ describe('selectTrack', () => {
   });
 
   it('원곡이 없으면 대체 버전을 고른다', () => {
+    const candidates = [cand(1, ['Dynamite (Holiday Remix)', 'BTS'])];
+
+    expect(selectTrack({ artist: 'BTS', title: 'Dynamite' }, candidates)).toBe(
+      1,
+    );
+  });
+
+  it('라이브 녹음은 원곡이 없어도 채택하지 않는다', () => {
     // 원곡 후보는 JP 스토어에 없어 '平井 堅' 표기가 없다 → 아티스트 대조 실패
+    // null이면 해석기가 아티스트 곡 목록에서 원곡을 다시 찾는다
     const candidates = [
       cand(1, ['Hitomiwo Tojite', 'Ken Hirai'], ['瞳をとじて', 'Ken Hirai']),
       cand(
@@ -72,6 +81,53 @@ describe('selectTrack', () => {
 
     expect(
       selectTrack({ artist: '平井堅', title: '瞳をとじて' }, candidates),
+    ).toBeNull();
+  });
+
+  it('곡명에 표기가 없어도 라이브 앨범 수록본은 채택하지 않는다', () => {
+    // 악뮤 투어 실황 앨범은 곡명에 Live 표기가 없다 (11/5 실측)
+    const tourLive = {
+      ...cand(
+        1,
+        ['How can I love the heartbreak, you’re the one I love', 'AKMU'],
+        ['어떻게 이별까지 사랑하겠어, 널 사랑하는 거지', '악뮤'],
+      ),
+      album: "AKMU 'SAILING' TOUR LIVE",
+    };
+    const studio = {
+      ...cand(
+        2,
+        ['How can I love the heartbreak, you’re the one I love', 'AKMU'],
+        ['어떻게 이별까지 사랑하겠어, 널 사랑하는 거지', '악뮤'],
+      ),
+      album: '항해',
+    };
+    const request = {
+      artist: 'AKMU',
+      title: '어떻게 이별까지 사랑하겠어, 널 사랑하는 거지',
+    };
+
+    expect(selectTrack(request, [tourLive, studio])).toBe(2);
+    expect(selectTrack(request, [tourLive])).toBeNull();
+  });
+
+  it("요청 곡명에 live가 있으면 거르지 않고, 'Love Live!'는 라이브로 보지 않는다", () => {
+    const liveAndLetDie = {
+      ...cand(1, ['Live and Let Die', 'Paul McCartney & Wings']),
+      album: 'Live and Let Die - Single',
+    };
+    const snowHalation = {
+      ...cand(2, ['Snow halation', "μ's"]),
+      album: "Love Live! School idol project μ's Best Album",
+    };
+
+    expect(
+      selectTrack({ artist: 'Wings', title: 'Live and Let Die' }, [
+        liveAndLetDie,
+      ]),
+    ).toBe(1);
+    expect(
+      selectTrack({ artist: "μ's", title: 'Snow halation' }, [snowHalation]),
     ).toBe(2);
   });
 
@@ -129,9 +185,10 @@ describe('selectTrack', () => {
       cand(2, ['Four Seasons', 'TAEYEON'], ['사계', '태연']),
     ];
     // Eric Clapton - Tears in Heaven: 스튜디오 원곡은 베스트 앨범에만 있음 (11/2 프로브)
+    // 실측 대체 버전은 'Acoustic Live'였으나 라이브는 이제 채택하지 않아 Acoustic으로 비교한다
     const onlyCompilation = [
       { ...cand(1, ['Tears in Heaven', 'Eric Clapton']), compilation: true },
-      cand(2, ['Tears In Heaven (Acoustic Live)', 'Eric Clapton']),
+      cand(2, ['Tears In Heaven (Acoustic)', 'Eric Clapton']),
     ];
 
     expect(selectTrack({ artist: '태연', title: '사계' }, withAlbum)).toBe(2);

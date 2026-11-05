@@ -239,6 +239,7 @@ export class ITunesService {
     return tracks.map((t) => ({
       track: t,
       names: [t, ...localized.filter((l) => l.trackId === t.trackId)],
+      album: t.collectionName,
       compilation: ITunesService.COMPILATION_PATTERNS.some((pattern) =>
         pattern.test(t.collectionName ?? ''),
       ),

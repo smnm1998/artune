@@ -602,16 +602,49 @@ function summary(args, outDir) {
   const { selectByRegionQuota } = require(
     path.join(DIST, 'music/utils/region-quota.util'),
   );
+  // 운영 곡 키(정규화 + 8자 해시) — 위 songKey(LLM 후보 집계용 원문 키)와 다르다
+  const { songKey: d3Key } = require(
+    path.join(DIST, 'music/utils/song-key.util'),
+  );
+  const { orderByFreshness, HISTORY_LIMIT } = require(
+    path.join(DIST, 'music/utils/freshness-order.util'),
+  );
+  const { ExposureWindow } = require(path.join(DIST, 'music/exposure-window'));
   // 선곡 순서를 점수로 넘긴다: 앞에 고른 곡부터 지역 쿼터를 채운다
   const served = (picked) =>
     selectByRegionQuota(
       picked.flatMap((t, i) => {
         const found = results[key(t.artist, t.title)];
         return found?.found
-          ? [{ track: found, region: t.region, match: picked.length - i }]
+          ? [
+              {
+                track: { ...found, key: d3Key(t) },
+                region: t.region,
+                match: picked.length - i,
+              },
+            ]
           : [];
       }),
     );
+  // D3 재생: 응답을 아래 순서대로 한 서버에 흘려 보내며 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓는다
+  // 전체 노출 창은 모든 응답이 함께 쓰고, 사용자 이력은 5개씩 끊은 같은 사람이 본 최근 40곡
+  const replay = (rs, mode) => {
+    const exposure = new ExposureWindow();
+    let history = [];
+    return rs.map((r, i) => {
+      if (i % 5 === 0) history = [];
+      const songs = served(
+        orderByFreshness(
+          r.output[mode].map((t) => ({ ...t, key: d3Key(t) })),
+          { heads: exposure.heads(mode), seen: new Set(history) },
+        ),
+      );
+      const keys = songs.map((t) => t.key);
+      exposure.record(mode, keys);
+      history = [...history, ...keys].slice(-HISTORY_LIMIT);
+      return { id: r.id, emotion: r.output.emotion, songs };
+    });
+  };
   // 같은 사람 지표는 입력 순서를 쓴다 — 재시도한 응답이 파일 끝에 붙어도 입력 파일 순서로 되돌린다
   const inputIds = (() => {
     const metaFile = path.join(outDir, 'meta.json');
@@ -643,12 +676,19 @@ function summary(args, outDir) {
       })
       .sort((a, b) => a.round - b.round || a.pos - b.pos)
       .map(({ r }) => r);
-    return ['soothe', 'immerse'].map((mode) => {
-      const lists = rs.map((r) => ({
-        id: r.id,
-        emotion: r.output.emotion,
-        songs: served(r.output[mode]),
-      }));
+    const runs = ['soothe', 'immerse'].flatMap((mode) => [
+      {
+        mode,
+        order: '선곡 순서',
+        lists: rs.map((r) => ({
+          id: r.id,
+          emotion: r.output.emotion,
+          songs: served(r.output[mode]),
+        })),
+      },
+      { mode, order: 'D3 후순위', lists: replay(rs, mode) },
+    ]);
+    return runs.map(({ mode, order, lists }) => {
       const counts = new Map();
       const emotions = new Map();
       const names = new Map();
@@ -692,6 +732,7 @@ function summary(args, outDir) {
       return row([
         group,
         mode === 'soothe' ? '완화' : '심취',
+        order,
         share(sum(ranked.slice(0, 20))),
         firstId == null
           ? '-'
@@ -709,8 +750,10 @@ function summary(args, outDir) {
     '',
     '## 화면 10곡 (판정 기준)',
     '',
-    '- 해석 결과를 선곡 순서대로 운영 지역 쿼터(6:3:1, 1아티스트 1곡)에 넣어 사용자가 실제로 보는 목록을 재현한다',
-    '- 판정(완화, D4 전 고정): 상위 20곡 ≤35% · 1위 곡 ≤25%',
+    '- 해석 결과를 운영 지역 쿼터(6:3:1, 1아티스트 1곡)에 넣어 사용자가 실제로 보는 목록을 재현한다',
+    '- 순서: "선곡 순서"는 LLM이 고른 순서 그대로, "D3 후순위"는 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓은 것(운영에 들어갈 순서)',
+    '- D3 재생: 응답을 표의 순서대로 한 서버에 흘려 보낸다. 전체 노출 창(모드별 최근 30목록 중 15% 이상, 5목록부터)은 모든 응답이 함께 쓰고, 사용자 이력은 같은 사람(아래)이 본 최근 40곡. 실제 서버에는 다른 방문자 기록도 섞인다',
+    '- 판정(D4 전 고정, D3 후순위 행으로): 완화 상위 20곡 ≤35% · 1위 곡 ≤25% · 같은 사람 완화 ≤3/40곡 · 심취 ≤5/40곡',
     '- 상위 20곡·6감정+ 자리는 응답이 많을수록 커진다. 응답 수가 같은 폴더끼리만 비교하고, 판정은 회차(입력 40개)별 폴더 값의 평균으로 한다',
     '- 6감정+ 자리: 6개 이상 감정의 화면에 나온 곡이 차지한 자리 비율 (감정과 무관한 머리 곡)',
     '- 같은 입력: 같은 문장을 두 번 넣었을 때 두 화면 10곡 중 겹친 곡 수 (같은 입력이 두 번 이상 기록된 폴더만)',
@@ -719,6 +762,7 @@ function summary(args, outDir) {
     row([
       '변형·모델',
       '모드',
+      '순서',
       '상위 20곡',
       '1위 곡 (목록 중)',
       '6감정+ 자리',
@@ -726,7 +770,7 @@ function summary(args, outDir) {
       '같은 사람 5회 중 다시 본 곡',
       '10곡 채움',
     ]),
-    row(Array(8).fill('---')),
+    row(Array(9).fill('---')),
     ...screen,
   );
 

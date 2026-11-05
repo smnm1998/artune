@@ -131,7 +131,7 @@ describe('selectTrack', () => {
     ).toBe(2);
   });
 
-  it('Mix·THE FIRST TAKE도 대체 버전으로 보고 원곡을 먼저 고른다', () => {
+  it('Mix는 대체 버전, THE FIRST TAKE는 라이브처럼 빼고 원곡을 고른다', () => {
     // Sleep Mix가 원곡보다 먼저 채택된 케이스 (11/3 홀드아웃)
     const mix = [
       cand(
@@ -161,6 +161,10 @@ describe('selectTrack', () => {
     expect(
       selectTrack({ artist: 'Aimer', title: 'カタオモイ' }, firstTake),
     ).toBe(2);
+    // 원곡이 없어도 채택하지 않는다 (11/3 사람 검수 기준 "원곡 아니면 X")
+    expect(
+      selectTrack({ artist: 'Aimer', title: 'カタオモイ' }, [firstTake[0]]),
+    ).toBeNull();
   });
 
   it("'Original Mix'는 원곡 표기로 본다", () => {

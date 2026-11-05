@@ -182,7 +182,18 @@ async function pick(args, outDir) {
   const targets = inputs.slice(0, args.limit ?? undefined);
   const file = path.join(outDir, 'picks.jsonl');
   const runKey = (r) => `${groupOf(r)}|${r.id}`;
-  const done = new Set(readJsonl(file).map(runKey));
+  // 오류 난 입력은 이어 실행 때 다시 시도한다 — 오류 줄은 지우지 않고 picks.errors.jsonl 로 옮겨 남긴다
+  const previous = readJsonl(file);
+  const failed = previous.filter((r) => !r.output);
+  if (failed.length) {
+    const lines = (rs) => rs.map((r) => `${JSON.stringify(r)}\n`).join('');
+    fs.appendFileSync(path.join(outDir, 'picks.errors.jsonl'), lines(failed));
+    fs.writeFileSync(file, lines(previous.filter((r) => r.output)));
+    console.log(
+      `[pick] 오류 ${failed.length}건을 picks.errors.jsonl 로 옮기고 다시 시도`,
+    );
+  }
+  const done = new Set(previous.filter((r) => r.output).map(runKey));
   const sha1 = (text) =>
     createHash('sha1').update(text).digest('hex').slice(0, 12);
 
@@ -369,6 +380,8 @@ async function resolve(args, outDir) {
               trackId: track.trackId,
               trackName: track.trackName,
               artistName: track.artistName,
+              // 화면 10곡 재현의 1아티스트 1곡 판정용 (스토어마다 표기가 달라도 같은 값)
+              artistId: track.artistId ?? null,
               genre: track.primaryGenreName ?? null,
             }
           : { found: false };
@@ -571,6 +584,7 @@ function summary(args, outDir) {
     '## 기본곡 쏠림·감정별 차별화',
     '',
     '- 상위 20곡 비율 · 고유 곡 수는 응답 수가 같을 때만 비교한다 (변형마다 같은 입력)',
+    '- LLM이 고른 후보 기준이다. 판정은 아래 "화면 10곡" 기준으로 한다',
     '',
     row([
       '변형·모델',
@@ -582,6 +596,138 @@ function summary(args, outDir) {
     ]),
     row(Array(6).fill('---')),
     ...diversity,
+  );
+
+  // 화면 10곡 — 운영 지역 쿼터(dist)로 사용자가 실제로 보는 목록을 재현한다 (R2 설계 §8)
+  const { selectByRegionQuota } = require(
+    path.join(DIST, 'music/utils/region-quota.util'),
+  );
+  // 선곡 순서를 점수로 넘긴다: 앞에 고른 곡부터 지역 쿼터를 채운다
+  const served = (picked) =>
+    selectByRegionQuota(
+      picked.flatMap((t, i) => {
+        const found = results[key(t.artist, t.title)];
+        return found?.found
+          ? [{ track: found, region: t.region, match: picked.length - i }]
+          : [];
+      }),
+    );
+  // 같은 사람 지표는 입력 순서를 쓴다 — 재시도한 응답이 파일 끝에 붙어도 입력 파일 순서로 되돌린다
+  const inputIds = (() => {
+    const metaFile = path.join(outDir, 'meta.json');
+    const meta = fs.existsSync(metaFile)
+      ? JSON.parse(fs.readFileSync(metaFile, 'utf8'))
+      : {};
+    const file = meta.inputsFile && path.join(REPO, meta.inputsFile);
+    return file && fs.existsSync(file)
+      ? JSON.parse(fs.readFileSync(file, 'utf8')).inputs.map((i) => i.id)
+      : [];
+  })();
+  const screen = groups.flatMap((group) => {
+    // 해석이 끝난 응답만. 같은 입력의 n번째 기록끼리(회차) 입력 파일 순서로 놓는다 — 입력 파일을 모르면 기록 순서
+    const nth = new Map();
+    const rs = picks
+      .filter(
+        (r) =>
+          groupOf(r) === group &&
+          r.output &&
+          ['immerse', 'soothe'].every((m) =>
+            r.output[m].every((t) => results[key(t.artist, t.title)]),
+          ),
+      )
+      .map((r, i) => {
+        const round = nth.get(r.id) ?? 0;
+        nth.set(r.id, round + 1);
+        const pos = inputIds.indexOf(r.id);
+        return { r, round, pos: pos === -1 ? i : pos };
+      })
+      .sort((a, b) => a.round - b.round || a.pos - b.pos)
+      .map(({ r }) => r);
+    return ['soothe', 'immerse'].map((mode) => {
+      const lists = rs.map((r) => ({
+        id: r.id,
+        emotion: r.output.emotion,
+        songs: served(r.output[mode]),
+      }));
+      const counts = new Map();
+      const emotions = new Map();
+      const names = new Map();
+      for (const { emotion, songs } of lists)
+        for (const t of songs) {
+          counts.set(t.trackId, (counts.get(t.trackId) ?? 0) + 1);
+          emotions.set(
+            t.trackId,
+            (emotions.get(t.trackId) ?? new Set()).add(emotion),
+          );
+          names.set(t.trackId, t.trackName);
+        }
+      const slots = lists.reduce((a, l) => a + l.songs.length, 0);
+      const ranked = [...counts].sort((a, b) => b[1] - a[1]);
+      const sum = (xs) => xs.reduce((a, [, n]) => a + n, 0);
+      const share = (n) => (slots ? `${Math.round((n / slots) * 100)}%` : '-');
+      const [firstId, firstCount] = ranked[0] ?? [];
+
+      // 같은 입력: 같은 문장을 두 번 넣었을 때 두 화면에서 겹친 곡 수
+      const byInput = Map.groupBy(lists, (l) => l.id);
+      const overlaps = [...byInput.values()].flatMap((same) =>
+        same.flatMap((a, i) =>
+          same.slice(i + 1).map((b) => {
+            const ids = new Set(a.songs.map((t) => t.trackId));
+            return b.songs.filter((t) => ids.has(t.trackId)).length;
+          }),
+        ),
+      );
+      // 같은 사람: 입력 순서대로 5개씩 끊어 한 사람의 연속 사용으로 보고, 2~5번째 화면에서 앞서 본 곡 수
+      const repeats = [];
+      for (let s = 0; s + 5 <= lists.length; s += 5) {
+        const seen = new Set();
+        let again = 0;
+        for (const { songs } of lists.slice(s, s + 5)) {
+          again += songs.filter((t) => seen.has(t.trackId)).length;
+          for (const t of songs) seen.add(t.trackId);
+        }
+        repeats.push(again);
+      }
+
+      return row([
+        group,
+        mode === 'soothe' ? '완화' : '심취',
+        share(sum(ranked.slice(0, 20))),
+        firstId == null
+          ? '-'
+          : `${names.get(firstId)} ${pct(firstCount, lists.length)}`,
+        share(sum(ranked.filter(([id]) => emotions.get(id).size >= 6))),
+        overlaps.length ? `${avg(overlaps).toFixed(1)}/10곡` : '-',
+        repeats.length
+          ? `${avg(repeats).toFixed(1)}/40곡 (${repeats.length}명)`
+          : '-',
+        pct(lists.filter((l) => l.songs.length >= 10).length, lists.length),
+      ]);
+    });
+  });
+  lines.push(
+    '',
+    '## 화면 10곡 (판정 기준)',
+    '',
+    '- 해석 결과를 선곡 순서대로 운영 지역 쿼터(6:3:1, 1아티스트 1곡)에 넣어 사용자가 실제로 보는 목록을 재현한다',
+    '- 판정(완화, D4 전 고정): 상위 20곡 ≤35% · 1위 곡 ≤25%',
+    '- 상위 20곡·6감정+ 자리는 응답이 많을수록 커진다. 응답 수가 같은 폴더끼리만 비교하고, 판정은 회차(입력 40개)별 폴더 값의 평균으로 한다',
+    '- 6감정+ 자리: 6개 이상 감정의 화면에 나온 곡이 차지한 자리 비율 (감정과 무관한 머리 곡)',
+    '- 같은 입력: 같은 문장을 두 번 넣었을 때 두 화면 10곡 중 겹친 곡 수 (같은 입력이 두 번 이상 기록된 폴더만)',
+    '- 같은 사람: 입력 순서대로 5개씩 끊어 한 사람의 연속 사용으로 본다(예: 기쁨 3번 → 슬픔 2번). 2~5번째 화면 40곡 중 앞에서 이미 본 곡 수의 평균',
+    '',
+    row([
+      '변형·모델',
+      '모드',
+      '상위 20곡',
+      '1위 곡 (목록 중)',
+      '6감정+ 자리',
+      '같은 입력 겹침',
+      '같은 사람 5회 중 다시 본 곡',
+      '10곡 채움',
+    ]),
+    row(Array(8).fill('---')),
+    ...screen,
   );
 
   if (misses.length) {

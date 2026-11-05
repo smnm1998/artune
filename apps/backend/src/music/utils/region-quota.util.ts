@@ -13,7 +13,7 @@ export interface RegionedTrack {
  * 지역 쿼터(기본 6:3:1)로 최종 목록 선정.
  * - 각 지역에서 match 내림차순으로 쿼터만큼 채움
  * - 쿼터를 못 채우면 부족분을 다른 지역 잔여분으로 보충 (곡 수 우선 = A안)
- * - 아티스트 중복 제거 (1아티스트 1곡)
+ * - 아티스트 중복 제거 (1아티스트 1곡) — 스토어마다 표기가 달라(DAY6 ↔ 데이식스) artistId로 비교
  */
 export function selectByRegionQuota(
   candidates: RegionedTrack[],
@@ -37,7 +37,10 @@ export function selectByRegionQuota(
   const usedTrackIds = new Set<number>();
 
   const take = (rt: RegionedTrack): boolean => {
-    const artistKey = rt.track.artistName?.toLowerCase() ?? '';
+    const artistKey =
+      rt.track.artistId != null
+        ? `id:${rt.track.artistId}`
+        : (rt.track.artistName?.toLowerCase() ?? '');
     if (usedTrackIds.has(rt.track.trackId)) return false;
     if (usedArtists.has(artistKey)) return false; // 1아티스트 1곡
     selected.push(rt.track);

@@ -296,6 +296,41 @@ describe('ITunesService', () => {
         });
       });
 
+      it('곡 목록에서는 곡명이 그대로 같은 원곡을 앞에 놓인 편곡보다 먼저 고른다', async () => {
+        // 곡 목록은 검색과 달리 관련도순이 아니다 (11/5 실측: Brown Eyes 곡 목록에서 편곡이 원곡보다 앞)
+        const other = makeTrack({
+          trackId: 10,
+          trackName: 'With Coffee',
+          artistName: 'Brown Eyes',
+          artistId: 5,
+        });
+        const nocturn = makeTrack({
+          trackId: 21,
+          trackName: '벌써 일년 Piano Nocturn',
+          artistName: 'Brown Eyes',
+          artistId: 5,
+        });
+        const original = makeTrack({
+          trackId: 22,
+          trackName: '벌써 일년',
+          artistName: 'Brown Eyes',
+          artistId: 5,
+        });
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: { results: [other] } })
+          .mockResolvedValueOnce({ data: { results: [] } })
+          .mockResolvedValueOnce({
+            data: { results: [artistInfo(5, 'Brown Eyes'), nocturn, original] },
+          });
+
+        const result = await service.resolveTrack({
+          artist: 'Brown Eyes',
+          title: '벌써 일년',
+        });
+
+        expect(result).toEqual(original);
+      });
+
       it('같은 문자로 쓴 다른 아티스트가 검색되면 곡 목록을 보지 않는다', async () => {
         mockedAxios.get
           .mockResolvedValueOnce({

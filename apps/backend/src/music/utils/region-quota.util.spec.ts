@@ -91,7 +91,7 @@ describe('selectByRegionQuota', () => {
   it('같은 아티스트는 1곡만 포함한다', () => {
     const candidates = [
       rt(1, 'IU', 'korea', 0.9),
-      rt(2, 'IU', 'korea', 0.8), // 중복 아티스트
+      rt(2, 'IU', 'korea', 0.95), // 중복 아티스트 — 쿼터 안에 들 만큼 match가 높아야 제거를 검증한다
       ...many('korea', 8, 100),
       ...many('pop', 3, 200),
       ...many('jpop', 1, 300),
@@ -99,5 +99,22 @@ describe('selectByRegionQuota', () => {
     const result = selectByRegionQuota(candidates);
     const iuCount = result.filter((t) => t.artistName === 'IU').length;
     expect(iuCount).toBe(1);
+  });
+
+  it('스토어마다 표기가 달라도 artistId가 같으면 같은 아티스트로 본다', () => {
+    // 검색 단계는 US 표기, 곡 목록 단계는 KR 표기를 돌려준다
+    const us = rt(1, 'DAY6', 'korea', 0.99);
+    const kr = rt(2, '데이식스', 'korea', 0.98);
+    us.track.artistId = 100;
+    kr.track.artistId = 100;
+    const candidates = [
+      us,
+      kr,
+      ...many('korea', 8, 100),
+      ...many('pop', 3, 200),
+      ...many('jpop', 1, 300),
+    ];
+    const result = selectByRegionQuota(candidates);
+    expect(result.filter((t) => t.artistId === 100)).toEqual([us.track]);
   });
 });

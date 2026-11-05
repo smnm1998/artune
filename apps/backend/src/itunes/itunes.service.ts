@@ -3,6 +3,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ITunesTrack } from './itunes-track.type';
 import { selectTrack } from './track-select.util';
 import { artistMatches } from './track-artist-match.util';
+import { normalizeTitle } from './track-title-match.util';
 import { Cache } from 'cache-manager';
 import axios from 'axios';
 
@@ -217,8 +218,12 @@ export class ITunesService {
       return { status: 'transient' };
     }
     // 첫 항목은 아티스트 정보라 미리듣기가 없어 품질 필터에서 빠진다
-    const songs =
-      result.status === 'ok' ? this.filterQualityTracks(result.tracks) : [];
+    // 곡 목록은 관련도순이 아니라 편곡('벌써 일년 Piano Nocturn')이 원곡보다 앞설 수 있어 곡명이 같은 곡부터 본다
+    const sameTitle = (song: ITunesTrack) =>
+      normalizeTitle(song.trackName) === normalizeTitle(query.title);
+    const songs = (
+      result.status === 'ok' ? this.filterQualityTracks(result.tracks) : []
+    ).sort((a, b) => Number(sameTitle(b)) - Number(sameTitle(a)));
     // 곡 목록은 이미 그 아티스트의 곡이므로 요청 표기를 아티스트 후보로 더해 곡명·버전만 대조한다
     const asRequested = songs.map((song) => ({
       ...song,

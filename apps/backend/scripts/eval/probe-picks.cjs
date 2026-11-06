@@ -115,10 +115,16 @@ function mockPicks(config) {
   const text = body.messages.at(-1).content;
   let h = 0;
   for (const ch of text + body.model) h = (h * 31 + ch.codePointAt(0)) >>> 0;
-  const { PICKS_PER_MODE } = loadPickPrompt();
-  const list = (mode) =>
+  // 시스템 프롬프트로 변형을 찾아 그 변형의 모드별 곡 수만큼 고른다 (V5는 완화 15곡)
+  const { PICK_VARIANTS, buildPickPrompt, picksPerMode } = loadPickPrompt();
+  const counts = picksPerMode(
+    Object.values(PICK_VARIANTS).find(
+      (options) => buildPickPrompt(options) === body.messages[0].content,
+    ),
+  );
+  const list = (mode, perRegion) =>
     REGIONS.flatMap((region) =>
-      Array.from({ length: PICKS_PER_MODE[region] }, (_, i) => ({
+      Array.from({ length: perRegion[region] }, (_, i) => ({
         artist: `${region}${mode}${(h + i) % 9}`,
         title: `${mode} ${region} song ${i}`,
         region,
@@ -133,8 +139,8 @@ function mockPicks(config) {
       reading: '모의 해석',
       targets: { immerse: 'mock', soothe: 'mock' },
     }),
-    immerse: list('im'),
-    soothe: list('so'),
+    immerse: list('im', counts.immerse),
+    soothe: list('so', counts.soothe),
   };
   return {
     data: {
@@ -216,7 +222,6 @@ async function pick(args, outDir) {
         })(),
         mock: args.mock,
         models: {},
-        perMode: prompts.PICKS_PER_MODE,
         variants: {},
         inputs: targets.length,
         inputsFile: path.relative(REPO, args.inputs),
@@ -228,6 +233,8 @@ async function pick(args, outDir) {
     meta.variants[variant] ??= {
       options: prompts.PICK_VARIANTS[variant],
       promptSha1: sha1(prompts.buildPickPrompt(prompts.PICK_VARIANTS[variant])),
+      // 모드별 지역 곡 수 — 변형마다 다르다 (V5는 완화 15곡)
+      perMode: prompts.picksPerMode(prompts.PICK_VARIANTS[variant]),
     };
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
 
@@ -404,7 +411,8 @@ async function resolve(args, outDir) {
 }
 
 function summary(args, outDir) {
-  const { PICKS_PER_MODE, DEFAULT_SONGS } = loadPickPrompt();
+  const { PICKS_PER_MODE, PICK_VARIANTS, picksPerMode, DEFAULT_SONGS } =
+    loadPickPrompt();
   const picks = readJsonl(path.join(outDir, 'picks.jsonl'));
   const resolveFile = path.join(outDir, 'resolve.json');
   const results = fs.existsSync(resolveFile)
@@ -499,15 +507,29 @@ function summary(args, outDir) {
     );
   }
 
+  // 변형마다 모드별 목표 곡 수가 다르다 (V5는 완화 15곡). 변형 표기가 없는 11/2·11/3 기록은 모드마다 12곡
+  const targetsOf = (r) =>
+    r.variant
+      ? picksPerMode(PICK_VARIANTS[r.variant])
+      : { immerse: PICKS_PER_MODE, soothe: PICKS_PER_MODE };
+  const total = (perRegion) =>
+    Object.values(perRegion).reduce((a, b) => a + b, 0);
   const compliance = groups.map((group) => {
-    const modes = picks
-      .filter((r) => groupOf(r) === group && r.output)
-      .flatMap((r) => ['immerse', 'soothe'].map((m) => r.output[m]));
-    const countOk = modes.filter((m) =>
-      REGIONS.every(
-        (g) => m.filter((t) => t.region === g).length === PICKS_PER_MODE[g],
+    const rs = picks.filter((r) => groupOf(r) === group && r.output);
+    const modes = rs.flatMap((r) =>
+      ['immerse', 'soothe'].map((m) => r.output[m]),
+    );
+    const countOk = rs.flatMap((r) =>
+      ['immerse', 'soothe'].filter((m) =>
+        REGIONS.every(
+          (g) =>
+            r.output[m].filter((t) => t.region === g).length ===
+            targetsOf(r)[m][g],
+        ),
       ),
     ).length;
+    const length = (m) =>
+      `${avg(rs.map((r) => r.output[m].length)).toFixed(1)}/${rs.length ? total(targetsOf(rs[0])[m]) : '-'}`;
     const dupArtist = modes.filter(
       (m) => new Set(m.map((t) => t.artist.toLowerCase())).size < m.length,
     ).length;
@@ -516,7 +538,7 @@ function summary(args, outDir) {
       .filter((t) => /remix|live|\(\d{4}\)|ver\./i.test(t.title)).length;
     return row([
       group,
-      `${avg(modes.map((m) => m.length)).toFixed(1)}`,
+      `${length('immerse')} · ${length('soothe')}`,
       pct(countOk, modes.length),
       dupArtist,
       decorated,
@@ -528,8 +550,8 @@ function summary(args, outDir) {
     '',
     row([
       '변형·모델',
-      '모드당 곡 수(목표 12)',
-      '지역 7/4/1 정확',
+      '곡 수 심취 · 완화 (평균/목표)',
+      '지역별 곡 수 정확',
       '아티스트 중복 모드',
       '버전·연도 표기 곡',
     ]),
@@ -583,7 +605,7 @@ function summary(args, outDir) {
     '',
     '## 기본곡 쏠림·감정별 차별화',
     '',
-    '- 상위 20곡 비율 · 고유 곡 수는 응답 수가 같을 때만 비교한다 (변형마다 같은 입력)',
+    '- 상위 20곡 비율 · 고유 곡 수는 응답 수와 모드 곡 수가 같을 때만 비교한다 (변형마다 같은 입력, V5는 완화 15곡)',
     '- LLM이 고른 후보 기준이다. 판정은 아래 "화면 10곡" 기준으로 한다',
     '',
     row([

@@ -3,6 +3,7 @@ import {
   buildPickPrompt,
   DEFAULT_SONGS,
   PICK_VARIANTS,
+  picksPerMode,
 } from './pick-prompt';
 
 // strict 모드 규칙: 모든 객체는 additionalProperties: false, 모든 속성이 required — 어기면 API가 요청을 거부한다
@@ -86,5 +87,42 @@ describe('buildPickPrompt', () => {
       expect(prompt('V2')).not.toContain(`${song.artist} - ${song.title}`);
       expect(prompt('V3')).toContain(`${song.artist} - ${song.title}`);
     }
+  });
+
+  it('곡 수 지시는 변형의 모드별 곡 수를 따른다', () => {
+    expect(prompt('V3')).toContain(
+      '[곡 수] 모드마다 12곡: korea 7곡, pop 4곡, jpop 1곡.',
+    );
+    expect(prompt('V5')).toContain(
+      '[곡 수] immerse 12곡: korea 7곡, pop 4곡, jpop 1곡. soothe 15곡: korea 8곡, pop 5곡, jpop 2곡.',
+    );
+  });
+
+  it('V5는 V3에서 갈라진다 — V3 지시는 모두 유지하고 V4의 reading·targets는 쓰지 않는다', () => {
+    const v3 = prompt('V3')
+      .split('\n')
+      .filter((l) => l.startsWith('- '));
+    for (const line of v3) expect(prompt('V5')).toContain(line);
+    expect(prompt('V5')).not.toContain('reading');
+    expect(
+      buildPickFormat(PICK_VARIANTS.V5).json_schema.schema.properties,
+    ).not.toHaveProperty('reading');
+  });
+});
+
+describe('picksPerMode', () => {
+  it('V0~V4는 두 모드 모두 12곡(7/4/1)', () => {
+    for (const variant of ['V0', 'V1', 'V2', 'V3', 'V4'])
+      expect(picksPerMode(PICK_VARIANTS[variant])).toEqual({
+        immerse: { korea: 7, pop: 4, jpop: 1 },
+        soothe: { korea: 7, pop: 4, jpop: 1 },
+      });
+  });
+
+  it('V5는 완화만 15곡(8/5/2) — 화면 6:3:1보다 지역마다 2·2·1곡 많다', () => {
+    expect(picksPerMode(PICK_VARIANTS.V5)).toEqual({
+      immerse: { korea: 7, pop: 4, jpop: 1 },
+      soothe: { korea: 8, pop: 5, jpop: 2 },
+    });
   });
 });

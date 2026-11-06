@@ -1,4 +1,5 @@
 import { EMOTIONS, Emotion } from '../emotion/constants/emotions.constant';
+import type { PlaylistMode } from '../music/exposure-window';
 import type { Region } from '../music/utils/region-quota.util';
 
 /**
@@ -6,6 +7,7 @@ import type { Region } from '../music/utils/region-quota.util';
  *
  * 운영과 측정(scripts/eval/probe-picks.cjs)이 같은 빌더를 쓴다: 잰 프롬프트가 곧 배포하는 프롬프트.
  * 변형은 누적이다(V0 → V4). 스크리닝으로 고른 변형이 운영 기본값이 된다.
+ * V5는 운영 후보 V3에서 갈라진다(V4의 reading·targets는 쓰지 않는다).
  * V0 = 11/2·11/3 프로브 프롬프트(promptSha1 eb886af1b088) + R1 필드(crisis, description).
  */
 export interface PickPromptOptions {
@@ -19,6 +21,8 @@ export interface PickPromptOptions {
   avoidDefaults: boolean;
   /** C5 곡보다 먼저 reading(맥락 해석)·targets(모드별 무드 목표)를 쓰게 한다 */
   planFields: boolean;
+  /** C6 완화만 15곡: 이미 본 곡·머리 곡을 뒤로 밀어도(D3) 화면 10곡을 채울 곡이 남게 한다 */
+  overpickSoothe: boolean;
 }
 
 const V0: PickPromptOptions = {
@@ -27,11 +31,13 @@ const V0: PickPromptOptions = {
   isoSoothe: false,
   avoidDefaults: false,
   planFields: false,
+  overpickSoothe: false,
 };
 const V1 = { ...V0, officialNotation: true, romanceBoundary: true };
 const V2 = { ...V1, isoSoothe: true };
 const V3 = { ...V2, avoidDefaults: true };
 const V4 = { ...V3, planFields: true };
+const V5 = { ...V3, overpickSoothe: true };
 
 export const PICK_VARIANTS: Record<string, PickPromptOptions> = {
   V0,
@@ -39,6 +45,7 @@ export const PICK_VARIANTS: Record<string, PickPromptOptions> = {
   V2,
   V3,
   V4,
+  V5,
 };
 
 /** 모드당 12곡 — 최종 6:3:1(10곡) + 해석 실패 여유 2곡 */
@@ -47,6 +54,25 @@ export const PICKS_PER_MODE: Record<Region, number> = {
   pop: 4,
   jpop: 1,
 };
+
+/** C6 완화 15곡 — 화면 6:3:1에 지역마다 2·2·1곡 여유 */
+export const OVERPICK_SOOTHE: Record<Region, number> = {
+  korea: 8,
+  pop: 5,
+  jpop: 2,
+};
+
+export function picksPerMode(
+  options: PickPromptOptions,
+): Record<PlaylistMode, Record<Region, number>> {
+  return {
+    immerse: PICKS_PER_MODE,
+    soothe: options.overpickSoothe ? OVERPICK_SOOTHE : PICKS_PER_MODE,
+  };
+}
+
+const countText = (counts: Record<Region, number>) =>
+  `${Object.values(counts).reduce((a, b) => a + b, 0)}곡: korea ${counts.korea}곡, pop ${counts.pop}곡, jpop ${counts.jpop}곡`;
 
 /**
  * 감정과 무관하게 반복된 곡 — 11/3 홀드아웃 luna 40응답에서 감정 10종 이상의 선곡에 들어간 8곡.
@@ -83,6 +109,7 @@ const section = (title: string, items: (string | false)[]) =>
   [title, ...items.filter(Boolean).map((item) => `- ${item}`)].join('\n');
 
 export function buildPickPrompt(options: PickPromptOptions): string {
+  const counts = picksPerMode(options);
   return [
     '너는 감정 기반 음악 큐레이터다. 사용자의 글을 읽고 감정을 하나 고른 뒤, 두 모드의 플레이리스트를 실제 발매곡으로 직접 고른다.',
     section('[감정]', [
@@ -111,7 +138,9 @@ export function buildPickPrompt(options: PickPromptOptions): string {
         'soothe 는 순서가 있는 흐름이다. 첫 곡은 지금 감정에 맞닿은 곡에서 시작해, 뒤로 갈수록 차분하고 안정된 곡으로 옮겨 간다. 감정마다 출발점이 다르므로 soothe 목록도 감정마다 달라야 한다.',
       '두 목록은 듣는 즉시 구분될 만큼 무드(에너지·질감)가 달라야 한다. 곡 자체의 무드로 고른다(아티스트의 대표 스타일이 아니라).',
     ]),
-    '[곡 수] 모드마다 12곡: korea 7곡, pop 4곡, jpop 1곡. 각 곡의 region 에 표시한다.',
+    counts.immerse === counts.soothe
+      ? `[곡 수] 모드마다 ${countText(counts.immerse)}. 각 곡의 region 에 표시한다.`
+      : `[곡 수] immerse ${countText(counts.immerse)}. soothe ${countText(counts.soothe)}. 각 곡의 region 에 표시한다.`,
     section('[실존]', [
       'Apple Music/iTunes에서 찾을 수 있는 실제 발매곡만. 확실하지 않으면 더 확실한 곡으로 바꾼다. 지어내지 않는다.',
       '한 모드 안에서 곡마다 다른 아티스트.',

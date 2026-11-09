@@ -121,7 +121,7 @@ describe('selectByRegionQuota', () => {
   });
 });
 
-describe('selectByRegionQuota — 반환 순서 (isFresh 없음, 운영 Last.fm 경로)', () => {
+describe('selectByRegionQuota — 반환 순서 (isFresh 없음)', () => {
   it('한국 6 → 팝 3 → 일본 1 → 모자란 자리는 남은 후보 match 순, 두 지역이 모자라도 10곡', () => {
     const result = selectByRegionQuota([
       ...many('korea', 10, 0),

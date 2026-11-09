@@ -7,13 +7,12 @@ import type { CompleteEvent, EmotionStreamEvent } from '@artune/shared-types';
 import { EmotionModule } from './emotion.module';
 import { OpenAIService } from '../openai/openai.service';
 import { ITunesService } from '../itunes/itunes.service';
-import { LastfmService } from '../lastfm/lastfm.service';
 import { ExposureWindow } from '../music/exposure-window';
 import { PickResult } from '../openai/pick-prompt';
 import { ITunesTrack } from '../itunes/itunes-track.type';
 
 // 실제 모듈 연결(EmotionModule → MusicModule의 노출 창 provider)로 SSE 요청을 보낸다.
-// 바깥 서비스(OpenAI·iTunes·Last.fm)만 바꾸고, .env는 읽지 않는다 (AppModule은 .env를 불러와서 쓰지 않는다)
+// 바깥 서비스(OpenAI·iTunes)만 바꾸고, .env는 읽지 않는다 (AppModule은 .env를 불러와서 쓰지 않는다)
 const picks: PickResult = {
   emotion: 'joy',
   emotionLabel: '기쁨',
@@ -51,7 +50,8 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: true,
-          load: [() => ({ OPENAI_API_KEY: 'test', LASTFM_API_KEY: 'test' })],
+          // LASTFM_API_KEY 없이 모듈이 뜨는지도 여기서 확인된다 (R4)
+          load: [() => ({ OPENAI_API_KEY: 'test' })],
         }),
         CacheModule.register({ isGlobal: true }),
         EmotionModule,
@@ -80,8 +80,6 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
         ),
         localizeTracks: jest.fn(async (tracks: ITunesTrack[]) => tracks),
       })
-      .overrideProvider(LastfmService)
-      .useValue({})
       .compile();
     app = moduleRef.createNestApplication();
     await app.init();

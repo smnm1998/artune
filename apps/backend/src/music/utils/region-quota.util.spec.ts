@@ -118,3 +118,134 @@ describe('selectByRegionQuota', () => {
     expect(result.filter((t) => t.artistId === 100)).toEqual([us.track]);
   });
 });
+
+describe('selectByRegionQuota — 반환 순서 (isFresh 없음, 운영 Last.fm 경로)', () => {
+  it('한국 6 → 팝 3 → 일본 1 → 모자란 자리는 남은 후보 match 순, 두 지역이 모자라도 10곡', () => {
+    const result = selectByRegionQuota([
+      ...many('korea', 10, 0),
+      ...many('pop', 1, 100),
+    ]);
+    expect(result.map((t) => t.artistName)).toEqual([
+      ...[0, 1, 2, 3, 4, 5].map((i) => `korea-artist-${i}`),
+      'pop-artist-0',
+      ...[6, 7, 8].map((i) => `korea-artist-${i}`),
+    ]);
+  });
+});
+
+describe('selectByRegionQuota — 처음 보는 곡 우선 (isFresh, D3)', () => {
+  // 처음 보는 곡(new)은 match 높게, 머리 곡·본 곡(old)은 낮게 — 정렬한 순서를 match로 넘기는 운영과 같다
+  const pool = (region: Region, fresh: number, stale: number, top: number) => [
+    ...Array.from({ length: fresh }, (_, i) =>
+      rt(top * 100 + i, `${region}-new-${i}`, region, top - i * 0.01),
+    ),
+    ...Array.from({ length: stale }, (_, i) =>
+      rt(
+        top * 100 + 50 + i,
+        `${region}-old-${i}`,
+        region,
+        top - 0.5 - i * 0.01,
+      ),
+    ),
+  ];
+  const isFresh = (c: RegionedTrack) => c.track.artistName.includes('-new');
+  const names = (result: ITunesTrack[]) => result.map((t) => t.artistName);
+  const count = (result: ITunesTrack[], prefix: string) =>
+    result.filter((t) => t.artistName.startsWith(prefix)).length;
+  const stale = (result: ITunesTrack[]) =>
+    result.filter((t) => t.artistName.includes('-old')).length;
+
+  it('처음 보는 곡으로 쿼터가 차면 match가 더 높아도 머리·본 곡은 들어가지 않는다', () => {
+    const result = selectByRegionQuota(
+      [
+        rt(1, 'korea-old-top', 'korea', 0.99),
+        ...pool('korea', 6, 0, 0.9),
+        ...pool('pop', 3, 0, 0.8),
+        ...pool('jpop', 1, 0, 0.7),
+      ],
+      undefined,
+      isFresh,
+    );
+    expect(result).toHaveLength(10);
+    expect(stale(result)).toBe(0);
+  });
+
+  it('처음 보는 곡이 모자란 지역은 한 자리를 다른 지역의 처음 보는 곡으로 채운다 — 처음 보는 곡이 앞', () => {
+    // 예: 심취 한국 후보 7곡 중 4곡만 처음 → 지금은 본 곡 2곡이 남지만, 팝의 처음 보는 곡 1곡이 1자리를 가져간다
+    const result = selectByRegionQuota(
+      [
+        ...pool('korea', 4, 3, 0.9),
+        ...pool('pop', 5, 0, 0.8),
+        ...pool('jpop', 2, 0, 0.7),
+      ],
+      undefined,
+      isFresh,
+    );
+    expect(names(result)).toEqual([
+      'korea-new-0',
+      'korea-new-1',
+      'korea-new-2',
+      'korea-new-3',
+      'pop-new-0',
+      'pop-new-1',
+      'pop-new-2',
+      'jpop-new-0',
+      'pop-new-3', // 빌려 온 자리 — 남은 처음 보는 곡 중 match가 가장 높다
+      'korea-old-0',
+    ]);
+  });
+
+  it('빌리는 건 1자리까지 — 나머지는 그 지역의 머리·본 곡으로 채워 한국 곡은 5곡을 지킨다', () => {
+    const result = selectByRegionQuota(
+      [
+        ...pool('korea', 2, 5, 0.9),
+        ...pool('pop', 5, 0, 0.8),
+        ...pool('jpop', 2, 0, 0.7),
+      ],
+      undefined,
+      isFresh,
+    );
+    expect(result).toHaveLength(10);
+    expect(count(result, 'korea')).toBe(5);
+    expect(count(result, 'korea-old')).toBe(3);
+    expect(count(result, 'pop')).toBe(4);
+  });
+
+  it('처음 보는 곡과 머리·본 곡 사이에도 1아티스트 1곡', () => {
+    const newIu = rt(1, 'IU-new', 'korea', 0.95);
+    const oldIu = rt(2, 'IU-old', 'korea', 0.45); // 머리·본 곡 중 match가 가장 높다
+    newIu.track.artistId = 7;
+    oldIu.track.artistId = 7;
+    const result = selectByRegionQuota(
+      [
+        newIu,
+        oldIu,
+        ...pool('korea', 2, 4, 0.9),
+        ...pool('pop', 5, 0, 0.8),
+        ...pool('jpop', 2, 0, 0.7),
+      ],
+      undefined,
+      isFresh,
+    );
+    expect(result).toHaveLength(10);
+    expect(result.filter((t) => t.artistId === 7)).toEqual([newIu.track]);
+  });
+
+  it('모두 머리·본 곡이어도 6:3:1로 10곡을 채운다 (곡 수 우선)', () => {
+    const result = selectByRegionQuota(
+      [
+        ...pool('korea', 0, 8, 0.9),
+        ...pool('pop', 0, 4, 0.8),
+        ...pool('jpop', 0, 2, 0.7),
+      ],
+      undefined,
+      isFresh,
+    );
+    expect(result).toHaveLength(10);
+    expect([
+      count(result, 'korea'),
+      count(result, 'pop'),
+      count(result, 'jpop'),
+    ]).toEqual([6, 3, 1]);
+  });
+});

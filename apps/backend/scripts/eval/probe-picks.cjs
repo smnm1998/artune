@@ -624,7 +624,7 @@ function summary(args, outDir) {
   const { selectByRegionQuota } = require(
     path.join(DIST, 'music/utils/region-quota.util'),
   );
-  // 운영 곡 키(정규화 + 8자 해시) — 위 songKey(LLM 후보 집계용 원문 키)와 다르다
+  // 운영 곡 키(정규화한 곡명 + 8자 해시) — 위 songKey(LLM 후보 집계용 원문 키)와 다르다
   const { songKey: d3Key } = require(
     path.join(DIST, 'music/utils/song-key.util'),
   );
@@ -632,8 +632,8 @@ function summary(args, outDir) {
     path.join(DIST, 'music/utils/freshness-order.util'),
   );
   const { ExposureWindow } = require(path.join(DIST, 'music/exposure-window'));
-  // 선곡 순서를 점수로 넘긴다: 앞에 고른 곡부터 지역 쿼터를 채운다
-  const served = (picked) =>
+  // 선곡 순서를 점수로 넘긴다: 앞에 고른 곡부터 지역 쿼터를 채운다. isFresh를 주면 처음 보는 곡으로 먼저 채운다
+  const served = (picked, isFresh) =>
     selectByRegionQuota(
       picked.flatMap((t, i) => {
         const found = results[key(t.artist, t.title)];
@@ -647,19 +647,25 @@ function summary(args, outDir) {
             ]
           : [];
       }),
+      undefined,
+      isFresh,
     );
   // D3 재생: 응답을 아래 순서대로 한 서버에 흘려 보내며 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓는다
+  // 지역에 처음 보는 곡이 모자라면 다른 지역의 처음 보는 곡 1곡까지 빌린다(FRESH_BORROW_LIMIT)
   // 전체 노출 창은 모든 응답이 함께 쓰고, 사용자 이력은 5개씩 끊은 같은 사람이 본 최근 40곡
   const replay = (rs, mode) => {
     const exposure = new ExposureWindow();
     let history = [];
     return rs.map((r, i) => {
       if (i % 5 === 0) history = [];
+      const heads = exposure.heads(mode);
+      const seen = new Set(history);
       const songs = served(
         orderByFreshness(
           r.output[mode].map((t) => ({ ...t, key: d3Key(t) })),
-          { heads: exposure.heads(mode), seen: new Set(history) },
+          { heads, seen },
         ),
+        (c) => !heads.has(c.track.key) && !seen.has(c.track.key),
       );
       const keys = songs.map((t) => t.key);
       exposure.record(mode, keys);
@@ -773,7 +779,7 @@ function summary(args, outDir) {
     '## 화면 10곡 (판정 기준)',
     '',
     '- 해석 결과를 운영 지역 쿼터(6:3:1, 1아티스트 1곡)에 넣어 사용자가 실제로 보는 목록을 재현한다',
-    '- 순서: "선곡 순서"는 LLM이 고른 순서 그대로, "D3 후순위"는 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓은 것(운영에 들어갈 순서)',
+    '- 순서: "선곡 순서"는 LLM이 고른 순서 그대로, "D3 후순위"는 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓고, 지역에 처음 보는 곡이 모자라면 다른 지역의 처음 보는 곡 1자리까지 빌린 것(운영에 들어갈 순서, 곡 키 = 정규화한 곡명)',
     '- D3 재생: 응답을 표의 순서대로 한 서버에 흘려 보낸다. 전체 노출 창(모드별 최근 30목록 중 15% 이상, 5목록부터)은 모든 응답이 함께 쓰고, 사용자 이력은 같은 사람(아래)이 본 최근 40곡. 실제 서버에는 다른 방문자 기록도 섞인다',
     '- 판정(D4 전 고정, D3 후순위 행으로): 완화 상위 20곡 ≤35% · 1위 곡 ≤25% · 같은 사람 완화 ≤3/40곡 · 심취 ≤5/40곡',
     '- 상위 20곡·6감정+ 자리는 응답이 많을수록 커진다. 응답 수가 같은 폴더끼리만 비교하고, 판정은 회차(입력 40개)별 폴더 값의 평균으로 한다',

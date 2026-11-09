@@ -23,7 +23,18 @@ export interface Track {
   duration_ms: number;
   preview_url: string | null;
   external_urls: { spotify: string };
+  /** 곡 키(정규화한 곡명의 8자 해시) — 브라우저 이력에 저장해 다음 요청의 seen으로 보낸다 */
+  key: string;
 }
+
+export type PlaylistMode = 'immerse' | 'soothe';
+
+/**
+ * 이 사람이 최근 본 곡 키 — 모드별 최근 40곡(브라우저 localStorage).
+ * 서버는 이 곡들을 지우지 않고 화면 순서에서 뒤로 미룬다.
+ * SSE 요청에서는 쿼리 seenImmerse·seenSoothe에 쉼표로 이어 보낸다.
+ */
+export type SeenHistory = Record<PlaylistMode, string[]>;
 
 /** 감정 심취(immerse) / 감정 완화(soothe) 각각의 플레이리스트 */
 export interface Playlist {
@@ -35,6 +46,12 @@ export interface Playlist {
 export interface Artwork {
   url: string;
   prompt: string;
+}
+
+/** POST /api/emotion/analyze 요청 본문 */
+export interface AnalyzeRequest {
+  text: string;
+  seen?: Partial<SeenHistory>;
 }
 
 /** POST /api/emotion/analyze 응답 및 SSE complete 이벤트의 페이로드 */

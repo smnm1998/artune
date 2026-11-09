@@ -5,6 +5,12 @@ import {
   EMOTION_ANALYSIS_FORMAT,
   EmotionAnalysisOutput,
 } from './emotion-analysis.schema';
+import {
+  buildPickFormat,
+  buildPickPrompt,
+  PICK_VARIANTS,
+  PickOutput,
+} from './pick-prompt';
 import axios from 'axios';
 
 jest.mock('axios');
@@ -182,6 +188,83 @@ describe('OpenAIService', () => {
 
       await expect(service.analyzeEmotion('테스트 텍스트')).rejects.toThrow(
         '최소 3곡 이상 필요합니다',
+      );
+    });
+  });
+
+  describe('pickSongs', () => {
+    const track = (region: 'korea' | 'pop' | 'jpop', i: number) => ({
+      artist: `${region} 아티스트${i}`,
+      title: `${region} 곡${i}`,
+      region,
+    });
+    const makePicks = (): PickOutput => ({
+      emotion: 'joy',
+      crisis: false,
+      description: '오늘 하루 정말 행복한 일들이 가득했네요!',
+      immerse: [track('korea', 1), track('pop', 1), track('jpop', 1)],
+      soothe: [track('korea', 2), track('pop', 2), track('jpop', 2)],
+    });
+
+    it('운영 변형 V5(완화 15곡)의 프롬프트·스키마로 선곡하고 화면 라벨을 붙인다', async () => {
+      const picks = makePicks();
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion(JSON.stringify(picks)),
+      );
+
+      const result = await service.pickSongs('오늘 정말 행복한 하루였어요!');
+
+      expect(result).toEqual({ ...picks, emotionLabel: '기쁨' });
+      // 측정(D4)으로 고른 변형 — 바꾸려면 다시 측정한다
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/chat/completions',
+        expect.objectContaining({
+          model: 'gpt-6-luna',
+          reasoning_effort: 'none',
+          response_format: buildPickFormat(PICK_VARIANTS.V5),
+          messages: [
+            { role: 'system', content: buildPickPrompt(PICK_VARIANTS.V5) },
+            { role: 'user', content: '오늘 정말 행복한 하루였어요!' },
+          ],
+        }),
+        expect.anything(),
+      );
+    });
+
+    it('빈 텍스트가 입력되면 API를 부르지 않고 에러를 던져야 한다.', async () => {
+      await expect(service.pickSongs('  ')).rejects.toThrow(
+        '분석할 텍스트를 입력해주세요.',
+      );
+      expect(mockedAxios.post).not.toHaveBeenCalled();
+    });
+
+    it('한 모드의 곡이 3곡 미만이면 에러를 던져야 한다.', async () => {
+      const picks = makePicks();
+      picks.soothe = picks.soothe.slice(0, 2);
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion(JSON.stringify(picks)),
+      );
+
+      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
+        'soothe 곡이 3곡 미만입니다.',
+      );
+    });
+
+    it('거절·잘림은 감정 분석과 같은 경로로 에러가 된다', async () => {
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion(null, { refusal: 'I can’t help with that.' }),
+      );
+      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
+        'OpenAI 응답 거절',
+      );
+
+      mockedAxios.post.mockResolvedValueOnce(
+        mockChatCompletion('{"emotion": "joy", "cri', {
+          finishReason: 'length',
+        }),
+      );
+      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
+        '토큰 한도',
       );
     });
   });

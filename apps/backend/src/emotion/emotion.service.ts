@@ -1,15 +1,20 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { EmotionResponse } from '@artune/shared-types';
+import { EmotionResponse, SeenHistory } from '@artune/shared-types';
 import { OpenAIService } from '../openai/openai.service';
-import { MusicService } from '../music/music.service';
+import { MusicService, ServedTrack } from '../music/music.service';
 import { DalleService } from '../dalle/dalle.service';
 import { mapItunesTrackToFrontend } from '../music/utils/track-mapper.util';
+import { HISTORY_LIMIT } from '../music/utils/freshness-order.util';
+import type { PlaylistMode } from '../music/exposure-window';
 import {
   IMMERSE_DESCRIPTIONS,
   SOOTHE_DESCRIPTIONS,
 } from './constants/emotion-descriptions.constant';
 import { Emotion } from './constants/emotions.constant';
-import { EmotionAnalysis } from '../openai/emotion-analysis.schema';
+import { PickResult } from '../openai/pick-prompt';
+
+/** 요청이 보낸 이력 그대로 — SSE 쿼리는 쉼표로 이은 문자열, POST 본문은 배열 */
+export type SeenInput = Partial<Record<PlaylistMode, unknown>>;
 
 /**
  * Emotion Service - Orchestrator
@@ -34,6 +39,24 @@ export class EmotionService {
 
   getSootheDescription(emotion: Emotion) {
     return SOOTHE_DESCRIPTIONS[emotion];
+  }
+
+  /**
+   * 곡 키 형식(16진수 8자)만 남기고 최근 HISTORY_LIMIT곡으로 자른다.
+   * 이력은 순서만 바꾸는 힌트라 형식이 틀린 값은 오류 대신 버린다
+   */
+  static parseSeen(raw: unknown): string[] {
+    const values = Array.isArray(raw)
+      ? raw
+      : typeof raw === 'string'
+        ? raw.split(',')
+        : [];
+    return values
+      .filter(
+        (value): value is string =>
+          typeof value === 'string' && /^[0-9a-f]{8}$/.test(value),
+      )
+      .slice(-HISTORY_LIMIT);
   }
 
   /**
@@ -65,11 +88,13 @@ export class EmotionService {
   }
 
   private buildResponse(
-    emotion: EmotionAnalysis,
-    immerseRecommendations,
-    sootheRecommendations,
+    emotion: PickResult,
+    immerseRecommendations: ServedTrack[],
+    sootheRecommendations: ServedTrack[],
     dessertImage,
   ): EmotionResponse {
+    const toTracks = (served: ServedTrack[]) =>
+      served.map(({ track, key }) => mapItunesTrackToFrontend(track, key));
     return {
       emotionLabel: emotion.emotionLabel,
       description: emotion.description,
@@ -82,12 +107,12 @@ export class EmotionService {
         immerse: {
           modeLabel: '감정 심취',
           description: this.getImmerseDescription(emotion.emotion),
-          tracks: immerseRecommendations.map(mapItunesTrackToFrontend),
+          tracks: toTracks(immerseRecommendations),
         },
         soothe: {
           modeLabel: '감정 완화',
           description: this.getSootheDescription(emotion.emotion),
-          tracks: sootheRecommendations.map(mapItunesTrackToFrontend),
+          tracks: toTracks(sootheRecommendations),
         },
       },
     };
@@ -98,8 +123,8 @@ export class EmotionService {
    * 구현을 하나로 두어 두 경로의 동작이 어긋나지 않게 한다.
    * @throws {BadRequestException} 빈 텍스트가 입력된 경우
    */
-  async analyzeAndRecommend(text) {
-    return this.analyzeAndRecommendWithProgress(text, () => {});
+  async analyzeAndRecommend(text, seen: SeenInput = {}) {
+    return this.analyzeAndRecommendWithProgress(text, () => {}, seen);
   }
 
   /**
@@ -107,8 +132,13 @@ export class EmotionService {
    *
    * 추천/이미지 생성은 병렬 처리하되, 진행률은 "완료 카운트 → 마일스톤" 매핑으로
    * 방출해 어떤 작업이 먼저 끝나도 단조 증가를 보장 (프론트 Math.max 가드와 이중 안전망)
+   * @param seen 이 사람이 모드별로 최근 본 곡 키 — 지우지 않고 화면 순서에서 뒤로 미룬다
    */
-  async analyzeAndRecommendWithProgress(text, onProgress) {
+  async analyzeAndRecommendWithProgress(
+    text,
+    onProgress,
+    seen: SeenInput = {},
+  ) {
     // 쿼리에 text가 두 번 오면 배열이다 (?text=a&text=b)
     if (typeof text !== 'string' || text.trim() === '') {
       throw new BadRequestException('분석할 텍스트가 필요합니다.');
@@ -119,14 +149,18 @@ export class EmotionService {
       );
     }
 
+    const history: SeenHistory = {
+      immerse: EmotionService.parseSeen(seen.immerse),
+      soothe: EmotionService.parseSeen(seen.soothe),
+    };
     const t0 = Date.now();
 
     // 시작 (0%)
     onProgress(0, '감정 분석을 시작합니다...');
 
-    // OpenAI로 감정 분석 (10%~30%)
+    // OpenAI로 감정 분석 + 선곡 (10%~30%)
     onProgress(10, '감정을 분석하고 있어요...');
-    const emotion = await this.openAIService.analyzeEmotion(text);
+    const emotion = await this.openAIService.pickSongs(text);
     const tOpenAI = Date.now();
     onProgress(30, '음악 추천을 준비하고 있어요...');
 
@@ -154,20 +188,23 @@ export class EmotionService {
     const [immerseRecommendations, sootheRecommendations, dessertImage] =
       await Promise.all([
         withProgress(
-          this.musicService.getRecommendations(
-            emotion.immerse.seeds,
+          this.musicService.servePicks(
+            emotion.immerse,
             'immerse',
+            history.immerse,
           ),
         ),
         withProgress(
-          this.musicService.getRecommendations(emotion.soothe.seeds, 'soothe'),
+          this.musicService.servePicks(
+            emotion.soothe,
+            'soothe',
+            history.soothe,
+          ),
         ),
-
         withProgress(
           this.dalleService.generateDessertImage(
             emotion.emotion,
             emotion.emotionLabel,
-            emotion.immerse.genres,
           ),
         ),
       ]);
@@ -177,12 +214,13 @@ export class EmotionService {
       `[timing] total=${tEnd - t0}ms ` +
         `openai=${tOpenAI - t0}ms ` +
         `parallel_block=${tEnd - tOpenAI}ms ` +
-        `tracks=${immerseRecommendations.length}/${sootheRecommendations.length}`,
+        `tracks=${immerseRecommendations.length}/${sootheRecommendations.length} ` +
+        `seen=${history.immerse.length}/${history.soothe.length}`,
     );
     this.logModeSeparation(
       emotion,
-      immerseRecommendations,
-      sootheRecommendations,
+      immerseRecommendations.map(({ track }) => track),
+      sootheRecommendations.map(({ track }) => track),
     );
 
     // 전체 완료 (100%)

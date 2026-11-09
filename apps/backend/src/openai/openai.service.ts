@@ -7,6 +7,14 @@ import {
   EmotionAnalysis,
   EmotionAnalysisOutput,
 } from './emotion-analysis.schema';
+import {
+  buildPickFormat,
+  buildPickPrompt,
+  PICK_VARIANTS,
+  PickOutput,
+  PickResult,
+  PRODUCTION_PICK_VARIANT,
+} from './pick-prompt';
 
 /**
  * OpenAI Chat Completions API를 활용한 감정 분석 서비스
@@ -24,7 +32,32 @@ export class OpenAIService {
   }
 
   /**
-   * 사용자 텍스트를 분석하여 감정 정보와 모드별 시드곡 반환
+   * 사용자 글 → 감정·위기 신호·공감 문구 + 모드별 곡 (LLM 직접 선곡, R2). 변형은 PRODUCTION_PICK_VARIANT
+   *
+   * @throws {BadRequestException} 텍스트가 비어있을 때
+   * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림·모드 곡이 3곡 미만일 때
+   */
+  async pickSongs(text: string): Promise<PickResult> {
+    if (!text || text.trim().length === 0) {
+      throw new BadRequestException('분석할 텍스트를 입력해주세요.');
+    }
+    const options = PICK_VARIANTS[PRODUCTION_PICK_VARIANT];
+    const result = await this.complete<PickOutput>(
+      buildPickPrompt(options),
+      buildPickFormat(options),
+      text,
+    );
+    // 곡 수는 스키마가 아니라 프롬프트로 지시한다 — 측정에서 지시 준수 98~99%(11/6)
+    for (const mode of ['immerse', 'soothe'] as const) {
+      if (result[mode].length < 3) {
+        throw new Error(`${mode} 곡이 3곡 미만입니다.`);
+      }
+    }
+    return { ...result, emotionLabel: EMOTION_LABELS[result.emotion] };
+  }
+
+  /**
+   * 사용자 텍스트를 분석하여 감정 정보와 모드별 시드곡 반환 (Last.fm 경로 — R4에서 삭제)
    *
    * @throws {BadRequestException} 텍스트가 비어있을 때
    * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림 시
@@ -34,24 +67,35 @@ export class OpenAIService {
     if (!text || text.trim().length === 0) {
       throw new BadRequestException('분석할 텍스트를 입력해주세요.');
     }
+    const result = await this.complete<EmotionAnalysisOutput>(
+      this.getSystemPrompt(),
+      EMOTION_ANALYSIS_FORMAT,
+      text,
+    );
+    this.validateResult(result);
+    return { ...result, emotionLabel: EMOTION_LABELS[result.emotion] };
+  }
 
+  /**
+   * Chat Completions 1회 — Structured Outputs(json_schema strict) 응답을 파싱해 돌려준다
+   *
+   * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림·JSON 파싱 실패 시
+   */
+  private async complete<T>(
+    systemPrompt: string,
+    responseFormat: object,
+    text: string,
+  ): Promise<T> {
     try {
-      // OpenAI Chat Completions API 호출
       const response = await axios.post(
         this.apiUrl,
         {
           model: OpenAIService.MODEL,
           messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt(),
-            },
-            {
-              role: 'user',
-              content: text,
-            },
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text },
           ],
-          response_format: EMOTION_ANALYSIS_FORMAT,
+          response_format: responseFormat,
           reasoning_effort: 'none',
         },
         {
@@ -70,10 +114,7 @@ export class OpenAIService {
       if (choice.finish_reason === 'length') {
         throw new Error('OpenAI 응답이 토큰 한도에서 잘렸습니다.');
       }
-      const result: EmotionAnalysisOutput = JSON.parse(choice.message.content);
-      this.validateResult(result);
-
-      return { ...result, emotionLabel: EMOTION_LABELS[result.emotion] };
+      return JSON.parse(choice.message.content) as T;
     } catch (error) {
       // JSON 파싱 에러
       if (error instanceof SyntaxError) {

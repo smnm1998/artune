@@ -1,7 +1,11 @@
 import { Track } from '@artune/shared-types';
 import { ITunesTrack } from 'src/itunes/itunes-track.type';
 
-export function mapItunesTrackToFrontend(track: ITunesTrack): Track {
+/** @param key 곡 키(songKey) — 브라우저 이력에 저장된다 */
+export function mapItunesTrackToFrontend(
+  track: ITunesTrack,
+  key: string,
+): Track {
   return {
     id: String(track.trackId),
     name: track.trackName,
@@ -17,5 +21,6 @@ export function mapItunesTrackToFrontend(track: ITunesTrack): Track {
     external_urls: {
       spotify: track.trackViewUrl,
     },
+    key,
   };
 }

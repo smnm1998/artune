@@ -1,6 +1,6 @@
 import { Controller, Post, Sse, Body, Query } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { EmotionService } from './emotion.service';
+import { EmotionService, SeenInput } from './emotion.service';
 
 /**
  * Emotion Controller
@@ -11,8 +11,8 @@ export class EmotionController {
   constructor(private readonly emotionService: EmotionService) {}
 
   @Post('analyze')
-  async analyze(@Body('text') text: string) {
-    return await this.emotionService.analyzeAndRecommend(text);
+  async analyze(@Body('text') text: string, @Body('seen') seen?: SeenInput) {
+    return await this.emotionService.analyzeAndRecommend(text, seen);
   }
 
   /**
@@ -24,7 +24,8 @@ export class EmotionController {
    * - error: { type: 'error', message: string }
    *
    * 예시:
-   * GET /emotion/analyze-stream?text=오늘 정말 기분이 좋아!
+   * GET /emotion/analyze-stream?text=오늘 정말 기분이 좋아!&seenImmerse=1a2b3c4d,5e6f7a8b&seenSoothe=9c0d1e2f
+   * - seenImmerse·seenSoothe: 이 사람이 최근 본 곡 키(쉼표로 이음, 모드별 최근 40곡) — 없어도 된다
    *
    * SSE Stream:
    * data: {"type":"progress","progress":0,"message":"감정 분석을 시작합니다..."}
@@ -33,7 +34,11 @@ export class EmotionController {
    * data: {"type":"complete","data":{...}}
    */
   @Sse('analyze-stream')
-  analyzeStream(@Query('text') text: string) {
+  analyzeStream(
+    @Query('text') text: string,
+    @Query('seenImmerse') seenImmerse?: string,
+    @Query('seenSoothe') seenSoothe?: string,
+  ) {
     return new Observable((observer) => {
       (async () => {
         try {
@@ -49,6 +54,7 @@ export class EmotionController {
                   },
                 });
               },
+              { immerse: seenImmerse, soothe: seenSoothe },
             );
 
           observer.next({

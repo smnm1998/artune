@@ -73,8 +73,21 @@ describe('EmotionController', () => {
 
       expect(emotionService.analyzeAndRecommend).toHaveBeenCalledWith(
         '오늘 행복해요',
+        undefined,
       );
       expect(result).toEqual(mockResult);
+    });
+
+    it('본문의 이력(seen)을 서비스에 넘긴다.', async () => {
+      emotionService.analyzeAndRecommend.mockResolvedValueOnce(mockResult);
+      const seen = { immerse: ['1a2b3c4d'], soothe: [] };
+
+      await controller.analyze('오늘 행복해요', seen);
+
+      expect(emotionService.analyzeAndRecommend).toHaveBeenCalledWith(
+        '오늘 행복해요',
+        seen,
+      );
     });
 
     it('서비스 에러를 그대로 전파한다.', async () => {
@@ -119,7 +132,27 @@ describe('EmotionController', () => {
 
       expect(
         emotionService.analyzeAndRecommendWithProgress,
-      ).toHaveBeenCalledWith('오늘 행복해요', expect.any(Function));
+      ).toHaveBeenCalledWith('오늘 행복해요', expect.any(Function), {
+        immerse: undefined,
+        soothe: undefined,
+      });
+    });
+
+    it('쿼리의 모드별 이력(seenImmerse·seenSoothe)을 서비스에 넘긴다.', async () => {
+      emotionService.analyzeAndRecommendWithProgress.mockResolvedValueOnce(
+        mockResult,
+      );
+
+      await collectStream(
+        controller.analyzeStream('테스트', '1a2b3c4d,5e6f7a8b', '9c0d1e2f'),
+      );
+
+      expect(
+        emotionService.analyzeAndRecommendWithProgress,
+      ).toHaveBeenCalledWith('테스트', expect.any(Function), {
+        immerse: '1a2b3c4d,5e6f7a8b',
+        soothe: '9c0d1e2f',
+      });
     });
 
     it('서비스 실패 시 error 이벤트를 방출한 뒤 스트림을 에러로 종료한다.', async () => {

@@ -48,6 +48,9 @@ export const PICK_VARIANTS: Record<string, PickPromptOptions> = {
   V5,
 };
 
+/** 운영 변형 — D4 판정(11/6, docs/measurements/2026-11-06-d4-r1/analysis.md) */
+export const PRODUCTION_PICK_VARIANT = 'V5';
+
 /** 모드당 12곡 — 최종 6:3:1(10곡) + 해석 실패 여유 2곡 */
 export const PICKS_PER_MODE: Record<Region, number> = {
   korea: 7,
@@ -103,6 +106,11 @@ export interface PickOutput {
   targets?: { immerse: string; soothe: string };
   immerse: PickedTrack[];
   soothe: PickedTrack[];
+}
+
+/** 서비스가 반환하는 형태 — 화면 라벨은 LLM이 아니라 enum에서 붙인다 */
+export interface PickResult extends PickOutput {
+  emotionLabel: string;
 }
 
 const section = (title: string, items: (string | false)[]) =>

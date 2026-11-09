@@ -1,14 +1,30 @@
 import { API_ENDPOINTS, API_BASE_URL } from '@/constants/api';
-import type { EmotionResponse, EmotionStreamEvent } from '@artune/shared-types';
+import type {
+  EmotionResponse,
+  EmotionStreamEvent,
+  SeenHistory,
+} from '@artune/shared-types';
 
 export type { EmotionResponse };
 
 type ProgressCallback = (progress: number, message: string) => void;
 
+/**
+ * SSE(GET) 요청 주소. 이력은 쿼리 seenImmerse·seenSoothe에 쉼표로 잇고, 빈 모드는 빼서 주소를 줄인다.
+ * (4일차 POST 전환 때 본문 seen으로 옮긴다)
+ */
+export function buildStreamUrl(text: string, seen?: SeenHistory): string {
+  const params = new URLSearchParams({ text });
+  if (seen?.immerse.length) params.set('seenImmerse', seen.immerse.join(','));
+  if (seen?.soothe.length) params.set('seenSoothe', seen.soothe.join(','));
+  return `${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}?${params}`;
+}
+
 export async function analyzeEmotionWithProgress(
   text: string,
   onProgress: ProgressCallback,
   signal?: AbortSignal,
+  seen?: SeenHistory,
 ): Promise<EmotionResponse> {
   return new Promise((resolve, reject) => {
     // 이미 abort 된 signal 은 'abort' 이벤트가 다시 발생하지 않으므로 직접 확인
@@ -17,10 +33,8 @@ export async function analyzeEmotionWithProgress(
       return;
     }
 
-    const url = `${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}?text=${encodeURIComponent(text)}`;
-
     // EventSource는 credentials를 보내지 않으므로 withCredentials 옵션 없이 생성
-    const eventSource = new EventSource(url);
+    const eventSource = new EventSource(buildStreamUrl(text, seen));
 
     const handleAbort = () => {
       cleanup();

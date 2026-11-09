@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import useAppStore from '@/stores/useAppStore';
 import { analyzeEmotionWithProgress } from '@/api/emotionApi';
 import type { EmotionResponse } from '@/api/emotionApi';
+import type { Track } from '@/types/track';
 import { ERROR_MESSAGES } from '@/constants/errorMessages';
+import { loadSeen } from '@/utils/seenHistory';
 
 vi.mock('@/api/emotionApi', () => ({
   analyzeEmotionWithProgress: vi.fn(),
@@ -20,6 +22,29 @@ const mockResult: EmotionResponse = {
     soothe: { modeLabel: '감정 완화', description: '', tracks: [] },
   },
 };
+
+/** 곡 키만 의미 있는 곡 — 이력 테스트용 */
+const trackOf = (key: string): Track => ({
+  id: key,
+  name: '',
+  artists: [],
+  album: { name: '', images: [] },
+  duration_ms: 0,
+  preview_url: null,
+  external_urls: { spotify: '' },
+  key,
+});
+
+const resultWithKeys = (
+  immerse: string[],
+  soothe: string[],
+): EmotionResponse => ({
+  ...mockResult,
+  playlists: {
+    immerse: { ...mockResult.playlists.immerse, tracks: immerse.map(trackOf) },
+    soothe: { ...mockResult.playlists.soothe, tracks: soothe.map(trackOf) },
+  },
+});
 
 /** 끝나지 않는 요청 (진행 중 상태를 만들기 위함) */
 const pending = () => new Promise<EmotionResponse>(() => {});
@@ -200,6 +225,53 @@ describe('useAppStore', () => {
           isLoading: false,
         });
       });
+    });
+  });
+
+  describe('본 곡 이력', () => {
+    beforeEach(() => localStorage.clear());
+
+    it('이력이 없으면 두 모드 모두 빈 이력을 보낸다', () => {
+      mockedAnalyze.mockImplementationOnce(pending);
+
+      void state().analyzeEmotion('테스트 텍스트');
+
+      expect(mockedAnalyze.mock.calls[0][3]).toEqual({
+        immerse: [],
+        soothe: [],
+      });
+    });
+
+    it('받은 응답의 곡 키가 다음 요청의 이력으로 실려 간다', async () => {
+      mockedAnalyze
+        .mockResolvedValueOnce(
+          resultWithKeys(['0000000a', '0000000b'], ['0000000c']),
+        )
+        .mockImplementationOnce(pending);
+
+      await state().analyzeEmotion('첫 번째 요청');
+      void state().analyzeEmotion('두 번째 요청');
+
+      expect(mockedAnalyze.mock.calls[1][3]).toEqual({
+        immerse: ['0000000a', '0000000b'],
+        soothe: ['0000000c'],
+      });
+    });
+
+    it('밀려난 요청의 응답은 화면에 안 나오므로 이력에도 남기지 않는다', async () => {
+      let resolveFirst: (value: EmotionResponse) => void = () => {};
+      mockedAnalyze
+        .mockImplementationOnce(
+          () => new Promise<EmotionResponse>((r) => (resolveFirst = r)),
+        )
+        .mockImplementationOnce(pending);
+
+      const first = state().analyzeEmotion('첫 번째 요청');
+      void state().analyzeEmotion('두 번째 요청');
+      resolveFirst(resultWithKeys(['0000000a'], ['0000000b']));
+      await first;
+
+      expect(loadSeen()).toEqual({ immerse: [], soothe: [] });
     });
   });
 

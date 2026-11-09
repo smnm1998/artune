@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { analyzeEmotionWithProgress, EmotionResponse } from '@/api/emotionApi';
 import { ERROR_MESSAGES } from '@/constants/errorMessages';
+import { loadSeen, recordSeen } from '@/utils/seenHistory';
 
 type Page = 'input' | 'loading' | 'result';
 
@@ -68,8 +69,11 @@ const useAppStore = create<AppState>((set, get) => ({
           }));
         },
         abortController.signal,
+        loadSeen(),
       );
       if (!isCurrent()) return;
+      // 화면에 보여 줄 응답만 이력에 남긴다 (밀려난 요청은 바로 위에서 걸러짐)
+      recordSeen(result);
 
       // 3. 완료
       set({

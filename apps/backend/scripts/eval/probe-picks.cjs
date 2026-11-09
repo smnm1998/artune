@@ -410,7 +410,7 @@ async function resolve(args, outDir) {
   }
 }
 
-function summary(args, outDir) {
+async function summary(args, outDir) {
   const { PICKS_PER_MODE, PICK_VARIANTS, picksPerMode, DEFAULT_SONGS } =
     loadPickPrompt();
   const picks = readJsonl(path.join(outDir, 'picks.jsonl'));
@@ -620,8 +620,8 @@ function summary(args, outDir) {
     ...diversity,
   );
 
-  // 화면 10곡 — 운영 지역 쿼터(dist)로 사용자가 실제로 보는 목록을 재현한다 (R2 설계 §8)
-  const { selectByRegionQuota } = require(
+  // 화면 10곡 — 운영과 같은 지역 쿼터 함수(dist, 필요할 때만 해석)로 사용자가 실제로 보는 목록을 재현한다 (R2 설계 §8)
+  const { selectByRegionQuotaLazily } = require(
     path.join(DIST, 'music/utils/region-quota.util'),
   );
   // 운영 곡 키(정규화한 곡명 + 8자 해시) — 위 songKey(LLM 후보 집계용 원문 키)와 다르다
@@ -633,45 +633,46 @@ function summary(args, outDir) {
   );
   const { ExposureWindow } = require(path.join(DIST, 'music/exposure-window'));
   // 선곡 순서를 점수로 넘긴다: 앞에 고른 곡부터 지역 쿼터를 채운다. isFresh를 주면 처음 보는 곡으로 먼저 채운다
-  const served = (picked, isFresh) =>
-    selectByRegionQuota(
-      picked.flatMap((t, i) => {
-        const found = results[key(t.artist, t.title)];
-        return found?.found
-          ? [
-              {
-                track: { ...found, key: d3Key(t) },
-                region: t.region,
-                match: picked.length - i,
-              },
-            ]
-          : [];
-      }),
-      undefined,
-      isFresh,
-    );
+  // 해석은 이미 받아 둔 resolve.json을 읽는다 — 운영이라면 그 곡에서 iTunes를 부른다
+  const served = async (picked, isFresh) =>
+    (
+      await selectByRegionQuotaLazily(
+        picked.map((t, i) => ({
+          ...t,
+          key: d3Key(t),
+          match: picked.length - i,
+        })),
+        async (c) => {
+          const found = results[key(c.artist, c.title)];
+          return found?.found ? found : null;
+        },
+        { isFresh },
+      )
+    ).map(({ candidate, track }) => ({ ...track, key: candidate.key }));
   // D3 재생: 응답을 아래 순서대로 한 서버에 흘려 보내며 해석 전에 처음 보는 곡 → 머리 곡 → 이 사람이 본 곡으로 다시 놓는다
   // 지역에 처음 보는 곡이 모자라면 다른 지역의 처음 보는 곡 1곡까지 빌린다(FRESH_BORROW_LIMIT)
   // 전체 노출 창은 모든 응답이 함께 쓰고, 사용자 이력은 5개씩 끊은 같은 사람이 본 최근 40곡
-  const replay = (rs, mode) => {
+  const replay = async (rs, mode) => {
     const exposure = new ExposureWindow();
     let history = [];
-    return rs.map((r, i) => {
+    const lists = [];
+    for (const [i, r] of rs.entries()) {
       if (i % 5 === 0) history = [];
       const heads = exposure.heads(mode);
       const seen = new Set(history);
-      const songs = served(
+      const songs = await served(
         orderByFreshness(
           r.output[mode].map((t) => ({ ...t, key: d3Key(t) })),
           { heads, seen },
         ),
-        (c) => !heads.has(c.track.key) && !seen.has(c.track.key),
+        (c) => !heads.has(c.key) && !seen.has(c.key),
       );
       const keys = songs.map((t) => t.key);
       exposure.record(mode, keys);
       history = [...history, ...keys].slice(-HISTORY_LIMIT);
-      return { id: r.id, emotion: r.output.emotion, songs };
-    });
+      lists.push({ id: r.id, emotion: r.output.emotion, songs });
+    }
+    return lists;
   };
   // 같은 사람 지표는 입력 순서를 쓴다 — 재시도한 응답이 파일 끝에 붙어도 입력 파일 순서로 되돌린다
   const inputIds = (() => {
@@ -684,7 +685,8 @@ function summary(args, outDir) {
       ? JSON.parse(fs.readFileSync(file, 'utf8')).inputs.map((i) => i.id)
       : [];
   })();
-  const screen = groups.flatMap((group) => {
+  const screen = [];
+  for (const group of groups) {
     // 해석이 끝난 응답만. 같은 입력의 n번째 기록끼리(회차) 입력 파일 순서로 놓는다 — 입력 파일을 모르면 기록 순서
     const nth = new Map();
     const rs = picks
@@ -704,19 +706,21 @@ function summary(args, outDir) {
       })
       .sort((a, b) => a.round - b.round || a.pos - b.pos)
       .map(({ r }) => r);
-    const runs = ['soothe', 'immerse'].flatMap((mode) => [
-      {
-        mode,
-        order: '선곡 순서',
-        lists: rs.map((r) => ({
+    const runs = [];
+    for (const mode of ['soothe', 'immerse']) {
+      const plain = [];
+      for (const r of rs)
+        plain.push({
           id: r.id,
           emotion: r.output.emotion,
-          songs: served(r.output[mode]),
-        })),
-      },
-      { mode, order: 'D3 후순위', lists: replay(rs, mode) },
-    ]);
-    return runs.map(({ mode, order, lists }) => {
+          songs: await served(r.output[mode]),
+        });
+      runs.push(
+        { mode, order: '선곡 순서', lists: plain },
+        { mode, order: 'D3 후순위', lists: await replay(rs, mode) },
+      );
+    }
+    for (const { mode, order, lists } of runs) {
       const counts = new Map();
       const emotions = new Map();
       const names = new Map();
@@ -757,23 +761,25 @@ function summary(args, outDir) {
         repeats.push(again);
       }
 
-      return row([
-        group,
-        mode === 'soothe' ? '완화' : '심취',
-        order,
-        share(sum(ranked.slice(0, 20))),
-        firstId == null
-          ? '-'
-          : `${names.get(firstId)} ${pct(firstCount, lists.length)}`,
-        share(sum(ranked.filter(([id]) => emotions.get(id).size >= 6))),
-        overlaps.length ? `${avg(overlaps).toFixed(1)}/10곡` : '-',
-        repeats.length
-          ? `${avg(repeats).toFixed(1)}/40곡 (${repeats.length}명)`
-          : '-',
-        pct(lists.filter((l) => l.songs.length >= 10).length, lists.length),
-      ]);
-    });
-  });
+      screen.push(
+        row([
+          group,
+          mode === 'soothe' ? '완화' : '심취',
+          order,
+          share(sum(ranked.slice(0, 20))),
+          firstId == null
+            ? '-'
+            : `${names.get(firstId)} ${pct(firstCount, lists.length)}`,
+          share(sum(ranked.filter(([id]) => emotions.get(id).size >= 6))),
+          overlaps.length ? `${avg(overlaps).toFixed(1)}/10곡` : '-',
+          repeats.length
+            ? `${avg(repeats).toFixed(1)}/40곡 (${repeats.length}명)`
+            : '-',
+          pct(lists.filter((l) => l.songs.length >= 10).length, lists.length),
+        ]),
+      );
+    }
+  }
   lines.push(
     '',
     '## 화면 10곡 (판정 기준)',
@@ -842,7 +848,7 @@ async function main() {
     process.chdir(fs.mkdtempSync(path.join(os.tmpdir(), 'artune-probe-')));
   if (args.command === 'pick') await pick(args, outDir);
   else if (args.command === 'resolve') await resolve(args, outDir);
-  else summary(args, outDir);
+  else await summary(args, outDir);
 }
 
 main().catch((error) => {

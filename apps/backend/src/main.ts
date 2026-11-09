@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { TRUSTED_PROXY_HOPS } from './throttle.config';
 
 /**
  * 허용된 Origin 목록
@@ -53,7 +55,10 @@ const corsOriginValidator = (
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 요청 제한이 IP로 세므로 프록시 주소가 아니라 실제 클라이언트 IP를 쓰게 한다
+  app.set('trust proxy', TRUSTED_PROXY_HOPS);
 
   app.setGlobalPrefix('api');
 

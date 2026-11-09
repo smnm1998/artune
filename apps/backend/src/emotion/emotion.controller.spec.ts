@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { APP_GUARD } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { Observable } from 'rxjs';
+import * as request from 'supertest';
 import { EmotionController } from './emotion.controller';
 import { EmotionService } from './emotion.service';
+import { THROTTLE_OPTIONS, TRUSTED_PROXY_HOPS } from '../throttle.config';
 
 /**
  * SSE Observable의 방출을 수집한다.
@@ -30,6 +35,7 @@ describe('EmotionController', () => {
   const mockResult = {
     emotionLabel: '기쁨',
     description: '즐거운 하루였군요.',
+    crisis: false,
     artwork: { url: '/artwork/joy.png', prompt: 'test' },
     playlists: {
       immerse: { modeLabel: '감정 심취', description: 'd', tracks: [] },
@@ -67,8 +73,21 @@ describe('EmotionController', () => {
 
       expect(emotionService.analyzeAndRecommend).toHaveBeenCalledWith(
         '오늘 행복해요',
+        undefined,
       );
       expect(result).toEqual(mockResult);
+    });
+
+    it('본문의 이력(seen)을 서비스에 넘긴다.', async () => {
+      emotionService.analyzeAndRecommend.mockResolvedValueOnce(mockResult);
+      const seen = { immerse: ['1a2b3c4d'], soothe: [] };
+
+      await controller.analyze('오늘 행복해요', seen);
+
+      expect(emotionService.analyzeAndRecommend).toHaveBeenCalledWith(
+        '오늘 행복해요',
+        seen,
+      );
     });
 
     it('서비스 에러를 그대로 전파한다.', async () => {
@@ -113,7 +132,27 @@ describe('EmotionController', () => {
 
       expect(
         emotionService.analyzeAndRecommendWithProgress,
-      ).toHaveBeenCalledWith('오늘 행복해요', expect.any(Function));
+      ).toHaveBeenCalledWith('오늘 행복해요', expect.any(Function), {
+        immerse: undefined,
+        soothe: undefined,
+      });
+    });
+
+    it('쿼리의 모드별 이력(seenImmerse·seenSoothe)을 서비스에 넘긴다.', async () => {
+      emotionService.analyzeAndRecommendWithProgress.mockResolvedValueOnce(
+        mockResult,
+      );
+
+      await collectStream(
+        controller.analyzeStream('테스트', '1a2b3c4d,5e6f7a8b', '9c0d1e2f'),
+      );
+
+      expect(
+        emotionService.analyzeAndRecommendWithProgress,
+      ).toHaveBeenCalledWith('테스트', expect.any(Function), {
+        immerse: '1a2b3c4d,5e6f7a8b',
+        soothe: '9c0d1e2f',
+      });
     });
 
     it('서비스 실패 시 error 이벤트를 방출한 뒤 스트림을 에러로 종료한다.', async () => {
@@ -145,7 +184,9 @@ describe('EmotionController', () => {
         'string rejection',
       );
 
-      const { events } = await collectStream(controller.analyzeStream('테스트'));
+      const { events } = await collectStream(
+        controller.analyzeStream('테스트'),
+      );
 
       expect(events).toEqual([
         {
@@ -168,5 +209,50 @@ describe('EmotionController', () => {
       ]);
       expect(completed).toBe(true);
     });
+  });
+});
+
+// 운영과 같은 제한 값·프록시 설정으로 실제 HTTP 요청을 보낸다 (AppModule은 .env를 불러와서 쓰지 않는다)
+describe('요청 제한 (IP당)', () => {
+  let app: NestExpressApplication;
+  const [{ limit }] = THROTTLE_OPTIONS.throttlers;
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot(THROTTLE_OPTIONS)],
+      controllers: [EmotionController],
+      providers: [
+        {
+          provide: EmotionService,
+          useValue: { analyzeAndRecommend: jest.fn().mockResolvedValue({}) },
+        },
+        { provide: APP_GUARD, useClass: ThrottlerGuard },
+      ],
+    }).compile();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
+    app.set('trust proxy', TRUSTED_PROXY_HOPS);
+    await app.init();
+  });
+
+  afterEach(() => app.close());
+
+  // Railway 프록시가 붙이는 것처럼 클라이언트 IP를 X-Forwarded-For로 보낸다
+  const analyze = (ip: string) =>
+    request(app.getHttpServer())
+      .post('/emotion/analyze')
+      .set('X-Forwarded-For', ip)
+      .send({ text: '오늘 좋았어' });
+
+  it('같은 IP가 분당 한도를 넘으면 429와 안내 문구를 돌려준다', async () => {
+    for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
+
+    const res = await analyze('203.0.113.1').expect(429);
+    expect(res.body.message).toBe(THROTTLE_OPTIONS.errorMessage);
+  });
+
+  it('프록시가 전달한 클라이언트 IP별로 따로 센다', async () => {
+    for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
+
+    await analyze('203.0.113.2').expect(201);
   });
 });

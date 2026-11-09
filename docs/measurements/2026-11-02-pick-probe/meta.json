@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-11-02T14:21:25.534Z",
+  "git": "faf0ed8",
+  "mock": false,
+  "models": {
+    "gpt-4.1-mini": {
+      "temperature": 0.7
+    },
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    },
+    "gpt-6.1-terra": {
+      "reasoning_effort": "none"
+    }
+  },
+  "perMode": {
+    "korea": 7,
+    "pop": 4,
+    "jpop": 1
+  },
+  "promptSha1": "eb886af1b088",
+  "inputs": 26
+}

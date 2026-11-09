@@ -23,9 +23,9 @@ describe('titleMatches', () => {
   });
 
   it('feat 표기가 달라도 매칭한다', () => {
-    expect(titleMatches('Born Hater', 'BORN HATER (feat. B.I, BOBBY & MINO)')).toBe(
-      true,
-    );
+    expect(
+      titleMatches('Born Hater', 'BORN HATER (feat. B.I, BOBBY & MINO)'),
+    ).toBe(true);
   });
 
   it('한글 곡명도 매칭한다', () => {
@@ -47,9 +47,40 @@ describe('titleMatches', () => {
     expect(titleMatches('Something', '')).toBe(false);
   });
 
-  it('접두 근사매칭은 최소 길이를 요구해 짧은 무관 제목을 막는다', () => {
-    // 서로 포함관계가 아니고 접두도 다르면 거부
+  it('앞부분만 같은 다른 곡은 거부한다', () => {
+    // 로이킴 - 우리 그만 헤어져요 요청에 같은 가수의 '우리 그만하자'가 온 케이스 (11/3 실측)
+    expect(titleMatches('우리 그만 헤어져요', '우리 그만하자')).toBe(false);
     expect(titleMatches('Papercut', 'Paranoid Android')).toBe(false);
-    expect(titleMatches('녹턴', '낙서')).toBe(false);
+  });
+
+  it('긴 곡명 속 짧은 단어나 속편 곡명은 일치로 보지 않는다', () => {
+    // Lana Del Rey 요청에 Cat Power - Woman (feat. Lana Del Rey)가 온 케이스 (11/3 실측)
+    expect(
+      titleMatches(
+        'Hope Is a Dangerous Thing for a Woman Like Me to Have - But I Have It',
+        'Woman (feat. Lana Del Rey)',
+      ),
+    ).toBe(false);
+    expect(titleMatches('Mommae', 'Keep It Sexy (MOMMAE 2)')).toBe(false);
+  });
+
+  it('전각 괄호도 같은 표기로 본다', () => {
+    // スキマスイッチ - 奏（かなで） 요청, JP 표기는 '奏(かなで)' (11/3 홀드아웃)
+    expect(titleMatches('奏（かなで）', '奏(かなで)')).toBe(true);
+  });
+
+  it('앞에 붙은 괄호 부제를 빼고도 비교한다', () => {
+    // Carpenters - Close to You 요청, 스토어 표기는 '(They Long To Be) Close To You' (11/3 홀드아웃)
+    expect(titleMatches('Close to You', '(They Long To Be) Close To You')).toBe(
+      true,
+    );
+    expect(titleMatches('(They Long To Be) Close To You', 'Close to You')).toBe(
+      true,
+    );
+  });
+
+  it('절반 이상 겹치는 중간 포함은 일치로 본다', () => {
+    // JP 스토어 표기
+    expect(titleMatches('Kick It', '英雄; Kick It')).toBe(true);
   });
 });

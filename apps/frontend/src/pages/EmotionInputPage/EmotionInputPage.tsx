@@ -6,8 +6,10 @@ import {
   titleStyle,
   subTitleStyle,
   inputWrapperStyle,
+  footerStyle,
 } from './EmotionInputPage.styles';
 import useAppStore from '@/stores/useAppStore';
+import { NOTICES } from '@/constants/notices';
 import {
   validateEmotionInput,
   isMaxLengthExceeded,
@@ -85,6 +87,8 @@ function EmotionInputPage() {
           maxLength={VALIDATION_RULES.MAX_LENGTH}
         />
       </div>
+
+      <footer css={footerStyle}>{NOTICES.AI_BEFORE_USE}</footer>
     </div>
   );
 }

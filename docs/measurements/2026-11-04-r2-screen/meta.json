@@ -1,0 +1,69 @@
+{
+  "startedAt": "2026-11-04T11:45:27.993Z",
+  "git": "cec89c7",
+  "mock": false,
+  "models": {
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    }
+  },
+  "perMode": {
+    "korea": 7,
+    "pop": 4,
+    "jpop": 1
+  },
+  "variants": {
+    "V0": {
+      "options": {
+        "officialNotation": false,
+        "romanceBoundary": false,
+        "isoSoothe": false,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "3585f2474f2d"
+    },
+    "V1": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": false,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "98fe6c562817"
+    },
+    "V2": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "987dc8e0e482"
+    },
+    "V3": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": false
+      },
+      "promptSha1": "ef2757989754"
+    },
+    "V4": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": true
+      },
+      "promptSha1": "ad0a2a05d56b"
+    }
+  },
+  "inputs": 40,
+  "inputsFile": "docs/measurements/eval/holdout-inputs.json"
+}

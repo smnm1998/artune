@@ -202,3 +202,26 @@ export const emptyStateStyle = css`
     max-width: 400px;
   }
 `;
+
+// 맨 아래 고지 — 결과 영역(최소 화면 높이) 다음, 스크롤 끝에 온다
+export const footerStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 40px 32px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: ${colors.text.tertiary};
+
+  p {
+    margin: 0;
+  }
+
+  @media (max-width: ${TABLET_BP}) {
+    padding: 0 20px 24px;
+  }
+`;

@@ -1,0 +1,81 @@
+{
+  "startedAt": "2026-11-04T11:45:27.993Z",
+  "git": "cec89c7",
+  "mock": false,
+  "models": {
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    }
+  },
+  "perMode": {
+    "korea": 7,
+    "pop": 4,
+    "jpop": 1
+  },
+  "variants": {
+    "V0": {
+      "options": {
+        "officialNotation": false,
+        "romanceBoundary": false,
+        "isoSoothe": false,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "3585f2474f2d"
+    },
+    "V1": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": false,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "98fe6c562817"
+    },
+    "V2": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": false,
+        "planFields": false
+      },
+      "promptSha1": "987dc8e0e482"
+    },
+    "V3": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": false
+      },
+      "promptSha1": "ef2757989754"
+    },
+    "V4": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": true
+      },
+      "promptSha1": "ad0a2a05d56b"
+    }
+  },
+  "inputs": 40,
+  "inputsFile": "docs/measurements/eval/holdout-inputs.json",
+  "rerun": {
+    "purpose": "해석기 v2.2(아티스트 곡 목록 단계) 효과 측정 — r2-screen·r2-rep2에서 해석 실패한 곡만 다시 해석",
+    "resolveGit": "5f45c22",
+    "resolvedAt": "2026-11-05",
+    "note": "최상위 git은 선곡 시점 커밋(r2-screen meta 그대로), 재해석은 resolveGit 코드로 실행",
+    "sources": [
+      "docs/measurements/2026-11-04-r2-screen",
+      "docs/measurements/2026-11-04-r2-rep2"
+    ],
+    "picks": "두 폴더 picks.jsonl을 이어 붙임(선곡 재실행 없음)",
+    "resolve": "r2-rep2/resolve.json에서 found:false 항목만 뺀 상태에서 시작"
+  }
+}

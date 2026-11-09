@@ -1,0 +1,39 @@
+{
+  "startedAt": "2026-11-04T14:05:54.355Z",
+  "git": "cec89c7",
+  "mock": false,
+  "models": {
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    }
+  },
+  "perMode": {
+    "korea": 7,
+    "pop": 4,
+    "jpop": 1
+  },
+  "variants": {
+    "V3": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": false
+      },
+      "promptSha1": "ef2757989754"
+    },
+    "V4": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": true
+      },
+      "promptSha1": "ad0a2a05d56b"
+    }
+  },
+  "inputs": 40,
+  "inputsFile": "docs/measurements/eval/holdout-inputs.json"
+}

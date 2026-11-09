@@ -14,30 +14,39 @@ const baseTrack: ITunesTrack = {
 
 describe('mapItunesTrackToFrontend', () => {
   it('필수 정상 매핑', () => {
-    const result = mapItunesTrackToFrontend(baseTrack);
+    const result = mapItunesTrackToFrontend(baseTrack, 'abcd1234');
     expect(result.id).toBe('12345');
     expect(result.name).toBe('Hello');
     expect(result.artists).toEqual([{ name: 'Adele' }]);
     expect(result.album.name).toBe('25');
+    expect(result.key).toBe('abcd1234');
+  });
+
+  it('곡 링크는 iTunes의 곡 주소(trackViewUrl)를 그대로 Apple Music 주소로 넘긴다', () => {
+    const result = mapItunesTrackToFrontend(baseTrack, 'abcd1234');
+    expect(result.appleMusicUrl).toBe('https://music.apple.com/track/12345');
   });
 
   it('artwork 해상도를 100x100 -> 600x600으로 업스케일', () => {
-    const result = mapItunesTrackToFrontend(baseTrack);
+    const result = mapItunesTrackToFrontend(baseTrack, 'abcd1234');
     expect(result.album.images[0].url).toBe(
       'https://example.com/artwork/600x600bb.jpg',
     );
   });
 
   it('previewUrl이 null이어도 preview_url로 null 전달', () => {
-    const result = mapItunesTrackToFrontend({ ...baseTrack, previewUrl: null });
+    const result = mapItunesTrackToFrontend(
+      { ...baseTrack, previewUrl: null },
+      'abcd1234',
+    );
     expect(result.preview_url).toBeNull();
   });
 
   it('artworkUrl100 누락 시 빈 문자열 반환', () => {
-    const result = mapItunesTrackToFrontend({
-      ...baseTrack,
-      artworkUrl100: '',
-    });
+    const result = mapItunesTrackToFrontend(
+      { ...baseTrack, artworkUrl100: '' },
+      'abcd1234',
+    );
     expect(result.album.images[0].url).toBe('');
   });
 });

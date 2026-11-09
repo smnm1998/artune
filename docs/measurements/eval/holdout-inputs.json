@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "description": "해석기 v2 홀드아웃용 평가 입력 (11/3). inputs.json 26개와 상황·문체가 겹치지 않게 12감정 × (명확 2 + 애매 1) + 문맥 함정 4. 목적은 튜닝에 쓰지 않은 선곡으로 해석 정확도를 재는 것 — 감정 라벨은 부수 지표.",
+  "inputs": [
+    { "id": "joy-h1", "kind": "clear", "expected": ["joy"], "text": "엄마 수술 잘 끝났대. 의사 선생님이 경과 아주 좋다고 하셨어" },
+    { "id": "joy-h2", "kind": "clear", "expected": ["joy"], "text": "로또 5천원 당첨됐다ㅋㅋ 소소하게 행복한 하루" },
+    { "id": "joy-h3", "kind": "ambiguous", "expected": ["joy", "sentimental", "neutral"], "why": "잔잔한 만족과 가족에 대한 아련함", "text": "오랜만에 가족들이랑 다 같이 저녁 먹었는데 별말 안 해도 좋더라" },
+
+    { "id": "sadness-h1", "kind": "clear", "expected": ["sadness"], "text": "할머니 장례식 끝나고 집에 왔는데 할머니가 보내주신 김치가 냉장고에 그대로 있어" },
+    { "id": "sadness-h2", "kind": "clear", "expected": ["sadness"], "text": "3년 만난 사람이랑 오늘 헤어졌어. 내가 먼저 말했는데도 너무 힘들다" },
+    { "id": "sadness-h3", "kind": "ambiguous", "expected": ["sadness", "neutral", "lonely"], "why": "무기력 — 슬픔인지 평온인지 고립인지 불분명", "text": "요즘 아무것도 하기 싫고 그냥 하루 종일 누워만 있어" },
+
+    { "id": "anger-h1", "kind": "clear", "expected": ["anger"], "text": "층간소음 때문에 새벽 2시에 또 깼어. 몇 번을 말했는데 도대체 왜 이래" },
+    { "id": "anger-h2", "kind": "clear", "expected": ["anger"], "text": "중고거래로 돈 보냈는데 물건은 안 오고 차단당했어. 어이가 없네" },
+    { "id": "anger-h3", "kind": "ambiguous", "expected": ["anger", "sadness"], "why": "답답함과 서운함", "text": "부모님이 또 내 진로 가지고 한참 잔소리하셨어. 내 인생인데" },
+
+    { "id": "fear-h1", "kind": "clear", "expected": ["fear"], "text": "혼자 사는데 밤마다 누가 현관문 손잡이를 돌려보는 소리가 나" },
+    { "id": "fear-h2", "kind": "clear", "expected": ["fear"], "text": "비행기가 난기류 때문에 계속 흔들려. 손에 땀이 멈추질 않아" },
+    { "id": "fear-h3", "kind": "ambiguous", "expected": ["fear", "excited"], "why": "긴장과 기대가 섞임", "text": "내일 운전면허 도로주행인데 떨리면서도 빨리 해보고 싶기도 해" },
+
+    { "id": "surprise-h1", "kind": "clear", "expected": ["surprise"], "text": "자고 일어났더니 눈이 무릎까지 쌓여 있어. 4월인데?" },
+    { "id": "surprise-h2", "kind": "clear", "expected": ["surprise"], "text": "조용하던 옆자리 동료가 알고 보니 유명한 웹툰 작가였대. 다들 입이 떡 벌어짐" },
+    { "id": "surprise-h3", "kind": "ambiguous", "expected": ["surprise", "joy"], "why": "놀람과 반가움", "text": "택배 상자 열었더니 주문 안 한 꽃다발이 들어 있었어. 누가 보낸 거지" },
+
+    { "id": "neutral-h1", "kind": "clear", "expected": ["neutral"], "text": "점심 먹고 산책 조금 하다 들어왔어. 오후엔 회의 하나 남았고" },
+    { "id": "neutral-h2", "kind": "clear", "expected": ["neutral"], "text": "세탁기 돌려놓고 끝나길 기다리는 중" },
+    { "id": "neutral-h3", "kind": "ambiguous", "expected": ["neutral", "sadness"], "why": "정보가 거의 없는 짧은 입력 — 과해석 여부", "text": "그냥 그래" },
+
+    { "id": "sentimental-h1", "kind": "clear", "expected": ["sentimental"], "text": "이사 가기 전날 텅 빈 방을 보니까 여기서 보낸 7년이 다 떠올라" },
+    { "id": "sentimental-h2", "kind": "clear", "expected": ["sentimental"], "text": "아빠가 예전에 차에서 틀어주던 노래가 라디오에서 나왔어" },
+    { "id": "sentimental-h3", "kind": "ambiguous", "expected": ["sentimental", "sadness", "joy"], "why": "끝의 아쉬움과 홀가분함", "text": "졸업식 끝나고 교문 앞에서 한참 서 있었어" },
+
+    { "id": "excited-h1", "kind": "clear", "expected": ["excited"], "text": "내일 부산 가서 처음으로 서핑 배워! 벌써 두근거린다" },
+    { "id": "excited-h2", "kind": "clear", "expected": ["excited"], "text": "응원하는 팀이 결승 올라갔어!! 다음 주 경기 직관 간다" },
+    { "id": "excited-h3", "kind": "ambiguous", "expected": ["excited", "joy", "neutral"], "why": "짧은 상황 묘사만으로 들뜸의 정도를 판단", "text": "금요일 퇴근 10분 전" },
+
+    { "id": "lonely-h1", "kind": "clear", "expected": ["lonely"], "text": "명절인데 일 때문에 고향 못 내려가고 혼자 편의점 도시락 먹는 중" },
+    { "id": "lonely-h2", "kind": "clear", "expected": ["lonely"], "text": "외국 와서 산 지 반년인데 아직 같이 밥 먹을 사람이 없어" },
+    { "id": "lonely-h3", "kind": "ambiguous", "expected": ["lonely", "neutral"], "why": "고요함인지 외로움인지", "text": "핸드폰이 하루 종일 조용하네" },
+
+    { "id": "dreamy-h1", "kind": "clear", "expected": ["dreamy"], "text": "바다 위로 해 지는 거 보면서 모래사장에 누워 있어. 시간이 멈춘 것 같아" },
+    { "id": "dreamy-h2", "kind": "clear", "expected": ["dreamy"], "text": "캠핑장에서 별이 쏟아지는 하늘 보면서 모닥불 앞에 앉아 있어" },
+    { "id": "dreamy-h3", "kind": "ambiguous", "expected": ["dreamy", "neutral", "sentimental"], "why": "낮잠 뒤 멍한 상태", "text": "낮잠 자고 일어났는데 노을이 져 있어서 지금이 몇 시인지 모르겠어" },
+
+    { "id": "confident-h1", "kind": "clear", "expected": ["confident"], "text": "하프 마라톤 완주했다. 1년 전엔 5km도 못 뛰던 내가" },
+    { "id": "confident-h2", "kind": "clear", "expected": ["confident"], "text": "연봉 협상에서 원하는 조건 다 말하고 다 받아냈어" },
+    { "id": "confident-h3", "kind": "ambiguous", "expected": ["confident", "joy"], "why": "자신감과 안도", "text": "처음으로 혼자 해외 출장 다녀왔는데 생각보다 할 만하더라" },
+
+    { "id": "romance-h1", "kind": "clear", "expected": ["romance"], "text": "오늘 100일인데 애인이 손편지를 써줬어" },
+    { "id": "romance-h2", "kind": "clear", "expected": ["romance"], "text": "고백 받았어. 나도 좋아하고 있었는데" },
+    { "id": "romance-h3", "kind": "ambiguous", "expected": ["romance", "joy"], "why": "오래된 관계의 애정과 일상의 만족", "text": "결혼 10년 차인데 아직도 배우자 퇴근 시간이 기다려져" },
+
+    { "id": "context-h1", "kind": "context", "expected": ["anger", "sadness"], "why": "^^와 '완벽한'이 있지만 반어 — 문맥으로 판단하는지", "text": "와 오늘 진짜 완벽한 하루였다^^ 지갑 잃어버리고 비 맞고 지각까지" },
+    { "id": "context-h2", "kind": "context", "expected": ["sadness"], "why": "웃음 표기(ㅋㅋㅋ)가 있지만 자조", "text": "ㅋㅋㅋ 시험 완전 망함 그냥 웃음만 나온다" },
+    { "id": "context-h3", "kind": "context", "expected": ["lonely", "sadness"], "why": "괜찮다는 말과 ㅎㅎ 뒤의 외로움", "text": "괜찮아 괜찮아 나 원래 혼자서도 잘 놀아 ㅎㅎ" },
+    { "id": "context-h4", "kind": "context", "expected": ["joy"], "why": "눈물 표기(ㅠㅠ)가 있지만 기쁨", "text": "ㅠㅠ 너무 좋아서 눈물 난다 드디어 우리 애가 걸었어" }
+  ]
+}

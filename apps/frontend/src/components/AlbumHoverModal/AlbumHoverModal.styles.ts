@@ -15,15 +15,18 @@ export const modalOverlayStyle = css`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  /* 카드 폭이 200~380px로 달라서, 안쪽 여백·간격을 카드 크기에 비례시키려고 크기 컨테이너로 둔다 */
+  container-type: size;
 `;
 
 // 모달 콘텐츠
 export const modalContentStyle = css`
   display: flex;
   flex-direction: column;
-  gap: 16px;
   width: 100%;
+  /* 큰 덩어리(곡 정보 · 미리듣기 상태 · Apple Music) 사이와 안쪽 여백 — 카드가 클수록 넓게, 작아도 최소는 지킨다 */
+  gap: clamp(12px, 7cqh, 26px);
+  padding: clamp(14px, 7cqw, 28px);
 `;
 
 // 앨범 타이틀
@@ -40,24 +43,22 @@ export const albumTitleStyle = css`
   overflow: hidden;
   text-overflow: ellipsis;
 
+  /* 작은 카드(높이 240px 이하)에서는 한 줄로 — 아래 줄들(미리듣기·배지·출처)이 들어갈 자리를 남긴다 */
+  @container (max-height: 240px) {
+    -webkit-line-clamp: 1;
+  }
+
   @media (max-width: ${MOBILE_BP}) {
     font-size: 14px;
   }
 `;
 
-// 앨범 정보
+// 앨범 정보 (앨범명 · 가수 · 추천곡) — 줄 사이를 살짝 띄운다. 줄임 처리는 각 줄 스타일이 맡는다
 export const albumInfoStyle = css`
-  font-size: 16px;
-  font-weight: 700;
-  color: ${colors.text.primary};
-  line-height: 1.4;
-
-  // 긴 제목 처리
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 `;
 
 // 아티스트 이름

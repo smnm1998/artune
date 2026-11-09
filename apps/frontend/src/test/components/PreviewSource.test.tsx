@@ -27,6 +27,18 @@ describe('PreviewSource', () => {
     expect(screen.queryByText(NOTICES.PREVIEW_ATTRIBUTION)).not.toBeNull();
   });
 
+  it('출처 표기는 배지 아래에 온다', () => {
+    render(<PreviewSource url={URL} />);
+
+    const badge = screen.getByRole('link', { name: 'Apple Music에서 듣기' });
+    const attribution = screen.getByText(NOTICES.PREVIEW_ATTRIBUTION);
+    // attribution이 문서 순서상 badge 뒤에 있다
+    expect(
+      badge.compareDocumentPosition(attribution) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('곡 주소가 없으면(이전 서버 응답) 배지 없이 출처 표기만 한다', () => {
     render(<PreviewSource />);
 

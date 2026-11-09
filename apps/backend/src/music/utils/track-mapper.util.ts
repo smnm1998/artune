@@ -18,9 +18,7 @@ export function mapItunesTrackToFrontend(
     },
     duration_ms: track.trackTimeMillis,
     preview_url: track.previewUrl ?? null,
-    external_urls: {
-      spotify: track.trackViewUrl,
-    },
+    appleMusicUrl: track.trackViewUrl,
     key,
   };
 }

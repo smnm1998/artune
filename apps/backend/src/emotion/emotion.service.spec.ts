@@ -30,7 +30,7 @@ const expectMappedTrack = ({ track, key }: ServedTrack) => ({
   },
   duration_ms: track.trackTimeMillis,
   preview_url: track.previewUrl,
-  external_urls: { spotify: track.trackViewUrl },
+  appleMusicUrl: track.trackViewUrl,
   key,
 });
 

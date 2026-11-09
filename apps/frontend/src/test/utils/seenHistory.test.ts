@@ -16,7 +16,7 @@ const track = (songKey: string): Track => ({
   album: { name: '', images: [] },
   duration_ms: 0,
   preview_url: null,
-  external_urls: { spotify: '' },
+  appleMusicUrl: '',
   key: songKey,
 });
 

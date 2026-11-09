@@ -22,7 +22,8 @@ export interface Track {
   album: AlbumInfo;
   duration_ms: number;
   preview_url: string | null;
-  external_urls: { spotify: string };
+  /** 이 곡의 Apple Music 주소(KR 스토어) — 화면의 "Apple Music에서 듣기" 배지가 여기로 연결된다 */
+  appleMusicUrl: string;
   /** 곡 키(정규화한 곡명의 8자 해시) — 브라우저 이력에 저장해 다음 요청의 seen으로 보낸다 */
   key: string;
 }

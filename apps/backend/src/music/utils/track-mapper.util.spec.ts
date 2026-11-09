@@ -22,6 +22,11 @@ describe('mapItunesTrackToFrontend', () => {
     expect(result.key).toBe('abcd1234');
   });
 
+  it('곡 링크는 iTunes의 곡 주소(trackViewUrl)를 그대로 Apple Music 주소로 넘긴다', () => {
+    const result = mapItunesTrackToFrontend(baseTrack, 'abcd1234');
+    expect(result.appleMusicUrl).toBe('https://music.apple.com/track/12345');
+  });
+
   it('artwork 해상도를 100x100 -> 600x600으로 업스케일', () => {
     const result = mapItunesTrackToFrontend(baseTrack, 'abcd1234');
     expect(result.album.images[0].url).toBe(

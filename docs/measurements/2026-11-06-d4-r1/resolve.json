@@ -1,0 +1,3325 @@
+{
+ "day6|한 페이지가 될 수 있게": {
+  "found": true,
+  "trackId": 1471938396,
+  "trackName": "한 페이지가 될 수 있게",
+  "artistName": "데이식스",
+  "artistId": 1037939997,
+  "genre": "K-Pop"
+ },
+ "akmu|어떻게 이별까지 사랑하겠어, 널 사랑하는 거지": {
+  "found": true,
+  "trackId": 1480802550,
+  "trackName": "How can I love the heartbreak, you're the one I love",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "소녀시대|힘 내!": {
+  "found": true,
+  "trackId": 854911649,
+  "trackName": "Way to Go",
+  "artistName": "Girls' Generation",
+  "artistId": 357463500,
+  "genre": "K-Pop"
+ },
+ "이한철|슈퍼스타": {
+  "found": true,
+  "trackId": 1474211652,
+  "trackName": "Superstar",
+  "artistName": "Lee Han Chul",
+  "artistId": 385049215,
+  "genre": "Singer/Songwriter"
+ },
+ "마마무|고고베베": {
+  "found": true,
+  "trackId": 1456234167,
+  "trackName": "gogobebe",
+  "artistName": "MAMAMOO",
+  "artistId": 818951094,
+  "genre": "K-Pop"
+ },
+ "bol4|여행": {
+  "found": true,
+  "trackId": 1550539052,
+  "trackName": "Travel",
+  "artistName": "BOL4",
+  "artistId": 1188975595,
+  "genre": "Rock"
+ },
+ "자우림|하하하쏭": {
+  "found": true,
+  "trackId": 1486290843,
+  "trackName": "Song of Ha Ha Ha",
+  "artistName": "Jaurim",
+  "artistId": 472553388,
+  "genre": "K-Pop"
+ },
+ "pharrell williams|happy": {
+  "found": true,
+  "trackId": 863835363,
+  "trackName": "Happy (From \"Despicable Me 2\")",
+  "artistName": "Pharrell Williams",
+  "artistId": 1361068,
+  "genre": "Pop"
+ },
+ "katrina & the waves|walking on sunshine": {
+  "found": true,
+  "trackId": 1684906367,
+  "trackName": "Walking on Sunshine",
+  "artistName": "CARSTN, Katrina and the Waves & Agent Zed",
+  "artistId": 1420709446,
+  "genre": "Dance"
+ },
+ "american authors|best day of my life": {
+  "found": true,
+  "trackId": 1440851075,
+  "trackName": "Best Day of My Life",
+  "artistName": "American Authors",
+  "artistId": 557564979,
+  "genre": "Alternative"
+ },
+ "bill withers|lovely day": {
+  "found": true,
+  "trackId": 989376634,
+  "trackName": "Lovely Day",
+  "artistName": "Bill Withers",
+  "artistId": 339834,
+  "genre": "Pop"
+ },
+ "星野源|恋": {
+  "found": true,
+  "trackId": 1156375396,
+  "trackName": "Koi",
+  "artistName": "Gen Hoshino",
+  "artistId": 269598403,
+  "genre": "J-Pop"
+ },
+ "아이유|blueming": {
+  "found": true,
+  "trackId": 1488300930,
+  "trackName": "Blueming",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "이승기|smile boy": {
+  "found": false
+ },
+ "윤하|사건의 지평선": {
+  "found": true,
+  "trackId": 1616649362,
+  "trackName": "Event Horizon",
+  "artistName": "Younha",
+  "artistId": 366264156,
+  "genre": "K-Pop"
+ },
+ "페퍼톤스|행운을 빌어요": {
+  "found": true,
+  "trackId": 1623109987,
+  "trackName": "Good Luck to You",
+  "artistName": "PEPPERTONES",
+  "artistId": 307373945,
+  "genre": "K-Pop"
+ },
+ "노라조|슈퍼맨": {
+  "found": true,
+  "trackId": 1449536686,
+  "trackName": "슈퍼맨",
+  "artistName": "NORAZO",
+  "artistId": 376942506,
+  "genre": "K-Pop"
+ },
+ "산울림|회상": {
+  "found": true,
+  "trackId": 1780359653,
+  "trackName": "Reminiscence",
+  "artistName": "Sanullim",
+  "artistId": 501604942,
+  "genre": "Rock"
+ },
+ "김광석|바람이 불어오는 곳": {
+  "found": true,
+  "trackId": 1501124554,
+  "trackName": "바람이 불어오는 곳",
+  "artistName": "Kim Kwang Seok",
+  "artistId": 543489568,
+  "genre": "K-Pop"
+ },
+ "jason mraz|have it all": {
+  "found": true,
+  "trackId": 1396747070,
+  "trackName": "Have It All",
+  "artistName": "Jason Mraz",
+  "artistId": 156987,
+  "genre": "Pop"
+ },
+ "colbie caillat|bubbly": {
+  "found": true,
+  "trackId": 1440745635,
+  "trackName": "Bubbly",
+  "artistName": "Colbie Caillat",
+  "artistId": 251316699,
+  "genre": "Pop"
+ },
+ "jack johnson|upside down": {
+  "found": true,
+  "trackId": 1469577741,
+  "trackName": "Upside Down",
+  "artistName": "Jack Johnson",
+  "artistId": 909253,
+  "genre": "Rock"
+ },
+ "the beatles|here comes the sun": {
+  "found": true,
+  "trackId": 1441164589,
+  "trackName": "Here Comes the Sun",
+  "artistName": "The Beatles",
+  "artistId": 136975,
+  "genre": "Rock"
+ },
+ "louis armstrong|what a wonderful world": {
+  "found": true,
+  "trackId": 1440787254,
+  "trackName": "What a Wonderful World",
+  "artistName": "Louis Armstrong",
+  "artistId": 518462,
+  "genre": "Jazz"
+ },
+ "星野源|くだらないの中に": {
+  "found": true,
+  "trackId": 1003282460,
+  "trackName": "Kudaranai no Nakani",
+  "artistName": "Gen Hoshino",
+  "artistId": 269598403,
+  "genre": "J-Pop"
+ },
+ "スピッツ|空も飛べるはず": {
+  "found": true,
+  "trackId": 1440863470,
+  "trackName": "空も飛べるはず",
+  "artistName": "スピッツ",
+  "artistId": 74456960,
+  "genre": "J-Pop"
+ },
+ "akmu|200%": {
+  "found": true,
+  "trackId": 1316852697,
+  "trackName": "200%",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "red velvet|빨간 맛": {
+  "found": true,
+  "trackId": 1256504651,
+  "trackName": "Red Flavor",
+  "artistName": "Red Velvet",
+  "artistId": 906961899,
+  "genre": "K-Pop"
+ },
+ "seventeen|아주 nice": {
+  "found": true,
+  "trackId": 1130828898,
+  "trackName": "VERY NICE",
+  "artistName": "SEVENTEEN",
+  "artistId": 999644772,
+  "genre": "K-Pop"
+ },
+ "twice|dance the night away": {
+  "found": true,
+  "trackId": 1555401454,
+  "trackName": "Dance The Night Away",
+  "artistName": "TWICE",
+  "artistId": 1203816887,
+  "genre": "K-Pop"
+ },
+ "justin timberlake|can't stop the feeling!": {
+  "found": true,
+  "trackId": 1154239184,
+  "trackName": "CAN'T STOP THE FEELING!",
+  "artistName": "Justin Timberlake",
+  "artistId": 398128,
+  "genre": "Soundtrack"
+ },
+ "akmu|dinosaur": {
+  "found": true,
+  "trackId": 1261291986,
+  "trackName": "DINOSAUR",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "iu|blueming": {
+  "found": true,
+  "trackId": 1488300930,
+  "trackName": "Blueming",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "jannabi|주저하는 연인들을 위해": {
+  "found": true,
+  "trackId": 1456103133,
+  "trackName": "For Lovers Who Hesitate",
+  "artistName": "JANNABI",
+  "artistId": 913424316,
+  "genre": "K-Pop"
+ },
+ "태연|weekend": {
+  "found": true,
+  "trackId": 1574308371,
+  "trackName": "Weekend",
+  "artistName": "TAEYEON",
+  "artistId": 435966642,
+  "genre": "K-Pop"
+ },
+ "cheeze|오늘의 기분": {
+  "found": true,
+  "trackId": 1513526424,
+  "trackName": "Today's Mood",
+  "artistName": "CHEEZE",
+  "artistId": 411941427,
+  "genre": "R&B/Soul"
+ },
+ "이하이|한숨": {
+  "found": true,
+  "trackId": 1315576194,
+  "trackName": "BREATHE",
+  "artistName": "LEEHI",
+  "artistId": 1484046668,
+  "genre": "Pop"
+ },
+ "crush|나빠": {
+  "found": true,
+  "trackId": 1477713320,
+  "trackName": "NAPPA",
+  "artistName": "Crush",
+  "artistId": 958641367,
+  "genre": "R&B/Soul"
+ },
+ "corinne bailey rae|like a star": {
+  "found": true,
+  "trackId": 1550773267,
+  "trackName": "Like A Star",
+  "artistName": "Corinne Bailey Rae",
+  "artistId": 64996022,
+  "genre": "R&B/Soul"
+ },
+ "jason mraz|lucky": {
+  "found": true,
+  "trackId": 277635829,
+  "trackName": "Lucky",
+  "artistName": "Jason Mraz & Colbie Caillat",
+  "artistId": 156987,
+  "genre": "Pop"
+ },
+ "norah jones|sunrise": {
+  "found": true,
+  "trackId": 721258700,
+  "trackName": "Sunrise",
+  "artistName": "Norah Jones",
+  "artistId": 1001750,
+  "genre": "Singer/Songwriter"
+ },
+ "スピッツ|チェリー": {
+  "found": true,
+  "trackId": 1440747285,
+  "trackName": "チェリー",
+  "artistName": "スピッツ",
+  "artistId": 74456960,
+  "genre": "ロック"
+ },
+ "あいみょん|マリーゴールド": {
+  "found": true,
+  "trackId": 1446781787,
+  "trackName": "Marigold",
+  "artistName": "Aimyon",
+  "artistId": 1165017710,
+  "genre": "J-Pop"
+ },
+ "이소라|바람이 분다": {
+  "found": true,
+  "trackId": 1448341239,
+  "trackName": "바람이 분다",
+  "artistName": "Lee Sora",
+  "artistId": 147683779,
+  "genre": "K-Pop"
+ },
+ "김동률|출발": {
+  "found": true,
+  "trackId": 1587651680,
+  "trackName": "Departure (2021 Remastered)",
+  "artistName": "Kim Dong Ryul",
+  "artistId": 364983336,
+  "genre": "K-Pop"
+ },
+ "성시경|두 사람": {
+  "found": true,
+  "trackId": 1543850531,
+  "trackName": "두 사람",
+  "artistName": "Sung Si Kyung",
+  "artistId": 48218076,
+  "genre": "K-Pop"
+ },
+ "윤종신|오래전 그날": {
+  "found": true,
+  "trackId": 1647269271,
+  "trackName": "The day long ago",
+  "artistName": "Yoon Jong Shin",
+  "artistId": 359836648,
+  "genre": "K-Pop"
+ },
+ "브로콜리너마저|유자차": {
+  "found": true,
+  "trackId": 1770513615,
+  "trackName": "Citrus Tea",
+  "artistName": "Broccoli you too",
+  "artistId": 1109560681,
+  "genre": "Rock"
+ },
+ "이진아|시간아 천천히": {
+  "found": true,
+  "trackId": 1863301081,
+  "trackName": "Time Slow Down",
+  "artistName": "Lee Jin Ah",
+  "artistId": 944848679,
+  "genre": "K-Pop"
+ },
+ "the beatles|in my life": {
+  "found": true,
+  "trackId": 1441164829,
+  "trackName": "In My Life",
+  "artistName": "The Beatles",
+  "artistId": 136975,
+  "genre": "Rock"
+ },
+ "carole king|you've got a friend": {
+  "found": true,
+  "trackId": 747087669,
+  "trackName": "You've Got a Friend",
+  "artistName": "Carole King",
+  "artistId": 34495,
+  "genre": "Singer/Songwriter"
+ },
+ "ben e. king|stand by me": {
+  "found": true,
+  "trackId": 674959586,
+  "trackName": "Stand by Me (Re-Recorded)",
+  "artistName": "Ben E. King",
+  "artistId": 479144,
+  "genre": "Pop"
+ },
+ "手嶌葵|明日への手紙": {
+  "found": true,
+  "trackId": 896503389,
+  "trackName": "Asu e no Tegami",
+  "artistName": "Aoi Teshima",
+  "artistId": 210783561,
+  "genre": "J-Pop"
+ },
+ "이적|걱정말아요 그대": {
+  "found": true,
+  "trackId": 1619308992,
+  "trackName": "Don't Worry (From \"Reply 1988, Pt. 2\") [Original Television Soundtrack]",
+  "artistName": "Lee Juck",
+  "artistId": 166744434,
+  "genre": "Soundtrack"
+ },
+ "잔나비|뜨거운 여름밤은 가고 남은 건 볼품없지만": {
+  "found": true,
+  "trackId": 1552662544,
+  "trackName": "뜨거운 여름밤은 가고 남은건 볼품 없지만",
+  "artistName": "JANNABI",
+  "artistId": 913424316,
+  "genre": "K-Pop"
+ },
+ "정엽|nothing better": {
+  "found": true,
+  "trackId": 1792388277,
+  "trackName": "Nothing Better (Guitar Ver.)",
+  "artistName": "Jungyup",
+  "artistId": 428922888,
+  "genre": "R&B/Soul"
+ },
+ "박효신|야생화": {
+  "found": true,
+  "trackId": 1523257572,
+  "trackName": "Wild Flower",
+  "artistName": "Park Hyo Shin",
+  "artistId": 292946954,
+  "genre": "K-Pop"
+ },
+ "루시드폴|보이나요": {
+  "found": true,
+  "trackId": 1623109078,
+  "trackName": "Do you see my love?",
+  "artistName": "Lucid Fall",
+  "artistId": 412677880,
+  "genre": "K-Pop"
+ },
+ "스탠딩 에그|오래된 노래": {
+  "found": true,
+  "trackId": 1633628323,
+  "trackName": "Old Song",
+  "artistName": "Standing Egg",
+  "artistId": 369145205,
+  "genre": "K-Pop"
+ },
+ "권진아|위로": {
+  "found": true,
+  "trackId": 1645250252,
+  "trackName": "Consolation",
+  "artistName": "Kwon Jin Ah",
+  "artistId": 1424423439,
+  "genre": "Soundtrack"
+ },
+ "james taylor|you've got a friend": {
+  "found": true,
+  "trackId": 1485665387,
+  "trackName": "You've Got a Friend",
+  "artistName": "James Taylor",
+  "artistId": 207815,
+  "genre": "Singer/Songwriter"
+ },
+ "eva cassidy|fields of gold": {
+  "found": true,
+  "trackId": 306987172,
+  "trackName": "Fields of Gold",
+  "artistName": "Eva Cassidy",
+  "artistId": 1102077,
+  "genre": "Singer/Songwriter"
+ },
+ "sade|by your side": {
+  "found": true,
+  "trackId": 193532153,
+  "trackName": "By Your Side",
+  "artistName": "Sade",
+  "artistId": 475591,
+  "genre": "R&B/Soul"
+ },
+ "katie melua|the closest thing to crazy": {
+  "found": true,
+  "trackId": 1702829369,
+  "trackName": "The Closest Thing To Crazy (2023 Remaster)",
+  "artistName": "Katie Melua",
+  "artistId": 6753382,
+  "genre": "Pop"
+ },
+ "坂本九|上を向いて歩こう": {
+  "found": true,
+  "trackId": 1465042017,
+  "trackName": "Sukiyaki",
+  "artistName": "Kyu Sakamoto",
+  "artistId": 80709322,
+  "genre": "Kayokyoku"
+ },
+ "김광석|이등병의 편지": {
+  "found": true,
+  "trackId": 1501134421,
+  "trackName": "이등병의 편지 (2012 Remastered)",
+  "artistName": "Kim Kwang Seok",
+  "artistId": 543489568,
+  "genre": "K-Pop"
+ },
+ "이문세|옛사랑": {
+  "found": true,
+  "trackId": 1823608078,
+  "trackName": "옛 사랑",
+  "artistName": "Lee Moon Sae",
+  "artistId": 367775650,
+  "genre": "K-Pop"
+ },
+ "김윤아|야상곡": {
+  "found": true,
+  "trackId": 1486523887,
+  "trackName": "Nocturne",
+  "artistName": "Kim Yuna",
+  "artistId": 148938540,
+  "genre": "K-Pop"
+ },
+ "성시경|희재": {
+  "found": true,
+  "trackId": 1546593996,
+  "trackName": "Heejae",
+  "artistName": "Sung Si Kyung",
+  "artistId": 48218076,
+  "genre": "K-Pop"
+ },
+ "박효신|눈의 꽃": {
+  "found": true,
+  "trackId": 1567943669,
+  "trackName": "눈의 꽃 - 미안하다, 사랑한다 (Original Television Soundtrack)",
+  "artistName": "Park Hyo Shin",
+  "artistId": 292946954,
+  "genre": "TV Soundtrack"
+ },
+ "정승환|이 바보야": {
+  "found": true,
+  "trackId": 1527243077,
+  "trackName": "The Fool",
+  "artistName": "Jung Seung Hwan",
+  "artistId": 949319364,
+  "genre": "K-Pop"
+ },
+ "adele|someone like you": {
+  "found": true,
+  "trackId": 1544491998,
+  "trackName": "Someone Like You",
+  "artistName": "Adele",
+  "artistId": 262836961,
+  "genre": "Pop"
+ },
+ "coldplay|fix you": {
+  "found": true,
+  "trackId": 1123076826,
+  "trackName": "Fix You",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "billie eilish|when the party's over": {
+  "found": true,
+  "trackId": 1450695872,
+  "trackName": "when the party's over",
+  "artistName": "Billie Eilish",
+  "artistId": 1065981054,
+  "genre": "Alternative"
+ },
+ "sufjan stevens|fourth of july": {
+  "found": true,
+  "trackId": 955572623,
+  "trackName": "Fourth of July",
+  "artistName": "Sufjan Stevens",
+  "artistId": 4273404,
+  "genre": "Singer/Songwriter"
+ },
+ "宇多田ヒカル|花束を君に": {
+  "found": true,
+  "trackId": 1736077461,
+  "trackName": "Hanataba Wo Kimini",
+  "artistName": "Hikaru Utada",
+  "artistId": 18756224,
+  "genre": "J-Pop"
+ },
+ "이소라|track 9": {
+  "found": true,
+  "trackId": 1448342202,
+  "trackName": "Track 9",
+  "artistName": "Lee Sora",
+  "artistId": 147683779,
+  "genre": "K-Pop"
+ },
+ "아이유|밤편지": {
+  "found": true,
+  "trackId": 1219218446,
+  "trackName": "Through the Night",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "김동률|감사": {
+  "found": true,
+  "trackId": 1652239678,
+  "trackName": "Thanks",
+  "artistName": "Kim Dong Ryul",
+  "artistId": 364983336,
+  "genre": "K-Pop"
+ },
+ "백예린|그건 아마 우리의 잘못은 아닐 거야": {
+  "found": true,
+  "trackId": 1456221393,
+  "trackName": "그건 아마 우리의 잘못은 아닐 거야",
+  "artistName": "백예린",
+  "artistId": 1053924796,
+  "genre": "K-Pop"
+ },
+ "신승훈|보이지 않는 사랑": {
+  "found": true,
+  "trackId": 1728633794,
+  "trackName": "Invisible Love",
+  "artistName": "Shin Seung Hun",
+  "artistId": 268959215,
+  "genre": "K-Pop"
+ },
+ "10cm|스토커": {
+  "found": true,
+  "trackId": 1649544416,
+  "trackName": "스토커",
+  "artistName": "10CM & Kwon Jin Ah",
+  "artistId": 448032126,
+  "genre": "K-Pop"
+ },
+ "the beatles|let it be": {
+  "found": true,
+  "trackId": 1441164738,
+  "trackName": "Let It Be",
+  "artistName": "The Beatles",
+  "artistId": 136975,
+  "genre": "Rock"
+ },
+ "simon & garfunkel|bridge over troubled water": {
+  "found": true,
+  "trackId": 324127934,
+  "trackName": "Bridge Over Troubled Water",
+  "artistName": "Simon & Garfunkel",
+  "artistId": 461503,
+  "genre": "Pop"
+ },
+ "박효신|숨": {
+  "found": true,
+  "trackId": 1698507285,
+  "trackName": "Breath",
+  "artistName": "Park Hyo Shin",
+  "artistId": 292946954,
+  "genre": "K-Pop"
+ },
+ "윤하|기다리다": {
+  "found": true,
+  "trackId": 1605915071,
+  "trackName": "기다리다",
+  "artistName": "Younha",
+  "artistId": 366264156,
+  "genre": "K-Pop"
+ },
+ "김광석|서른 즈음에": {
+  "found": true,
+  "trackId": 1501124618,
+  "trackName": "서른 즈음에",
+  "artistName": "Kim Kwang Seok",
+  "artistId": 543489568,
+  "genre": "K-Pop"
+ },
+ "정준일|안아줘": {
+  "found": true,
+  "trackId": 1358178246,
+  "trackName": "Hug Me",
+  "artistName": "Jung Joonil",
+  "artistId": 489742312,
+  "genre": "K-Pop"
+ },
+ "sam smith|too good at goodbyes": {
+  "found": true,
+  "trackId": 1536646948,
+  "trackName": "Too Good at Goodbyes",
+  "artistName": "Sam Smith",
+  "artistId": 156488786,
+  "genre": "Pop"
+ },
+ "olivia rodrigo|traitor": {
+  "found": true,
+  "trackId": 1560735421,
+  "trackName": "traitor",
+  "artistName": "Olivia Rodrigo",
+  "artistId": 979458609,
+  "genre": "Pop"
+ },
+ "taylor swift|all too well": {
+  "found": true,
+  "trackId": 1440935561,
+  "trackName": "All Too Well",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Country"
+ },
+ "宇多田ヒカル|first love": {
+  "found": true,
+  "trackId": 1440763358,
+  "trackName": "First Love (Remastered 2014)",
+  "artistName": "Hikaru Utada",
+  "artistId": 18756224,
+  "genre": "J-Pop"
+ },
+ "day6|놓아 놓아 놓아": {
+  "found": true,
+  "trackId": 1097918090,
+  "trackName": "놓아 놓아 놓아",
+  "artistName": "데이식스",
+  "artistId": 1037939997,
+  "genre": "K-Pop"
+ },
+ "태연|그대라는 시": {
+  "found": true,
+  "trackId": 1804658810,
+  "trackName": "그대라는 시",
+  "artistName": "TAEYEON",
+  "artistId": 435966642,
+  "genre": "K-Pop"
+ },
+ "백예린|bye bye my blue": {
+  "found": true,
+  "trackId": 1125891115,
+  "trackName": "Bye Bye My Blue",
+  "artistName": "백예린",
+  "artistId": 1053924796,
+  "genre": "K-Pop"
+ },
+ "볼빨간사춘기|나의 사춘기에게": {
+  "found": true,
+  "trackId": 1550029645,
+  "trackName": "To My Youth",
+  "artistName": "BOL4",
+  "artistId": 1188975595,
+  "genre": "K-Pop"
+ },
+ "윤종신|좋니": {
+  "found": true,
+  "trackId": 1787989435,
+  "trackName": "Like it",
+  "artistName": "Yoon Jong Shin",
+  "artistId": 359836648,
+  "genre": "K-Pop"
+ },
+ "10cm|서랍": {
+  "found": true,
+  "trackId": 1598506868,
+  "trackName": "Drawer",
+  "artistName": "10CM",
+  "artistId": 448032126,
+  "genre": "Soundtrack"
+ },
+ "alicia keys|if i ain't got you": {
+  "found": true,
+  "trackId": 255343130,
+  "trackName": "If I Ain't Got You",
+  "artistName": "Alicia Keys",
+  "artistId": 316069,
+  "genre": "R&B/Soul"
+ },
+ "norah jones|don't know why": {
+  "found": true,
+  "trackId": 1625058461,
+  "trackName": "Don't Know Why",
+  "artistName": "Norah Jones",
+  "artistId": 1001750,
+  "genre": "Singer/Songwriter"
+ },
+ "billie eilish|everything i wanted": {
+  "found": true,
+  "trackId": 1487502476,
+  "trackName": "everything i wanted",
+  "artistName": "Billie Eilish",
+  "artistId": 1065981054,
+  "genre": "Alternative"
+ },
+ "あいみょん|裸の心": {
+  "found": true,
+  "trackId": 1508133095,
+  "trackName": "裸の心",
+  "artistName": "あいみょん",
+  "artistId": 1165017710,
+  "genre": "J-Pop"
+ },
+ "김윤아|봄날은 간다": {
+  "found": true,
+  "trackId": 1618392187,
+  "trackName": "A Spring Day Is Gone",
+  "artistName": "Kim Yuna",
+  "artistId": 148938540,
+  "genre": "Soundtrack"
+ },
+ "최유리|숲": {
+  "found": true,
+  "trackId": 1641252975,
+  "trackName": "Forest",
+  "artistName": "Choi Yu Ree",
+  "artistId": 1495022606,
+  "genre": "Folk"
+ },
+ "adele|all i ask": {
+  "found": true,
+  "trackId": 1544494912,
+  "trackName": "All I Ask",
+  "artistName": "Adele",
+  "artistId": 262836961,
+  "genre": "Pop"
+ },
+ "bon iver|skinny love": {
+  "found": true,
+  "trackId": 947059829,
+  "trackName": "Skinny Love",
+  "artistName": "Bon Iver",
+  "artistId": 273428126,
+  "genre": "Alternative"
+ },
+ "damien rice|the blower's daughter": {
+  "found": true,
+  "trackId": 2249495,
+  "trackName": "The Blower's Daughter",
+  "artistName": "Damien Rice",
+  "artistId": 2249490,
+  "genre": "Singer/Songwriter"
+ },
+ "aimer|カタオモイ": {
+  "found": true,
+  "trackId": 1538259004,
+  "trackName": "Kataomoi",
+  "artistName": "Aimer",
+  "artistId": 569972619,
+  "genre": "J-Pop"
+ },
+ "김필|그때 그 아인": {
+  "found": true,
+  "trackId": 1499080015,
+  "trackName": "Someday, the Boy",
+  "artistName": "Kim Feel",
+  "artistId": 767877371,
+  "genre": "TV Soundtrack"
+ },
+ "루시드폴|바람, 어디에서 부는지": {
+  "found": true,
+  "trackId": 1876152742,
+  "trackName": "Wind, Where Does It Come From?",
+  "artistName": "Lucid Fall",
+  "artistId": 412677880,
+  "genre": "K-Pop"
+ },
+ "sufjan stevens|mystery of love": {
+  "found": true,
+  "trackId": 1318981699,
+  "trackName": "Mystery of Love (From “Call Me By Your Name”)",
+  "artistName": "Sufjan Stevens",
+  "artistId": 4273404,
+  "genre": "Soundtrack"
+ },
+ "sara bareilles|gravity": {
+  "found": true,
+  "trackId": 258606686,
+  "trackName": "Gravity",
+  "artistName": "Sara Bareilles",
+  "artistId": 64398046,
+  "genre": "Singer/Songwriter"
+ },
+ "bibi|가면무도회": {
+  "found": true,
+  "trackId": 1651175245,
+  "trackName": "가면무도회",
+  "artistName": "비비",
+  "artistId": 1444569221,
+  "genre": "K-Pop"
+ },
+ "stray kids|소리꾼": {
+  "found": false
+ },
+ "ateez|멋 (the real)": {
+  "found": true,
+  "trackId": 1573741136,
+  "trackName": "The Real",
+  "artistName": "ATEEZ",
+  "artistId": 1439301205,
+  "genre": "K-Pop"
+ },
+ "cl|나쁜 기집애": {
+  "found": true,
+  "trackId": 1338600148,
+  "trackName": "The Baddest Female",
+  "artistName": "CL",
+  "artistId": 655853528,
+  "genre": "Hip-Hop/Rap"
+ },
+ "dpr ian|so beautiful": {
+  "found": true,
+  "trackId": 1555436623,
+  "trackName": "So Beautiful",
+  "artistName": "DPR IAN",
+  "artistId": 1500739803,
+  "genre": "K-Pop"
+ },
+ "young posse|xxl": {
+  "found": true,
+  "trackId": 1735852954,
+  "trackName": "XXL",
+  "artistName": "YOUNG POSSE",
+  "artistId": 1711363069,
+  "genre": "K-Pop"
+ },
+ "rage against the machine|killing in the name": {
+  "found": true,
+  "trackId": 191450927,
+  "trackName": "Killing In the Name",
+  "artistName": "Rage Against the Machine",
+  "artistId": 899409,
+  "genre": "Hard Rock"
+ },
+ "paramore|misery business": {
+  "found": true,
+  "trackId": 604863246,
+  "trackName": "Misery Business",
+  "artistName": "Paramore",
+  "artistId": 75950796,
+  "genre": "Alternative"
+ },
+ "beyoncé|don't hurt yourself": {
+  "found": false
+ },
+ "the white stripes|seven nation army": {
+  "found": true,
+  "trackId": 1533513537,
+  "trackName": "Seven Nation Army",
+  "artistName": "The White Stripes",
+  "artistId": 2456318,
+  "genre": "Rock"
+ },
+ "one ok rock|完全感覚dreamer": {
+  "found": true,
+  "trackId": 1838917131,
+  "trackName": "完全感覚Dreamer",
+  "artistName": "ONE OK ROCK",
+  "artistId": 252239625,
+  "genre": "ロック"
+ },
+ "day6|누군가 필요해": {
+  "found": true,
+  "trackId": 1291154116,
+  "trackName": "누군가 필요해",
+  "artistName": "데이식스",
+  "artistId": 1037939997,
+  "genre": "K-Pop"
+ },
+ "leehi|홀로": {
+  "found": true,
+  "trackId": 1570374781,
+  "trackName": "HOLO",
+  "artistName": "LEEHI",
+  "artistId": 1484046668,
+  "genre": "K-Pop"
+ },
+ "태연|11:11": {
+  "found": true,
+  "trackId": 1170409098,
+  "trackName": "11:11",
+  "artistName": "TAEYEON",
+  "artistId": 435966642,
+  "genre": "K-Pop"
+ },
+ "crush|잊어버리지마": {
+  "found": true,
+  "trackId": 1615548707,
+  "trackName": "Don’t Forget (feat. TAEYEON)",
+  "artistName": "Crush",
+  "artistId": 958641367,
+  "genre": "R&B/Soul"
+ },
+ "정엽|왜 이제야 왔니": {
+  "found": true,
+  "trackId": 1861301848,
+  "trackName": "Why Did You Come Now",
+  "artistName": "Jungyup",
+  "artistId": 428922888,
+  "genre": "Soundtrack"
+ },
+ "coldplay|sparks": {
+  "found": true,
+  "trackId": 1122782281,
+  "trackName": "Sparks",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "keane|somewhere only we know": {
+  "found": true,
+  "trackId": 1445287036,
+  "trackName": "Somewhere Only We Know",
+  "artistName": "Keane",
+  "artistId": 1187178,
+  "genre": "Pop"
+ },
+ "노라조|형": {
+  "found": true,
+  "trackId": 804608682,
+  "trackName": "형",
+  "artistName": "NORAZO",
+  "artistId": 376942506,
+  "genre": "Dance"
+ },
+ "yb|나는 나비": {
+  "found": true,
+  "trackId": 1501269903,
+  "trackName": "나는 나비",
+  "artistName": "YB",
+  "artistId": 417006189,
+  "genre": "록"
+ },
+ "자우림|미안해 널 미워해": {
+  "found": true,
+  "trackId": 1486291526,
+  "trackName": "I Am Sorry, I Hate You",
+  "artistName": "Jaurim",
+  "artistId": 472553388,
+  "genre": "K-Pop"
+ },
+ "bibi|나쁜년": {
+  "found": false
+ },
+ "2ne1|내가 제일 잘 나가": {
+  "found": true,
+  "trackId": 1338689927,
+  "trackName": "I Am the Best",
+  "artistName": "2NE1",
+  "artistId": 329155759,
+  "genre": "K-Pop"
+ },
+ "blackpink|kill this love": {
+  "found": true,
+  "trackId": 1551479992,
+  "trackName": "Kill This Love",
+  "artistName": "BLACKPINK",
+  "artistId": 1141774019,
+  "genre": "K-Pop"
+ },
+ "dreamcatcher|scream": {
+  "found": true,
+  "trackId": 1891635495,
+  "trackName": "Scream",
+  "artistName": "Dreamcatcher",
+  "artistId": 1194912387,
+  "genre": "K-Pop"
+ },
+ "kelly clarkson|stronger": {
+  "found": true,
+  "trackId": 464446141,
+  "trackName": "Stronger (What Doesn't Kill You)",
+  "artistName": "Kelly Clarkson",
+  "artistId": 316265,
+  "genre": "Pop"
+ },
+ "demi lovato|sorry not sorry": {
+  "found": true,
+  "trackId": 1405206203,
+  "trackName": "Sorry Not Sorry",
+  "artistName": "Demi Lovato",
+  "artistId": 280215821,
+  "genre": "Pop"
+ },
+ "p!nk|so what": {
+  "found": true,
+  "trackId": 6793253949,
+  "trackName": "So What",
+  "artistName": "P!nk",
+  "artistId": 4488522,
+  "genre": "Pop"
+ },
+ "lisa|紅蓮華": {
+  "found": true,
+  "trackId": 1538286723,
+  "trackName": "Gurenge",
+  "artistName": "LiSA",
+  "artistId": 573943518,
+  "genre": "Anime"
+ },
+ "옥상달빛|수고했어, 오늘도": {
+  "found": true,
+  "trackId": 1747652085,
+  "trackName": "Cheer Up",
+  "artistName": "Okdal",
+  "artistId": 721537275,
+  "genre": "Folk"
+ },
+ "akmu|시간과 낙엽": {
+  "found": true,
+  "trackId": 1316836865,
+  "trackName": "Time and Fallen Leaves",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "sara bareilles|brave": {
+  "found": true,
+  "trackId": 1440504730,
+  "trackName": "Brave",
+  "artistName": "Sara Bareilles",
+  "artistId": 64398046,
+  "genre": "Pop"
+ },
+ "florence + the machine|shake it out": {
+  "found": true,
+  "trackId": 1440808361,
+  "trackName": "Shake It Out",
+  "artistName": "Florence + the Machine",
+  "artistId": 281070699,
+  "genre": "Alternative"
+ },
+ "coldplay|viva la vida": {
+  "found": true,
+  "trackId": 1122773680,
+  "trackName": "Viva La Vida",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "米津玄師|アイネクライネ": {
+  "found": true,
+  "trackId": 1440792118,
+  "trackName": "アイネクライネ",
+  "artistName": "米津玄師",
+  "artistId": 530814268,
+  "genre": "J-Pop"
+ },
+ "윤미래|검은 행복": {
+  "found": true,
+  "trackId": 1064314171,
+  "trackName": "Black Happiness",
+  "artistName": "YOON MIRAE",
+  "artistId": 326451219,
+  "genre": "K-Pop"
+ },
+ "자우림|일탈": {
+  "found": true,
+  "trackId": 1486570398,
+  "trackName": "Deviation",
+  "artistName": "Jaurim",
+  "artistId": 472553388,
+  "genre": "K-Pop"
+ },
+ "bibi|나쁜x": {
+  "found": true,
+  "trackId": 1564738146,
+  "trackName": "Life Is a Bi…",
+  "artistName": "BIBI",
+  "artistId": 1444569221,
+  "genre": "K-Pop"
+ },
+ "(g)i-dle|tomboy": {
+  "found": true,
+  "trackId": 1802621240,
+  "trackName": "TOMBOY",
+  "artistName": "i-dle",
+  "artistId": 1378887586,
+  "genre": "K-Pop"
+ },
+ "blackpink|pretty savage": {
+  "found": true,
+  "trackId": 1533894675,
+  "trackName": "Pretty Savage",
+  "artistName": "BLACKPINK",
+  "artistId": 1141774019,
+  "genre": "K-Pop"
+ },
+ "ateez|guerrilla": {
+  "found": true,
+  "trackId": 1634355469,
+  "trackName": "Guerrilla",
+  "artistName": "ATEEZ",
+  "artistId": 1439301205,
+  "genre": "K-Pop"
+ },
+ "kelly clarkson|since u been gone": {
+  "found": true,
+  "trackId": 275765380,
+  "trackName": "Since U Been Gone",
+  "artistName": "Kelly Clarkson",
+  "artistId": 316265,
+  "genre": "Pop"
+ },
+ "paramore|ignorance": {
+  "found": true,
+  "trackId": 604800415,
+  "trackName": "Ignorance",
+  "artistName": "Paramore",
+  "artistId": 75950796,
+  "genre": "Alternative"
+ },
+ "윤하|비밀번호 486": {
+  "found": true,
+  "trackId": 1804697713,
+  "trackName": "비밀번호 486",
+  "artistName": "Younha",
+  "artistId": 366264156,
+  "genre": "K-Pop"
+ },
+ "이효리|u-go-girl": {
+  "found": true,
+  "trackId": 1688124068,
+  "trackName": "U-Go-Girl (feat. Nassun)",
+  "artistName": "Lee Hyori",
+  "artistId": 464985628,
+  "genre": "K-Pop"
+ },
+ "마마무|hip": {
+  "found": true,
+  "trackId": 1487928109,
+  "trackName": "HIP",
+  "artistName": "MAMAMOO",
+  "artistId": 818951094,
+  "genre": "K-Pop"
+ },
+ "itzy|wannabe": {
+  "found": true,
+  "trackId": 1608253214,
+  "trackName": "WANNABE",
+  "artistName": "ITZY",
+  "artistId": 1451964345,
+  "genre": "Dance"
+ },
+ "아이유|이름에게": {
+  "found": true,
+  "trackId": 1229073408,
+  "trackName": "Dear Name",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "katy perry|roar": {
+  "found": true,
+  "trackId": 1440818897,
+  "trackName": "Roar",
+  "artistName": "Katy Perry",
+  "artistId": 64387566,
+  "genre": "Pop"
+ },
+ "natasha bedingfield|unwritten": {
+  "found": true,
+  "trackId": 430514893,
+  "trackName": "Unwritten",
+  "artistName": "Natasha Bedingfield",
+  "artistId": 17768486,
+  "genre": "Pop"
+ },
+ "rachel platten|fight song": {
+  "found": true,
+  "trackId": 1061182684,
+  "trackName": "Fight Song",
+  "artistName": "Rachel Platten",
+  "artistId": 431528675,
+  "genre": "Pop"
+ },
+ "sia|elastic heart": {
+  "found": true,
+  "trackId": 882945393,
+  "trackName": "Elastic Heart",
+  "artistName": "Sia",
+  "artistId": 28721078,
+  "genre": "Pop"
+ },
+ "dreamcatcher|chase me": {
+  "found": true,
+  "trackId": 6767425292,
+  "trackName": "Chase Me",
+  "artistName": "Dreamcatcher",
+  "artistId": 1194912387,
+  "genre": "K-Pop"
+ },
+ "p1harmony|scared": {
+  "found": true,
+  "trackId": 6809644382,
+  "trackName": "Scared",
+  "artistName": "P1Harmony",
+  "artistId": 1536862708,
+  "genre": "Dance"
+ },
+ "gain|paradise lost": {
+  "found": true,
+  "trackId": 1787524497,
+  "trackName": "Paradise Lost",
+  "artistName": "GAIN",
+  "artistId": 348732958,
+  "genre": "Dance"
+ },
+ "red velvet|peek-a-boo": {
+  "found": true,
+  "trackId": 1314275552,
+  "trackName": "피카부 Peek-A-Boo",
+  "artistName": "Red Velvet",
+  "artistId": 906961899,
+  "genre": "K-Pop"
+ },
+ "bibi|animal farm": {
+  "found": true,
+  "trackId": 1799820486,
+  "trackName": "Animal Farm",
+  "artistName": "BIBI",
+  "artistId": 1444569221,
+  "genre": "Pop"
+ },
+ "shinee|orgel": {
+  "found": true,
+  "trackId": 854903307,
+  "trackName": "Orgel",
+  "artistName": "SHINee",
+  "artistId": 433371033,
+  "genre": "Pop"
+ },
+ "taemin|criminal": {
+  "found": true,
+  "trackId": 1530317820,
+  "trackName": "Criminal",
+  "artistName": "TAEMIN",
+  "artistId": 971826499,
+  "genre": "K-Pop"
+ },
+ "billie eilish|bury a friend": {
+  "found": true,
+  "trackId": 1450695881,
+  "trackName": "bury a friend",
+  "artistName": "Billie Eilish",
+  "artistId": 1065981054,
+  "genre": "Alternative"
+ },
+ "rihanna|disturbia": {
+  "found": true,
+  "trackId": 1441154571,
+  "trackName": "Disturbia",
+  "artistName": "Rihanna",
+  "artistId": 63346553,
+  "genre": "R&B/Soul"
+ },
+ "the weeknd|the hills": {
+  "found": true,
+  "trackId": 1440858495,
+  "trackName": "The Hills",
+  "artistName": "The Weeknd",
+  "artistId": 479756766,
+  "genre": "R&B/Soul"
+ },
+ "lana del rey|once upon a dream": {
+  "found": true,
+  "trackId": 1443557799,
+  "trackName": "Once Upon a Dream",
+  "artistName": "Lana Del Rey",
+  "artistId": 464296584,
+  "genre": "Soundtrack"
+ },
+ "ado|うっせぇわ": {
+  "found": true,
+  "trackId": 1535123742,
+  "trackName": "Usseewa",
+  "artistName": "ADO",
+  "artistId": 1492604670,
+  "genre": "J-Pop"
+ },
+ "dreamcatcher|because": {
+  "found": true,
+  "trackId": 1893002813,
+  "trackName": "BEcause",
+  "artistName": "Dreamcatcher",
+  "artistId": 1194912387,
+  "genre": "K-Pop"
+ },
+ "iu|밤편지": {
+  "found": true,
+  "trackId": 1219218446,
+  "trackName": "Through the Night",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "jukjae|나랑 같이 걸을래": {
+  "found": true,
+  "trackId": 1537071992,
+  "trackName": "Do You Want to Walk with Me? (Romance 101)",
+  "artistName": "JUKJAE",
+  "artistId": 1239707923,
+  "genre": "K-Pop"
+ },
+ "younha|사건의 지평선": {
+  "found": true,
+  "trackId": 1616649362,
+  "trackName": "Event Horizon",
+  "artistName": "Younha",
+  "artistId": 366264156,
+  "genre": "K-Pop"
+ },
+ "paul kim|너를 만나": {
+  "found": true,
+  "trackId": 1732909766,
+  "trackName": "Me After You",
+  "artistName": "Paul Kim",
+  "artistId": 657331568,
+  "genre": "K-Pop"
+ },
+ "lee hi|only": {
+  "found": true,
+  "trackId": 1584615664,
+  "trackName": "ONLY",
+  "artistName": "LEEHI",
+  "artistId": 1484046668,
+  "genre": "R&B/Soul"
+ },
+ "taylor swift|safe & sound": {
+  "found": true,
+  "trackId": 1440795596,
+  "trackName": "Safe & Sound (feat. The Civil Wars)",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Soundtrack"
+ },
+ "radiohead|exit music (for a film)": {
+  "found": true,
+  "trackId": 1239489065,
+  "trackName": "Exit Music (For a Film) [Remastered]",
+  "artistName": "Radiohead",
+  "artistId": 657515,
+  "genre": "Alternative"
+ },
+ "백예린|0310": {
+  "found": true,
+  "trackId": 1490544515,
+  "trackName": "0310",
+  "artistName": "Yerin Baek",
+  "artistId": 1053924796,
+  "genre": "Singer/Songwriter"
+ },
+ "portishead|roads": {
+  "found": true,
+  "trackId": 1440653203,
+  "trackName": "Roads",
+  "artistName": "Portishead",
+  "artistId": 853090,
+  "genre": "Electronic"
+ },
+ "lorde|yellow flicker beat": {
+  "found": true,
+  "trackId": 1440859725,
+  "trackName": "Yellow Flicker Beat",
+  "artistName": "Lorde",
+  "artistId": 602767352,
+  "genre": "Soundtrack"
+ },
+ "선우정아|도망가자": {
+  "found": true,
+  "trackId": 1491118224,
+  "trackName": "Run with Me",
+  "artistName": "sunwoojunga",
+  "artistId": 721478818,
+  "genre": "Singer/Songwriter"
+ },
+ "椎名林檎|ギブス": {
+  "found": true,
+  "trackId": 1485676887,
+  "trackName": "Gips",
+  "artistName": "Sheena Ringo",
+  "artistId": 74576999,
+  "genre": "J-Pop"
+ },
+ "김사월|누군가에게": {
+  "found": true,
+  "trackId": 1436255555,
+  "trackName": "Someone",
+  "artistName": "Kim Sawol",
+  "artistId": 1055357910,
+  "genre": "Singer/Songwriter"
+ },
+ "daughter|youth": {
+  "found": true,
+  "trackId": 1771706941,
+  "trackName": "Youth",
+  "artistName": "Daughter",
+  "artistId": 469701923,
+  "genre": "Alternative"
+ },
+ "이승열|날아": {
+  "found": true,
+  "trackId": 1655610509,
+  "trackName": "Fly",
+  "artistName": "Yi Sung Yol",
+  "artistId": 177595438,
+  "genre": "Soundtrack"
+ },
+ "아이유|무릎": {
+  "found": true,
+  "trackId": 1051977847,
+  "trackName": "무릎 Knees",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "정재형|running": {
+  "found": true,
+  "trackId": 1611510977,
+  "trackName": "Running",
+  "artistName": "Jung Jae Hyung",
+  "artistId": 337421488,
+  "genre": "K-Pop"
+ },
+ "윤석철트리오|즐겁게, 음악.": {
+  "found": true,
+  "trackId": 945256702,
+  "trackName": "Merrily Music",
+  "artistName": "Yun Seokcheol Trio",
+  "artistId": 945258015,
+  "genre": "Jazz"
+ },
+ "norah jones|come away with me": {
+  "found": true,
+  "trackId": 1625058484,
+  "trackName": "Come Away With Me",
+  "artistName": "Norah Jones",
+  "artistId": 1001750,
+  "genre": "Singer/Songwriter"
+ },
+ "josé gonzález|heartbeats": {
+  "found": true,
+  "trackId": 828118037,
+  "trackName": "Heartbeats",
+  "artistName": "José González",
+  "artistId": 153417030,
+  "genre": "Singer/Songwriter"
+ },
+ "坂本龍一|aqua": {
+  "found": true,
+  "trackId": 1597194573,
+  "trackName": "Aqua",
+  "artistName": "坂本龍一",
+  "artistId": 271593168,
+  "genre": "インストゥルメンタル"
+ },
+ "윤하|오르트구름": {
+  "found": true,
+  "trackId": 1594292084,
+  "trackName": "Oort Cloud",
+  "artistName": "Younha",
+  "artistId": 366264156,
+  "genre": "K-Pop"
+ },
+ "n.flying|옥탑방": {
+  "found": true,
+  "trackId": 6809729518,
+  "trackName": "Rooftop",
+  "artistName": "N.Flying",
+  "artistId": 996833778,
+  "genre": "Korean Rock"
+ },
+ "carly rae jepsen|cut to the feeling": {
+  "found": true,
+  "trackId": 1445304939,
+  "trackName": "Cut To The Feeling",
+  "artistName": "Carly Rae Jepsen",
+  "artistId": 284363062,
+  "genre": "Pop"
+ },
+ "onerepublic|good life": {
+  "found": true,
+  "trackId": 1461280616,
+  "trackName": "Good Life",
+  "artistName": "OneRepublic",
+  "artistId": 260414340,
+  "genre": "Rock"
+ },
+ "mrs. green apple|start": {
+  "found": true,
+  "trackId": 1440745441,
+  "trackName": "Start",
+  "artistName": "Mrs. GREEN APPLE",
+  "artistId": 962221033,
+  "genre": "J-Pop"
+ },
+ "nct dream|hello future": {
+  "found": true,
+  "trackId": 1573200614,
+  "trackName": "Hello Future",
+  "artistName": "NCT DREAM",
+  "artistId": 1208839599,
+  "genre": "K-Pop"
+ },
+ "소수빈|머물러주오": {
+  "found": true,
+  "trackId": 1725414890,
+  "trackName": "Stay",
+  "artistName": "So Soo Bin",
+  "artistId": 580777307,
+  "genre": "K-Pop"
+ },
+ "정은지|하늘바라기": {
+  "found": true,
+  "trackId": 1104837743,
+  "trackName": "Hopefully Sky (feat. 하림)",
+  "artistName": "Jeong Eun Ji",
+  "artistId": 558359377,
+  "genre": "K-Pop"
+ },
+ "coldplay|strawberry swing": {
+  "found": true,
+  "trackId": 1122773712,
+  "trackName": "Strawberry Swing",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "exo|첫 눈": {
+  "found": true,
+  "trackId": 854908536,
+  "trackName": "The First Snow",
+  "artistName": "EXO",
+  "artistId": 657630070,
+  "genre": "Holiday"
+ },
+ "태연|겨울나무": {
+  "found": true,
+  "trackId": 1323945035,
+  "trackName": "I’m all ears",
+  "artistName": "TAEYEON",
+  "artistId": 435966642,
+  "genre": "K-Pop"
+ },
+ "성시경|거리에서": {
+  "found": true,
+  "trackId": 1543850904,
+  "trackName": "거리에서",
+  "artistName": "Sung Si Kyung",
+  "artistId": 48218076,
+  "genre": "K-Pop"
+ },
+ "김필|눈에 담아": {
+  "found": false
+ },
+ "taylor swift|snow on the beach": {
+  "found": true,
+  "trackId": 1645937258,
+  "trackName": "Snow On The Beach (feat. Lana Del Rey)",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Pop"
+ },
+ "sia|snowman": {
+  "found": true,
+  "trackId": 1440098017,
+  "trackName": "Snowman",
+  "artistName": "Sia",
+  "artistId": 28721078,
+  "genre": "Holiday"
+ },
+ "aurora|winter bird": {
+  "found": true,
+  "trackId": 1771718374,
+  "trackName": "Winter Bird",
+  "artistName": "AURORA",
+  "artistId": 947171999,
+  "genre": "Indie Rock"
+ },
+ "bon iver|holocene": {
+  "found": true,
+  "trackId": 438685989,
+  "trackName": "Holocene",
+  "artistName": "Bon Iver",
+  "artistId": 273428126,
+  "genre": "Alternative"
+ },
+ "back number|ヒロイン": {
+  "found": true,
+  "trackId": 1451566361,
+  "trackName": "ヒロイン",
+  "artistName": "back number",
+  "artistId": 302361237,
+  "genre": "J-Pop"
+ },
+ "이진아|냠냠냠": {
+  "found": true,
+  "trackId": 1527242468,
+  "trackName": "Yum Yum Yum (Rebooted Version) [feat. Tak]",
+  "artistName": "Lee Jin Ah",
+  "artistId": 944848679,
+  "genre": "K-Pop"
+ },
+ "akmu|오랜 날 오랜 밤": {
+  "found": true,
+  "trackId": 1191276302,
+  "trackName": "Last Goodbye",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "아이유|가을 아침": {
+  "found": true,
+  "trackId": 1286574372,
+  "trackName": "Autumn Morning",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "폴킴|너를 만나": {
+  "found": true,
+  "trackId": 1732909766,
+  "trackName": "Me After You",
+  "artistName": "Paul Kim",
+  "artistId": 657331568,
+  "genre": "K-Pop"
+ },
+ "jack johnson|banana pancakes": {
+  "found": true,
+  "trackId": 1440857795,
+  "trackName": "Banana Pancakes",
+  "artistName": "Jack Johnson",
+  "artistId": 909253,
+  "genre": "Rock"
+ },
+ "israel kamakawiwo'ole|somewhere over the rainbow": {
+  "found": true,
+  "trackId": 6920352,
+  "trackName": "Somewhere Over the Rainbow / What a Wonderful World",
+  "artistName": "Israel Kamakawiwo'ole",
+  "artistId": 4218340,
+  "genre": "Worldwide"
+ },
+ "newjeans|super shy": {
+  "found": true,
+  "trackId": 1692686518,
+  "trackName": "Super Shy",
+  "artistName": "NewJeans",
+  "artistId": 1635469693,
+  "genre": "K-Pop"
+ },
+ "bts|dynamite": {
+  "found": true,
+  "trackId": 1627575419,
+  "trackName": "Dynamite",
+  "artistName": "BTS",
+  "artistId": 883131348,
+  "genre": "K-Pop"
+ },
+ "katy perry|firework": {
+  "found": true,
+  "trackId": 716192625,
+  "trackName": "Firework",
+  "artistName": "Katy Perry",
+  "artistId": 64387566,
+  "genre": "Pop"
+ },
+ "taylor swift|you need to calm down": {
+  "found": true,
+  "trackId": 1468058704,
+  "trackName": "You Need To Calm Down",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Pop"
+ },
+ "dua lipa|levitating": {
+  "found": true,
+  "trackId": 1538003843,
+  "trackName": "Levitating",
+  "artistName": "Dua Lipa",
+  "artistId": 1031397873,
+  "genre": "Pop"
+ },
+ "米津玄師|ピースサイン": {
+  "found": true,
+  "trackId": 1538275660,
+  "trackName": "Peace Sign",
+  "artistName": "Kenshi Yonezu",
+  "artistId": 530814268,
+  "genre": "J-Pop"
+ },
+ "볼빨간사춘기|여행": {
+  "found": true,
+  "trackId": 1550539052,
+  "trackName": "Travel",
+  "artistName": "BOL4",
+  "artistId": 1188975595,
+  "genre": "Rock"
+ },
+ "성시경|너의 모든 순간": {
+  "found": true,
+  "trackId": 1859791980,
+  "trackName": "Every moment of you",
+  "artistName": "Sung Si Kyung",
+  "artistId": 48218076,
+  "genre": "Soundtrack"
+ },
+ "이문세|소녀": {
+  "found": true,
+  "trackId": 1454761690,
+  "trackName": "소녀",
+  "artistName": "Lee Moon Sae",
+  "artistId": 367775650,
+  "genre": "Folk"
+ },
+ "coldplay|yellow": {
+  "found": true,
+  "trackId": 1122782283,
+  "trackName": "Yellow",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "john mayer|heartbreak warfare": {
+  "found": true,
+  "trackId": 336390911,
+  "trackName": "Heartbreak Warfare",
+  "artistName": "John Mayer",
+  "artistId": 472054,
+  "genre": "Rock"
+ },
+ "오마이걸|비밀정원": {
+  "found": true,
+  "trackId": 1738879526,
+  "trackName": "Secret Garden",
+  "artistName": "OH MY GIRL",
+  "artistId": 987326929,
+  "genre": "K-Pop"
+ },
+ "red velvet|feel my rhythm": {
+  "found": true,
+  "trackId": 1614179710,
+  "trackName": "Feel My Rhythm",
+  "artistName": "Red Velvet",
+  "artistId": 906961899,
+  "genre": "K-Pop"
+ },
+ "twice|what is love?": {
+  "found": true,
+  "trackId": 1555390083,
+  "trackName": "What is Love?",
+  "artistName": "TWICE",
+  "artistId": 1203816887,
+  "genre": "K-Pop"
+ },
+ "newjeans|omg": {
+  "found": true,
+  "trackId": 1659513445,
+  "trackName": "OMG",
+  "artistName": "NewJeans",
+  "artistId": 1635469693,
+  "genre": "K-Pop"
+ },
+ "le sserafim|perfect night": {
+  "found": true,
+  "trackId": 1712731159,
+  "trackName": "Perfect Night",
+  "artistName": "LE SSERAFIM",
+  "artistId": 1616740364,
+  "genre": "K-Pop"
+ },
+ "katy perry|teenage dream": {
+  "found": true,
+  "trackId": 716192601,
+  "trackName": "Teenage Dream",
+  "artistName": "Katy Perry",
+  "artistId": 64387566,
+  "genre": "Pop"
+ },
+ "taylor swift|message in a bottle": {
+  "found": true,
+  "trackId": 1590368886,
+  "trackName": "Message In A Bottle (Taylor's Version) [From The Vault]",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Pop"
+ },
+ "carly rae jepsen|call me maybe": {
+  "found": true,
+  "trackId": 1440874008,
+  "trackName": "Call Me Maybe",
+  "artistName": "Carly Rae Jepsen",
+  "artistId": 284363062,
+  "genre": "Pop"
+ },
+ "abba|dancing queen": {
+  "found": true,
+  "trackId": 1440820267,
+  "trackName": "Dancing Queen",
+  "artistName": "ABBA",
+  "artistId": 372976,
+  "genre": "Pop"
+ },
+ "perfume|チョコレイト・ディスコ": {
+  "found": true,
+  "trackId": 1479641007,
+  "trackName": "Chocolate Disco",
+  "artistName": "Perfume",
+  "artistId": 351343399,
+  "genre": "Electronic"
+ },
+ "cheeze|mood indigo": {
+  "found": true,
+  "trackId": 1747660529,
+  "trackName": "Mood Indigo",
+  "artistName": "CHEEZE",
+  "artistId": 411941427,
+  "genre": "R&B/Soul"
+ },
+ "이하이|홀로": {
+  "found": true,
+  "trackId": 1570374781,
+  "trackName": "HOLO",
+  "artistName": "LEEHI",
+  "artistId": 1484046668,
+  "genre": "K-Pop"
+ },
+ "백예린|square (2017)": {
+  "found": true,
+  "trackId": 1490544823,
+  "trackName": "Square (2017)",
+  "artistName": "Yerin Baek",
+  "artistId": 1053924796,
+  "genre": "Singer/Songwriter"
+ },
+ "박문치|널 좋아하고 있어": {
+  "found": true,
+  "trackId": 1812611820,
+  "trackName": "I'm into You (feat. KIRIN, Dala & Jungu)",
+  "artistName": "Park Moonchi",
+  "artistId": 1398645223,
+  "genre": "Dance"
+ },
+ "大塚愛|さくらんぼ": {
+  "found": true,
+  "trackId": 337731162,
+  "trackName": "Sakuranbo",
+  "artistName": "Ai Otsuka",
+  "artistId": 74076479,
+  "genre": "J-Pop"
+ },
+ "혁오|tomboy": {
+  "found": true,
+  "trackId": 1450778317,
+  "trackName": "TOMBOY",
+  "artistName": "HYUKOH",
+  "artistId": 927548906,
+  "genre": "Rock"
+ },
+ "새소년|긴 꿈": {
+  "found": true,
+  "trackId": 1450484432,
+  "trackName": "A Long Dream",
+  "artistName": "SE SO NEON",
+  "artistId": 1251285366,
+  "genre": "Rock"
+ },
+ "검정치마|everything": {
+  "found": true,
+  "trackId": 1242155576,
+  "trackName": "EVERYTHING",
+  "artistName": "The Black Skirts",
+  "artistId": 365442996,
+  "genre": "Indie Rock"
+ },
+ "simon & garfunkel|the 59th street bridge song": {
+  "found": true,
+  "trackId": 1467438682,
+  "trackName": "The 59th Street Bridge Song (Feelin' Groovy)",
+  "artistName": "Simon & Garfunkel",
+  "artistId": 461503,
+  "genre": "Pop"
+ },
+ "adoy|wonder": {
+  "found": true,
+  "trackId": 1552372532,
+  "trackName": "Wonder",
+  "artistName": "ADOY",
+  "artistId": 1245962396,
+  "genre": "Korean Indie"
+ },
+ "쏜애플|시퍼런 봄": {
+  "found": true,
+  "trackId": 1410619815,
+  "trackName": "Blue Spring",
+  "artistName": "THORNAPPLE",
+  "artistId": 963680681,
+  "genre": "Rock"
+ },
+ "men i trust|show me how": {
+  "found": true,
+  "trackId": 1719975688,
+  "trackName": "Show Me How",
+  "artistName": "Men I Trust",
+  "artistId": 886240553,
+  "genre": "Pop"
+ },
+ "clairo|bags": {
+  "found": true,
+  "trackId": 1893175134,
+  "trackName": "Bags",
+  "artistName": "Clairo",
+  "artistId": 1187613837,
+  "genre": "Alternative"
+ },
+ "the marías|cariño": {
+  "found": true,
+  "trackId": 1420364126,
+  "trackName": "Cariño",
+  "artistName": "The Marías",
+  "artistId": 1244878938,
+  "genre": "Pop"
+ },
+ "beach house|space song": {
+  "found": true,
+  "trackId": 997914096,
+  "trackName": "Space Song",
+  "artistName": "Beach House",
+  "artistId": 200823564,
+  "genre": "Alternative"
+ },
+ "羊文学|光るとき": {
+  "found": true,
+  "trackId": 1615341467,
+  "trackName": "Hikaru toki",
+  "artistName": "Hitsujibungaku",
+  "artistId": 1281384242,
+  "genre": "Rock"
+ },
+ "폴킴|비": {
+  "found": true,
+  "trackId": 1732912110,
+  "trackName": "Rain",
+  "artistName": "Paul Kim",
+  "artistId": 657331568,
+  "genre": "R&B/Soul"
+ },
+ "the xx|intro": {
+  "found": true,
+  "trackId": 1850810463,
+  "trackName": "Intro",
+  "artistName": "The xx",
+  "artistId": 315473044,
+  "genre": "Alternative"
+ },
+ "lamp|ゆめうつつ": {
+  "found": true,
+  "trackId": 297101322,
+  "trackName": "Yume Utsutsu",
+  "artistName": "Lamp",
+  "artistId": 121939461,
+  "genre": "J-Pop"
+ },
+ "윤딴딴|겨울을 걷는다": {
+  "found": true,
+  "trackId": 1463138177,
+  "trackName": "Walking in the Winter",
+  "artistName": "Yun DDan DDan",
+  "artistId": 903775302,
+  "genre": "Singer/Songwriter"
+ },
+ "kacey musgraves|rainbow": {
+  "found": true,
+  "trackId": 1440918405,
+  "trackName": "Rainbow",
+  "artistName": "Kacey Musgraves",
+  "artistId": 466044182,
+  "genre": "Country"
+ },
+ "김윤아|going home": {
+  "found": true,
+  "trackId": 1720122263,
+  "trackName": "going home",
+  "artistName": "Kim Yuna",
+  "artistId": 148938540,
+  "genre": "Rock"
+ },
+ "정인|오르막길": {
+  "found": true,
+  "trackId": 1754932374,
+  "trackName": "Uphill Road (feat. Jung In)",
+  "artistName": "Yoon Jong Shin",
+  "artistId": 359836648,
+  "genre": "K-Pop"
+ },
+ "adele|when we were young": {
+  "found": true,
+  "trackId": 1544494407,
+  "trackName": "When We Were Young",
+  "artistName": "Adele",
+  "artistId": 262836961,
+  "genre": "Pop"
+ },
+ "ronan keating|the long goodbye": {
+  "found": true,
+  "trackId": 1468866564,
+  "trackName": "The Long Goodbye",
+  "artistName": "Ronan Keating",
+  "artistId": 85927,
+  "genre": "Pop"
+ },
+ "coldplay|the scientist": {
+  "found": true,
+  "trackId": 1122776155,
+  "trackName": "The Scientist",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "スピッツ|楓": {
+  "found": true,
+  "trackId": 1440893427,
+  "trackName": "楓",
+  "artistName": "スピッツ",
+  "artistId": 74456960,
+  "genre": "J-Pop"
+ },
+ "검정치마|기다린 만큼, 더": {
+  "found": true,
+  "trackId": 1619441084,
+  "trackName": "Till the End of Time",
+  "artistName": "The Black Skirts",
+  "artistId": 365442996,
+  "genre": "Soundtrack"
+ },
+ "잔나비|주저하는 연인들을 위해": {
+  "found": true,
+  "trackId": 1456103133,
+  "trackName": "For Lovers Who Hesitate",
+  "artistName": "JANNABI",
+  "artistId": 913424316,
+  "genre": "K-Pop"
+ },
+ "fleetwood mac|landslide": {
+  "found": true,
+  "trackId": 912323300,
+  "trackName": "Landslide",
+  "artistName": "Fleetwood Mac",
+  "artistId": 158038,
+  "genre": "Pop"
+ },
+ "elton john|your song": {
+  "found": true,
+  "trackId": 1440810937,
+  "trackName": "Your Song",
+  "artistName": "Elton John",
+  "artistId": 54657,
+  "genre": "Pop"
+ },
+ "israel kamakawiwoʻole|somewhere over the rainbow": {
+  "found": true,
+  "trackId": 6920394,
+  "trackName": "Somewhere Over the Rainbow",
+  "artistName": "Israel Kamakawiwo'ole",
+  "artistId": 4218340,
+  "genre": "Worldwide"
+ },
+ "森山直太朗|さくら": {
+  "found": true,
+  "trackId": 1445297208,
+  "trackName": "さくら(独唱)",
+  "artistName": "森山直太朗",
+  "artistId": 73405968,
+  "genre": "J-Pop"
+ },
+ "빛과 소금|샴푸의 요정": {
+  "found": true,
+  "trackId": 1804597217,
+  "trackName": "샴푸의 요정",
+  "artistName": "The Light and The Salt",
+  "artistId": 561401202,
+  "genre": "K-Pop"
+ },
+ "유재하|사랑하기 때문에": {
+  "found": true,
+  "trackId": 1505988998,
+  "trackName": "사랑하기 때문에",
+  "artistName": "Yoo Jae Ha",
+  "artistId": 42052124,
+  "genre": "K-Pop"
+ },
+ "015b|이젠 안녕": {
+  "found": true,
+  "trackId": 1562091101,
+  "trackName": "이젠 안녕",
+  "artistName": "015B",
+  "artistId": 307801647,
+  "genre": "Pop"
+ },
+ "윤상|가려진 시간 사이로": {
+  "found": true,
+  "trackId": 1804625621,
+  "trackName": "가려진 시간 사이로",
+  "artistName": "yoonsang",
+  "artistId": 396832809,
+  "genre": "K-Pop"
+ },
+ "carpenters|yesterday once more": {
+  "found": true,
+  "trackId": 1434886946,
+  "trackName": "Yesterday Once More",
+  "artistName": "Carpenters",
+  "artistId": 117982008,
+  "genre": "Pop"
+ },
+ "simon & garfunkel|the sound of silence": {
+  "found": true,
+  "trackId": 192480260,
+  "trackName": "The Sound of Silence",
+  "artistName": "Simon & Garfunkel",
+  "artistId": 461503,
+  "genre": "Folk-Rock"
+ },
+ "松任谷由実|ルージュの伝言": {
+  "found": true,
+  "trackId": 1436021956,
+  "trackName": "ルージュの伝言",
+  "artistName": "荒井由実",
+  "artistId": 81316604,
+  "genre": "J-Pop"
+ },
+ "이문세|가로수 그늘 아래 서면": {
+  "found": true,
+  "trackId": 1461532114,
+  "trackName": "가로수 그늘 아래서면",
+  "artistName": "Lee Moon Sae",
+  "artistId": 367775650,
+  "genre": "Adult Contemporary"
+ },
+ "김현철|춘천가는 기차": {
+  "found": true,
+  "trackId": 1804595369,
+  "trackName": "춘천가는 기차",
+  "artistName": "Kim Hyun Chul",
+  "artistId": 290984253,
+  "genre": "K-Pop"
+ },
+ "최백호|바다 끝": {
+  "found": true,
+  "trackId": 1613136443,
+  "trackName": "End of the Sea",
+  "artistName": "Choi Beck Ho",
+  "artistId": 743655963,
+  "genre": "K-Pop"
+ },
+ "이적|다행이다": {
+  "found": true,
+  "trackId": 345527899,
+  "trackName": "Relieved",
+  "artistName": "Lee Juck",
+  "artistId": 166744434,
+  "genre": "K-Pop"
+ },
+ "박학기|비타민": {
+  "found": true,
+  "trackId": 1630371850,
+  "trackName": "비타민 (feat. 정연 & 승연)",
+  "artistName": "Park Haki",
+  "artistId": 147683918,
+  "genre": "Singer/Songwriter"
+ },
+ "루시드폴|보이나요?": {
+  "found": true,
+  "trackId": 1623109078,
+  "trackName": "Do you see my love?",
+  "artistName": "Lucid Fall",
+  "artistId": 412677880,
+  "genre": "K-Pop"
+ },
+ "bill withers|lean on me": {
+  "found": true,
+  "trackId": 989376991,
+  "trackName": "Lean on Me",
+  "artistName": "Bill Withers",
+  "artistId": 339834,
+  "genre": "Pop"
+ },
+ "荒井由実|ひこうき雲": {
+  "found": true,
+  "trackId": 1436012207,
+  "trackName": "Vapor Trail / Hikouki Gumo",
+  "artistName": "Yumi Arai",
+  "artistId": 81316604,
+  "genre": "J-Pop"
+ },
+ "넬|기억을 걷는 시간": {
+  "found": true,
+  "trackId": 1714248019,
+  "trackName": "Time Walking on Memories",
+  "artistName": "NELL",
+  "artistId": 660177479,
+  "genre": "Rock"
+ },
+ "아이유|나의 옛날이야기": {
+  "found": true,
+  "trackId": 879281074,
+  "trackName": "My Old Story",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "전람회|기억의 습작": {
+  "found": true,
+  "trackId": 1562088525,
+  "trackName": "기억의 습작",
+  "artistName": "Exhibition",
+  "artistId": 382026557,
+  "genre": "K-Pop"
+ },
+ "lord huron|the night we met": {
+  "found": true,
+  "trackId": 1806531961,
+  "trackName": "The Night We Met",
+  "artistName": "Lord Huron",
+  "artistId": 393068687,
+  "genre": "Indie Rock"
+ },
+ "sufjan stevens|should have known better": {
+  "found": true,
+  "trackId": 955572619,
+  "trackName": "Should Have Known Better",
+  "artistName": "Sufjan Stevens",
+  "artistId": 4273404,
+  "genre": "Singer/Songwriter"
+ },
+ "정밀아|꽃": {
+  "found": true,
+  "trackId": 1592973949,
+  "trackName": "Flower",
+  "artistName": "JEONGMILLA",
+  "artistId": 935566873,
+  "genre": "Folk"
+ },
+ "윤종신|오르막길": {
+  "found": true,
+  "trackId": 1754929069,
+  "trackName": "Uphill Road (Monthly Project 2012 June Yoon Jong Shin)",
+  "artistName": "Jung In & Yoon Jong Shin",
+  "artistId": 339950184,
+  "genre": "K-Pop"
+ },
+ "장필순|나의 외로움이 널 부를 때": {
+  "found": true,
+  "trackId": 1567882616,
+  "trackName": "나의 외로움이 널 부를 때",
+  "artistName": "Jang Pill Soon",
+  "artistId": 346026807,
+  "genre": "Korean Folk-Pop"
+ },
+ "ben howard|old pine": {
+  "found": true,
+  "trackId": 1440796945,
+  "trackName": "Old Pine",
+  "artistName": "Ben Howard",
+  "artistId": 432957499,
+  "genre": "Singer/Songwriter"
+ },
+ "nick drake|pink moon": {
+  "found": true,
+  "trackId": 1440822691,
+  "trackName": "Pink Moon",
+  "artistName": "Nick Drake",
+  "artistId": 1285818,
+  "genre": "Alternative Folk"
+ },
+ "taylor swift|new year's day": {
+  "found": true,
+  "trackId": 1440934434,
+  "trackName": "New Year’s Day",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Pop"
+ },
+ "秦基博|ひまわりの約束": {
+  "found": true,
+  "trackId": 1445016747,
+  "trackName": "ひまわりの約束",
+  "artistName": "秦 基博",
+  "artistId": 293454653,
+  "genre": "J-Pop"
+ },
+ "n.flying|아 진짜요.": {
+  "found": true,
+  "trackId": 6809734685,
+  "trackName": "Oh really.",
+  "artistName": "N.Flying",
+  "artistId": 996833778,
+  "genre": "Korean Rock"
+ },
+ "lucy|개화": {
+  "found": true,
+  "trackId": 1787411417,
+  "trackName": "Flowering",
+  "artistName": "LUCY",
+  "artistId": 1470368134,
+  "genre": "Rock"
+ },
+ "owl city & carly rae jepsen|good time": {
+  "found": true,
+  "trackId": 1444320054,
+  "trackName": "Good Time",
+  "artistName": "Owl City & Carly Rae Jepsen",
+  "artistId": 264481094,
+  "genre": "Pop"
+ },
+ "ゆず|夏色": {
+  "found": true,
+  "trackId": 422250979,
+  "trackName": "夏色",
+  "artistName": "ゆず",
+  "artistId": 99087089,
+  "genre": "J-Pop"
+ },
+ "bol4|나의 사춘기에게": {
+  "found": true,
+  "trackId": 1550029645,
+  "trackName": "To My Youth",
+  "artistName": "BOL4",
+  "artistId": 1188975595,
+  "genre": "K-Pop"
+ },
+ "the paper kites|bloom": {
+  "found": true,
+  "trackId": 609187708,
+  "trackName": "Bloom (Bonus Track)",
+  "artistName": "The Paper Kites",
+  "artistId": 454316567,
+  "genre": "Singer/Songwriter"
+ },
+ "h.o.t.|전사의 후예": {
+  "found": true,
+  "trackId": 1060456814,
+  "trackName": "전사의 후예 - 폭력시대",
+  "artistName": "H.O.T.",
+  "artistId": 4691436,
+  "genre": "K-Pop"
+ },
+ "싸이|챔피언": {
+  "found": true,
+  "trackId": 1574482348,
+  "trackName": "챔피언",
+  "artistName": "PSY",
+  "artistId": 554290495,
+  "genre": "Dance"
+ },
+ "queen|we will rock you": {
+  "found": true,
+  "trackId": 6781080737,
+  "trackName": "We Will Rock You",
+  "artistName": "Queen",
+  "artistId": 3296287,
+  "genre": "Rock"
+ },
+ "the black eyed peas|i gotta feeling": {
+  "found": true,
+  "trackId": 1440769310,
+  "trackName": "I Gotta Feeling",
+  "artistName": "Black Eyed Peas",
+  "artistId": 360391,
+  "genre": "Pop"
+ },
+ "imagine dragons|on top of the world": {
+  "found": true,
+  "trackId": 1440873406,
+  "trackName": "On Top of the World",
+  "artistName": "Imagine Dragons",
+  "artistId": 358714030,
+  "genre": "Alternative"
+ },
+ "嵐|happiness": {
+  "found": true,
+  "trackId": 1485847849,
+  "trackName": "Happiness",
+  "artistName": "ARASHI",
+  "artistId": 548185047,
+  "genre": "J-Pop"
+ },
+ "coldplay|a sky full of stars": {
+  "found": true,
+  "trackId": 829910927,
+  "trackName": "A Sky Full of Stars",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "katrina and the waves|walking on sunshine": {
+  "found": true,
+  "trackId": 723501674,
+  "trackName": "Walking On Sunshine",
+  "artistName": "Katrina and the Waves",
+  "artistId": 15878468,
+  "genre": "Pop"
+ },
+ "avicii|the nights": {
+  "found": true,
+  "trackId": 1440829549,
+  "trackName": "The Nights",
+  "artistName": "Avicii",
+  "artistId": 298496035,
+  "genre": "Dance"
+ },
+ "いきものがかり|ありがとう": {
+  "found": true,
+  "trackId": 1536261286,
+  "trackName": "Arigatou",
+  "artistName": "Ikimonogakari",
+  "artistId": 550412714,
+  "genre": "J-Pop"
+ },
+ "데이식스|한 페이지가 될 수 있게": {
+  "found": true,
+  "trackId": 1471938396,
+  "trackName": "한 페이지가 될 수 있게",
+  "artistName": "데이식스",
+  "artistId": 1037939997,
+  "genre": "K-Pop"
+ },
+ "세븐틴|아주 nice": {
+  "found": true,
+  "trackId": 1130828898,
+  "trackName": "VERY NICE",
+  "artistName": "SEVENTEEN",
+  "artistId": 999644772,
+  "genre": "K-Pop"
+ },
+ "마마무|너나 해": {
+  "found": true,
+  "trackId": 1676209533,
+  "trackName": "Egotistic",
+  "artistName": "MAMAMOO",
+  "artistId": 818951094,
+  "genre": "K-Pop"
+ },
+ "아이유|celebrity": {
+  "found": true,
+  "trackId": 1550907178,
+  "trackName": "Celebrity",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "mark ronson|uptown funk": {
+  "found": true,
+  "trackId": 943946671,
+  "trackName": "Uptown Funk (feat. Bruno Mars)",
+  "artistName": "Mark Ronson",
+  "artistId": 14400049,
+  "genre": "Pop"
+ },
+ "the weeknd|blinding lights": {
+  "found": true,
+  "trackId": 1499378607,
+  "trackName": "Blinding Lights",
+  "artistName": "The Weeknd",
+  "artistId": 479756766,
+  "genre": "R&B/Soul"
+ },
+ "아이유|금요일에 만나요": {
+  "found": true,
+  "trackId": 786863008,
+  "trackName": "Friday (feat. Jang Yi-jeong)",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "bobby mcferrin|don't worry, be happy": {
+  "found": true,
+  "trackId": 723398328,
+  "trackName": "Don't Worry, Be Happy",
+  "artistName": "Bobby McFerrin",
+  "artistId": 63710,
+  "genre": "Pop"
+ },
+ "corinne bailey rae|the heart speaks in whispers": {
+  "found": false
+ },
+ "윤종신|배웅": {
+  "found": true,
+  "trackId": 1501059328,
+  "trackName": "배웅",
+  "artistName": "Yoon Jong Shin",
+  "artistId": 359836648,
+  "genre": "K-Pop"
+ },
+ "정미조|개여울": {
+  "found": true,
+  "trackId": 1762406293,
+  "trackName": "개여울 (feat. Son Seong Je)",
+  "artistName": "Jeong Mijo",
+  "artistId": 349644636,
+  "genre": "K-Pop"
+ },
+ "adele|million years ago": {
+  "found": true,
+  "trackId": 1544494905,
+  "trackName": "Million Years Ago",
+  "artistName": "Adele",
+  "artistId": 262836961,
+  "genre": "Pop"
+ },
+ "宇多田ヒカル|真夏の通り雨": {
+  "found": true,
+  "trackId": 1445008625,
+  "trackName": "Manatsu No Tooriame",
+  "artistName": "Hikaru Utada",
+  "artistId": 18756224,
+  "genre": "J-Pop"
+ },
+ "어반자카파|그날에 우리": {
+  "found": true,
+  "trackId": 1804711016,
+  "trackName": "My Love",
+  "artistName": "Urban Zakapa",
+  "artistId": 438874798,
+  "genre": "K-Pop"
+ },
+ "藤井風|帰ろう": {
+  "found": true,
+  "trackId": 1505498795,
+  "trackName": "Kaerou",
+  "artistName": "Fujii Kaze",
+  "artistId": 1486113150,
+  "genre": "J-Pop"
+ },
+ "김필|청춘": {
+  "found": true,
+  "trackId": 1623124374,
+  "trackName": "Youth (feat. Kim Chang Wan)",
+  "artistName": "Kim Feel",
+  "artistId": 767877371,
+  "genre": "Soundtrack"
+ },
+ "lorde|liability": {
+  "found": true,
+  "trackId": 1429663167,
+  "trackName": "Liability",
+  "artistName": "Lorde",
+  "artistId": 602767352,
+  "genre": "Alternative"
+ },
+ "cheeze|우린 어디에나": {
+  "found": true,
+  "trackId": 1464114377,
+  "trackName": "We're Everywhere",
+  "artistName": "CHEEZE",
+  "artistId": 411941427,
+  "genre": "Singer/Songwriter"
+ },
+ "10cm|서울의 잠 못 이루는 밤": {
+  "found": true,
+  "trackId": 1566979911,
+  "trackName": "Sleepless in Seoul (feat. LEE SUHYUN)",
+  "artistName": "10CM",
+  "artistId": 448032126,
+  "genre": "Singer/Songwriter"
+ },
+ "bruno mars|count on me": {
+  "found": true,
+  "trackId": 576655102,
+  "trackName": "Count on Me",
+  "artistName": "Bruno Mars",
+  "artistId": 278873078,
+  "genre": "Pop"
+ },
+ "スピッツ|優しいあの子": {
+  "found": true,
+  "trackId": 1466912193,
+  "trackName": "優しいあの子",
+  "artistName": "スピッツ",
+  "artistId": 74456960,
+  "genre": "J-Pop"
+ },
+ "10cm|봄이 좋냐??": {
+  "found": true,
+  "trackId": 1747833892,
+  "trackName": "What The Spring??",
+  "artistName": "10CM",
+  "artistId": 448032126,
+  "genre": "Folk"
+ },
+ "멜로망스|선물": {
+  "found": true,
+  "trackId": 1598710381,
+  "trackName": "Gift",
+  "artistName": "MeloMance",
+  "artistId": 975450659,
+  "genre": "Singer/Songwriter"
+ },
+ "오존|우리 사이 은하수를 만들어": {
+  "found": true,
+  "trackId": 1611486063,
+  "trackName": "Milky Way Between Us",
+  "artistName": "O3ohn",
+  "artistId": 1163087245,
+  "genre": "Soundtrack"
+ },
+ "cigarettes after sex|nothing's gonna hurt you baby": {
+  "found": true,
+  "trackId": 1266067536,
+  "trackName": "Nothing's Gonna Hurt You Baby",
+  "artistName": "Cigarettes After Sex",
+  "artistId": 1069739468,
+  "genre": "Alternative"
+ },
+ "the xx|angels": {
+  "found": true,
+  "trackId": 555642308,
+  "trackName": "Angels",
+  "artistName": "The xx",
+  "artistId": 315473044,
+  "genre": "Alternative"
+ },
+ "mazzy star|fade into you": {
+  "found": true,
+  "trackId": 1440848810,
+  "trackName": "Fade into You",
+  "artistName": "Mazzy Star",
+  "artistId": 532997,
+  "genre": "Pop"
+ },
+ "きのこ帝国|クロノスタシス": {
+  "found": true,
+  "trackId": 926192009,
+  "trackName": "Chronostasis",
+  "artistName": "Kinoko Teikoku",
+  "artistId": 521644940,
+  "genre": "Rock"
+ },
+ "혁오|공드리": {
+  "found": true,
+  "trackId": 1450779937,
+  "trackName": "Gondry",
+  "artistName": "HYUKOH",
+  "artistId": 927548906,
+  "genre": "Rock"
+ },
+ "くるり|ばらの花": {
+  "found": true,
+  "trackId": 1860778017,
+  "trackName": "Bara no Hana (Flower of Roses)",
+  "artistName": "Quruli",
+  "artistId": 105025123,
+  "genre": "Alternative"
+ },
+ "fleet foxes|blue ridge mountains": {
+  "found": true,
+  "trackId": 281086446,
+  "trackName": "Blue Ridge Mountains",
+  "artistName": "Fleet Foxes",
+  "artistId": 275727569,
+  "genre": "Alternative"
+ },
+ "青葉市子|いきのこり●ぼくら": {
+  "found": true,
+  "trackId": 797351955,
+  "trackName": "Ikinokori Bokura (20131125)",
+  "artistName": "Ichiko Aoba",
+  "artistId": 344132486,
+  "genre": "Alternative"
+ },
+ "나얼|바람기억": {
+  "found": true,
+  "trackId": 1792404198,
+  "trackName": "Memory Of The Wind",
+  "artistName": "NAUL",
+  "artistId": 359617072,
+  "genre": "R&B/Soul"
+ },
+ "novo amor|anchor": {
+  "found": true,
+  "trackId": 1672227410,
+  "trackName": "Anchor",
+  "artistName": "Novo Amor",
+  "artistId": 763635303,
+  "genre": "Alternative"
+ },
+ "laufey|promise": {
+  "found": true,
+  "trackId": 1690608935,
+  "trackName": "Promise",
+  "artistName": "Laufey",
+  "artistId": 1504424880,
+  "genre": "Jazz"
+ },
+ "wave to earth|seasons": {
+  "found": true,
+  "trackId": 1781856632,
+  "trackName": "seasons",
+  "artistName": "wave to earth",
+  "artistId": 1477295619,
+  "genre": "Alternative"
+ },
+ "cigarettes after sex|apocalypse": {
+  "found": true,
+  "trackId": 1217977755,
+  "trackName": "Apocalypse",
+  "artistName": "Cigarettes After Sex",
+  "artistId": 1069739468,
+  "genre": "Alternative"
+ },
+ "10cm|매트리스": {
+  "found": true,
+  "trackId": 1433853580,
+  "trackName": "Mattress",
+  "artistName": "10CM",
+  "artistId": 448032126,
+  "genre": "Singer/Songwriter"
+ },
+ "bts|작은 것들을 위한 시": {
+  "found": true,
+  "trackId": 1599172208,
+  "trackName": "Boy With Luv (feat. Halsey)",
+  "artistName": "BTS",
+  "artistId": 883131348,
+  "genre": "K-Pop"
+ },
+ "ateez|불놀이야": {
+  "found": true,
+  "trackId": 1881859430,
+  "trackName": "불놀이야 (I'm The One)",
+  "artistName": "ATEEZ",
+  "artistId": 1439301205,
+  "genre": "Dance"
+ },
+ "queen|don't stop me now": {
+  "found": true,
+  "trackId": 6781079518,
+  "trackName": "Don't Stop Me Now",
+  "artistName": "Queen",
+  "artistId": 3296287,
+  "genre": "Rock"
+ },
+ "the script|hall of fame": {
+  "found": true,
+  "trackId": 563641976,
+  "trackName": "Hall of Fame (feat. will.i.am)",
+  "artistName": "The Script",
+  "artistId": 277228393,
+  "genre": "Pop"
+ },
+ "아이유|에잇": {
+  "found": true,
+  "trackId": 1511885178,
+  "trackName": "eight (feat. SUGA)",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "coldplay|up&up": {
+  "found": true,
+  "trackId": 1053934864,
+  "trackName": "Up&Up",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "ゆず|栄光の架橋": {
+  "found": true,
+  "trackId": 424185595,
+  "trackName": "栄光の架橋",
+  "artistName": "ゆず",
+  "artistId": 99087089,
+  "genre": "J-Pop"
+ },
+ "dpr live|jasmine": {
+  "found": true,
+  "trackId": 1294367397,
+  "trackName": "Jasmine",
+  "artistName": "DPR LIVE",
+  "artistId": 1216702838,
+  "genre": "K-Pop"
+ },
+ "부석순|파이팅 해야지": {
+  "found": true,
+  "trackId": 1668145595,
+  "trackName": "Fighting (feat. Lee Young Ji)",
+  "artistName": "BSS",
+  "artistId": 1361943504,
+  "genre": "K-Pop"
+ },
+ "psy|that that": {
+  "found": true,
+  "trackId": 1698053100,
+  "trackName": "That That (prod.&feat. SUGA of BTS)",
+  "artistName": "PSY",
+  "artistId": 554290495,
+  "genre": "Dance"
+ },
+ "bigbang|뱅뱅뱅": {
+  "found": false
+ },
+ "yoasobi|群青": {
+  "found": true,
+  "trackId": 1528119630,
+  "trackName": "Gunjou",
+  "artistName": "YOASOBI",
+  "artistId": 1490256993,
+  "genre": "J-Pop"
+ },
+ "akmu|후라이의 꿈": {
+  "found": true,
+  "trackId": 1702810043,
+  "trackName": "Fry’s Dream",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "Folk"
+ },
+ "coldplay|adventure of a lifetime": {
+  "found": true,
+  "trackId": 1053934846,
+  "trackName": "Adventure of a Lifetime",
+  "artistName": "Coldplay",
+  "artistId": 471744,
+  "genre": "Alternative"
+ },
+ "ben rector|brand new": {
+  "found": true,
+  "trackId": 1509004825,
+  "trackName": "Brand New",
+  "artistName": "Ben Rector",
+  "artistId": 285154089,
+  "genre": "Singer/Songwriter"
+ },
+ "mr.children|彩り": {
+  "found": true,
+  "trackId": 1375049963,
+  "trackName": "Irodori",
+  "artistName": "Mr.Children",
+  "artistId": 428909573,
+  "genre": "J-Pop"
+ },
+ "아이유|너의 의미": {
+  "found": true,
+  "trackId": 879281078,
+  "trackName": "Meaning of You (feat. 김창완)",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "정엽|그 애": {
+  "found": true,
+  "trackId": 1621260721,
+  "trackName": "It's Love",
+  "artistName": "Jungyup",
+  "artistId": 428922888,
+  "genre": "TV Soundtrack"
+ },
+ "폴킴|커피 한 잔 할래요": {
+  "found": true,
+  "trackId": 1471328088,
+  "trackName": "Would You Like a Cup of Coffee?",
+  "artistName": "Paul Kim",
+  "artistId": 657331568,
+  "genre": "K-Pop"
+ },
+ "로이킴|그때 헤어지면 돼": {
+  "found": true,
+  "trackId": 1570375886,
+  "trackName": "Only Then",
+  "artistName": "Roy Kim",
+  "artistId": 572430917,
+  "genre": "K-Pop"
+ },
+ "bruno mars|just the way you are": {
+  "found": true,
+  "trackId": 576655095,
+  "trackName": "Just the Way You Are",
+  "artistName": "Bruno Mars",
+  "artistId": 278873078,
+  "genre": "Pop"
+ },
+ "ed sheeran|thinking out loud": {
+  "found": true,
+  "trackId": 1050204631,
+  "trackName": "Thinking Out Loud",
+  "artistName": "Ed Sheeran",
+  "artistId": 183313439,
+  "genre": "Pop"
+ },
+ "the beatles|all my loving": {
+  "found": true,
+  "trackId": 1441164625,
+  "trackName": "All My Loving",
+  "artistName": "The Beatles",
+  "artistId": 136975,
+  "genre": "Rock"
+ },
+ "이석훈|그대를 사랑하는 10가지 이유": {
+  "found": true,
+  "trackId": 377827015,
+  "trackName": "10 reasons for I love you",
+  "artistName": "Lee Seok Hoon",
+  "artistId": 536015998,
+  "genre": "K-Pop"
+ },
+ "어쿠스틱 콜라보|묘해, 너와": {
+  "found": true,
+  "trackId": 1466828152,
+  "trackName": "묘해, 너와 (Full Session)",
+  "artistName": "Acoustic Collabo",
+  "artistId": 538328730,
+  "genre": "K-Pop"
+ },
+ "치즈|오늘의 기분": {
+  "found": true,
+  "trackId": 1513526424,
+  "trackName": "Today's Mood",
+  "artistName": "CHEEZE",
+  "artistId": 411941427,
+  "genre": "R&B/Soul"
+ },
+ "elvis presley|can't help falling in love": {
+  "found": true,
+  "trackId": 949550091,
+  "trackName": "Can't Help Falling In Love",
+  "artistName": "Elvis Presley",
+  "artistId": 197443,
+  "genre": "Pop"
+ },
+ "frank sinatra|the way you look tonight": {
+  "found": true,
+  "trackId": 1440858124,
+  "trackName": "The Way You Look Tonight",
+  "artistName": "Frank Sinatra",
+  "artistId": 171366,
+  "genre": "Jazz"
+ },
+ "볼빨간사춘기|좋다고 말해": {
+  "found": false
+ },
+ "로이킴|봄봄봄": {
+  "found": true,
+  "trackId": 639483987,
+  "trackName": "Bom Bom Bom",
+  "artistName": "Roy Kim",
+  "artistId": 572430917,
+  "genre": "K-Pop"
+ },
+ "day6|예뻤어": {
+  "found": true,
+  "trackId": 1695484286,
+  "trackName": "예뻤어",
+  "artistName": "DAY6",
+  "artistId": 1037939997,
+  "genre": "K-Pop"
+ },
+ "소수빈|사랑하자": {
+  "found": true,
+  "trackId": 1764252469,
+  "trackName": "Let's Love",
+  "artistName": "So Soo Bin",
+  "artistId": 580777307,
+  "genre": "K-Pop"
+ },
+ "taylor swift|love story": {
+  "found": true,
+  "trackId": 1440924808,
+  "trackName": "Love Story",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Country"
+ },
+ "yui|che.r.ry": {
+  "found": true,
+  "trackId": 1537515569,
+  "trackName": "CHE. R. RY",
+  "artistName": "YUI",
+  "artistId": 252604926,
+  "genre": "J-Pop"
+ },
+ "이소라|청혼": {
+  "found": true,
+  "trackId": 1804606722,
+  "trackName": "청혼",
+  "artistName": "Lee Sora",
+  "artistId": 147683779,
+  "genre": "K-Pop"
+ },
+ "악뮤|어떻게 이별까지 사랑하겠어, 널 사랑하는 거지": {
+  "found": true,
+  "trackId": 1480802550,
+  "trackName": "How can I love the heartbreak, you're the one I love",
+  "artistName": "AKMU",
+  "artistId": 747306596,
+  "genre": "K-Pop"
+ },
+ "ed sheeran|perfect": {
+  "found": true,
+  "trackId": 1193701400,
+  "trackName": "Perfect",
+  "artistName": "Ed Sheeran",
+  "artistId": 183313439,
+  "genre": "Pop"
+ },
+ "john legend|all of me": {
+  "found": true,
+  "trackId": 1441844542,
+  "trackName": "All of Me",
+  "artistName": "John Legend",
+  "artistId": 16586443,
+  "genre": "R&B/Soul"
+ },
+ "adele|make you feel my love": {
+  "found": true,
+  "trackId": 1545382976,
+  "trackName": "Make You Feel My Love",
+  "artistName": "Adele",
+  "artistId": 262836961,
+  "genre": "Pop"
+ },
+ "아이유|너랑 나": {
+  "found": true,
+  "trackId": 484346204,
+  "trackName": "너랑 나 (YOU&I)",
+  "artistName": "IU",
+  "artistId": 409076743,
+  "genre": "K-Pop"
+ },
+ "성시경|좋을텐데": {
+  "found": false
+ },
+ "마크툽|오늘도 빛나는 너에게": {
+  "found": true,
+  "trackId": 1613184171,
+  "trackName": "To You My Light (2022)",
+  "artistName": "MAKTUB",
+  "artistId": 681051449,
+  "genre": "R&B/Soul"
+ },
+ "taylor swift|lover": {
+  "found": true,
+  "trackId": 1468058173,
+  "trackName": "Lover",
+  "artistName": "Taylor Swift",
+  "artistId": 159260351,
+  "genre": "Pop"
+ },
+ "10cm|그라데이션": {
+  "found": true,
+  "trackId": 1836310463,
+  "trackName": "Gradation",
+  "artistName": "10CM",
+  "artistId": 448032126,
+  "genre": "Folk"
+ },
+ "권진아|운이 좋았지": {
+  "found": true,
+  "trackId": 1480667629,
+  "trackName": "I Got Lucky",
+  "artistName": "Kwon Jin Ah",
+  "artistId": 1424423439,
+  "genre": "K-Pop"
+ },
+ "james taylor|how sweet it is (to be loved by you)": {
+  "found": true,
+  "trackId": 1485664495,
+  "trackName": "How Sweet It Is (To Be Loved By You)",
+  "artistName": "James Taylor",
+  "artistId": 207815,
+  "genre": "Singer/Songwriter"
+ },
+ "the beatles|something": {
+  "found": true,
+  "trackId": 1441164582,
+  "trackName": "Something",
+  "artistName": "The Beatles",
+  "artistId": 136975,
+  "genre": "Rock"
+ },
+ "carpenters|close to you": {
+  "found": true,
+  "trackId": 1429179335,
+  "trackName": "(They Long To Be) Close To You",
+  "artistName": "Carpenters",
+  "artistId": 117982008,
+  "genre": "Pop"
+ },
+ "福山雅治|家族になろうよ": {
+  "found": true,
+  "trackId": 1444861318,
+  "trackName": "Kazokuninarouyo",
+  "artistName": "Masaharu Fukuyama",
+  "artistId": 120889904,
+  "genre": "J-Pop"
+ },
+ "정인|미워요": {
+  "found": true,
+  "trackId": 363055975,
+  "trackName": "I Hate You",
+  "artistName": "Jung In",
+  "artistId": 339950184,
+  "genre": "R&B/Soul"
+ },
+ "sam smith|stay with me": {
+  "found": true,
+  "trackId": 1440814425,
+  "trackName": "Stay With Me",
+  "artistName": "Sam Smith",
+  "artistId": 156488786,
+  "genre": "Pop"
+ },
+ "lana del rey|video games": {
+  "found": true,
+  "trackId": 1779781782,
+  "trackName": "Video Games",
+  "artistName": "Lana Del Rey",
+  "artistId": 464296584,
+  "genre": "Pop"
+ },
+ "백아|첫사랑": {
+  "found": true,
+  "trackId": 1512931470,
+  "trackName": "Amor",
+  "artistName": "Baek A",
+  "artistId": 1459067231,
+  "genre": "Folk"
+ },
+ "정승환|보통의 하루": {
+  "found": true,
+  "trackId": 1608325134,
+  "trackName": "An Ordinary Day",
+  "artistName": "Jung Seung Hwan",
+  "artistId": 949319364,
+  "genre": "Soundtrack"
+ },
+ "자우림|스물다섯, 스물하나": {
+  "found": true,
+  "trackId": 1720118394,
+  "trackName": "스물다섯, 스물하나",
+  "artistName": "Jaurim",
+  "artistId": 472553388,
+  "genre": "Rock"
+ },
+ "lewis capaldi|someone you loved": {
+  "found": true,
+  "trackId": 1452619054,
+  "trackName": "Someone You Loved",
+  "artistName": "Lewis Capaldi",
+  "artistId": 1213405916,
+  "genre": "Alternative"
+ },
+ "jason mraz|life is wonderful": {
+  "found": true,
+  "trackId": 912711456,
+  "trackName": "Life Is Wonderful",
+  "artistName": "Jason Mraz",
+  "artistId": 156987,
+  "genre": "Pop"
+ },
+ "헤이즈|비도 오고 그래서": {
+  "found": true,
+  "trackId": 1569744098,
+  "trackName": "You, Clouds, Rain (feat. Shin Yong Jae)",
+  "artistName": "Heize",
+  "artistId": 805276942,
+  "genre": "K-Pop"
+ },
+ "cheeze|퇴근시간": {
+  "found": true,
+  "trackId": 1792417180,
+  "trackName": "Quitting time",
+  "artistName": "CHEEZE",
+  "artistId": 411941427,
+  "genre": "K-Pop"
+ },
+ "sasha alex sloan|older": {
+  "found": true,
+  "trackId": 1443900551,
+  "trackName": "Older",
+  "artistName": "Sasha Alex Sloan",
+  "artistId": 868093249,
+  "genre": "Pop"
+ },
+ "ben howard|only love": {
+  "found": true,
+  "trackId": 1440805198,
+  "trackName": "Only Love",
+  "artistName": "Ben Howard",
+  "artistId": 432957499,
+  "genre": "Singer/Songwriter"
+ },
+ "米津玄師|lemon": {
+  "found": true,
+  "trackId": 1537460612,
+  "trackName": "Lemon",
+  "artistName": "Kenshi Yonezu",
+  "artistId": 530814268,
+  "genre": "J-Pop"
+ },
+ "마마무|별이 빛나는 밤": {
+  "found": true,
+  "trackId": 1676209349,
+  "trackName": "Starry Night",
+  "artistName": "MAMAMOO",
+  "artistId": 818951094,
+  "genre": "K-Pop"
+ },
+ "eva cassidy|songbird": {
+  "found": true,
+  "trackId": 306987177,
+  "trackName": "Songbird",
+  "artistName": "Eva Cassidy",
+  "artistId": 1102077,
+  "genre": "Singer/Songwriter"
+ }
+}

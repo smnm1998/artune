@@ -1,0 +1,37 @@
+{
+  "startedAt": "2026-11-06T04:54:39.538Z",
+  "git": "564fce2",
+  "mock": false,
+  "models": {
+    "gpt-6-luna": {
+      "reasoning_effort": "none"
+    }
+  },
+  "variants": {
+    "V5": {
+      "options": {
+        "officialNotation": true,
+        "romanceBoundary": true,
+        "isoSoothe": true,
+        "avoidDefaults": true,
+        "planFields": false,
+        "overpickSoothe": true
+      },
+      "promptSha1": "e6101d539ce6",
+      "perMode": {
+        "immerse": {
+          "korea": 7,
+          "pop": 4,
+          "jpop": 1
+        },
+        "soothe": {
+          "korea": 8,
+          "pop": 5,
+          "jpop": 2
+        }
+      }
+    }
+  },
+  "inputs": 40,
+  "inputsFile": "docs/measurements/eval/holdout-inputs.json"
+}

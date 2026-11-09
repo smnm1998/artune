@@ -20,7 +20,10 @@ export const albumWrapperStyle = css`
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  overflow: visible;
+  /* aspect-ratio 상자는 min-height: auto면 내용물보다 작아지지 않는다 → 세로형 커버(예: 414x600)가 틀을 늘림.
+     0으로 두면 정사각형이 유지되고 넘친 부분은 커버의 object-fit: cover가 잘라 준다 */
+  min-height: 0;
+  overflow: visible; /* CD 장식이 틀 밖으로 나와야 해서 hidden으로 막지 않는다 */
 `;
 
 // CD (모바일에서는 숨김 처리)

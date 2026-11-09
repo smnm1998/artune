@@ -1,5 +1,7 @@
 import {
   selectByRegionQuota,
+  selectByRegionQuotaLazily,
+  QuotaCandidate,
   RegionedTrack,
   Region,
 } from './region-quota.util';
@@ -247,5 +249,125 @@ describe('selectByRegionQuota — 처음 보는 곡 우선 (isFresh, D3)', () =>
       count(result, 'pop'),
       count(result, 'jpop'),
     ]).toEqual([6, 3, 1]);
+  });
+});
+
+describe('selectByRegionQuotaLazily — 규칙이 볼 때만 해석', () => {
+  // 고정 시드 난수 — 실패한 경우를 같은 입력으로 다시 볼 수 있다
+  const random = (seed: number) => () =>
+    (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  type Pick = QuotaCandidate & {
+    id: number;
+    found: ITunesTrack | null;
+    fresh: boolean;
+  };
+  const regions: Region[] = ['korea', 'pop', 'jpop'];
+  // 해석 실패 · match 동점 · 같은 trackId · 같은 아티스트(artistId 유무)가 섞인 후보
+  const scenario = (rnd: () => number): Pick[] =>
+    Array.from({ length: Math.floor(rnd() * 22) }, (_, id) => {
+      const found = track(Math.floor(rnd() * 25), `a${Math.floor(rnd() * 12)}`);
+      if (rnd() < 0.5) found.artistId = Math.floor(rnd() * 12);
+      return {
+        id,
+        region: regions[Math.floor(rnd() * 3)],
+        match: Math.round(rnd() * 5) / 5,
+        found: rnd() < 0.85 ? found : null,
+        fresh: rnd() < 0.7,
+      };
+    });
+  const quotas = [undefined, { korea: 2, pop: 1, jpop: 1 }];
+
+  it('후보를 전부 해석한 뒤 selectByRegionQuota로 고른 결과와 같다 (무작위 500가지)', async () => {
+    const rnd = random(11);
+    for (let n = 0; n < 500; n++) {
+      const picks = scenario(rnd);
+      const quota = quotas[n % 2];
+      const regioned = picks
+        .filter((p) => p.found)
+        .map((p) => ({ track: p.found!, region: p.region, match: p.match, p }));
+      const expected = selectByRegionQuota(
+        regioned,
+        quota,
+        (rt) => regioned.find((r) => r === rt)!.p.fresh,
+      );
+
+      const lazy = await selectByRegionQuotaLazily(
+        picks,
+        async (p) => p.found,
+        { quota, isFresh: (p) => p.fresh },
+      );
+
+      expect(lazy.map((s) => s.track)).toStrictEqual(expected);
+    }
+  });
+
+  it('묶어서 해석해도 하나씩 해석할 때와 같은 후보만, 한 번씩만 해석한다', async () => {
+    const rnd = random(23);
+    for (let n = 0; n < 300; n++) {
+      const picks = scenario(rnd);
+      const calls = async (concurrency: number) => {
+        const ids: number[] = [];
+        await selectByRegionQuotaLazily(
+          picks,
+          async (p) => {
+            ids.push(p.id);
+            return p.found;
+          },
+          { isFresh: (p) => p.fresh, concurrency },
+        );
+        return ids;
+      };
+      const one = await calls(1);
+      const three = await calls(3);
+      expect(new Set(three)).toEqual(new Set(one));
+      expect(three).toHaveLength(new Set(three).size);
+    }
+  });
+
+  // 완화 15곡(한국 8 · 팝 5 · 일본 2)을 모두 찾을 수 있고 모두 처음 보는 곡
+  const soothe15 = (): Pick[] =>
+    (
+      [
+        ['korea', 8],
+        ['pop', 5],
+        ['jpop', 2],
+      ] as const
+    ).flatMap(([region, n], r) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: r * 10 + i,
+        region,
+        match: 1 - (r * 10 + i) / 100,
+        found: track(r * 10 + i, `${region}-${i}`),
+        fresh: true,
+      })),
+    );
+
+  it('처음 보는 곡이 모두 찾아지면 화면 10곡만 해석한다 — 나머지 5곡은 iTunes를 부르지 않는다', async () => {
+    const resolve = jest.fn(async (p: Pick) => p.found);
+
+    const result = await selectByRegionQuotaLazily(soothe15(), resolve);
+
+    expect(result).toHaveLength(10);
+    expect(resolve).toHaveBeenCalledTimes(10);
+  });
+
+  it('한 번에 concurrency개까지만 동시에 해석하고, 묶음 사이에만 쉰다', async () => {
+    let inFlight = 0;
+    let most = 0;
+    const pause = jest.fn(async () => {});
+    await selectByRegionQuotaLazily(
+      soothe15(),
+      async (p) => {
+        most = Math.max(most, ++inFlight);
+        await new Promise((r) => setImmediate(r));
+        inFlight--;
+        return p.found;
+      },
+      { concurrency: 3, pause },
+    );
+
+    expect(most).toBe(3);
+    // 묶음: 한국 3 · 3, 팝 3, 일본 1 → 4묶음, 사이 3번
+    expect(pause).toHaveBeenCalledTimes(3);
   });
 });

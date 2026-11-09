@@ -84,3 +84,106 @@ export function selectByRegionQuota(
 
   return selected;
 }
+
+/** 해석 전 후보 — 지역과 순위(match)는 선곡에서 정해진다 */
+export interface QuotaCandidate {
+  region: Region;
+  match: number;
+}
+
+export interface LazyQuotaOptions<C> {
+  quota?: Record<Region, number>;
+  isFresh?: (candidate: C) => boolean;
+  /** 동시에 해석하는 최대 후보 수 */
+  concurrency?: number;
+  /** 해석 묶음 사이에 기다린다(iTunes 몰아 부르기 완화). 첫 묶음 앞에서는 부르지 않는다 */
+  pause?: () => Promise<void>;
+}
+
+/**
+ * selectByRegionQuota와 같은 규칙으로 고르되, 후보를 미리 다 해석하지 않고 규칙이 그 후보를 볼 때 해석한다.
+ * - 결과는 "후보를 전부 해석한 뒤 selectByRegionQuota"와 같다(테스트로 묶음). 해석 실패(null)는 없는 후보로 본다
+ * - 남은 자리 수만큼(최대 concurrency) 묶어 동시에 해석한다. 자리보다 많이 묶지 않으므로
+ *   하나씩 해석할 때와 같은 후보만 해석한다(11/6 측정 기준 요청당 평균 20.2곡, 전부 해석하면 27곡)
+ * - 같은 후보는 한 번만 해석한다
+ * @returns 고른 후보와 그 트랙, 뽑힌 순서
+ */
+export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
+  candidates: readonly C[],
+  resolve: (candidate: C) => Promise<ITunesTrack | null>,
+  {
+    quota = REGION_QUOTA,
+    isFresh = () => true,
+    concurrency = 3,
+    pause = async () => {},
+  }: LazyQuotaOptions<C> = {},
+): Promise<{ candidate: C; track: ITunesTrack }[]> {
+  const total = Object.values(quota).reduce((a, b) => a + b, 0);
+  const sorted = [...candidates].sort((a, b) => b.match - a.match);
+  const fresh = sorted.filter(isFresh);
+  const stale = sorted.filter((c) => !isFresh(c));
+
+  const resolutions = new Map<C, Promise<ITunesTrack | null>>();
+  let batches = 0;
+  const resolveBatch = async (batch: C[]) => {
+    const pending = batch.filter((c) => !resolutions.has(c));
+    if (pending.length > 0) {
+      if (batches++ > 0) await pause();
+      for (const c of pending) resolutions.set(c, resolve(c));
+    }
+    return Promise.all(batch.map((c) => resolutions.get(c)!));
+  };
+
+  const selected: { candidate: C; track: ITunesTrack }[] = [];
+  const filled: Record<Region, number> = { korea: 0, pop: 0, jpop: 0 };
+  const usedArtists = new Set<string>();
+  const usedTrackIds = new Set<number>();
+
+  const take = (candidate: C, track: ITunesTrack | null): boolean => {
+    if (!track) return false;
+    const artistKey =
+      track.artistId != null
+        ? `id:${track.artistId}`
+        : (track.artistName?.toLowerCase() ?? '');
+    if (usedTrackIds.has(track.trackId)) return false;
+    if (usedArtists.has(artistKey)) return false; // 1아티스트 1곡
+    selected.push({ candidate, track });
+    filled[candidate.region]++;
+    usedArtists.add(artistKey);
+    usedTrackIds.add(track.trackId);
+    return true;
+  };
+
+  // pool 앞에서부터 남은 자리(room)만큼씩 묶어 해석하며 채운다
+  const fill = async (pool: C[], room: () => number) => {
+    let i = 0;
+    while (i < pool.length && room() > 0) {
+      const batch = pool.slice(i, i + Math.min(room(), concurrency));
+      i += batch.length;
+      const tracks = await resolveBatch(batch);
+      batch.forEach((c, j) => take(c, tracks[j]));
+    }
+  };
+  const left = () => total - selected.length;
+  const fillQuota = async (pool: C[]) => {
+    for (const region of Object.keys(quota) as Region[]) {
+      await fill(
+        pool.filter((c) => c.region === region),
+        () => Math.min(quota[region] - filled[region], left()),
+      );
+    }
+  };
+  const fillAny = async (pool: C[], limit = Infinity) => {
+    const before = selected.length;
+    await fill(pool, () =>
+      Math.min(limit - (selected.length - before), left()),
+    );
+  };
+
+  await fillQuota(fresh);
+  await fillAny(fresh, FRESH_BORROW_LIMIT);
+  await fillQuota(stale);
+  await fillAny(sorted); // 그래도 모자라면 남은 후보 아무 지역에서나 (A안 — 곡 수 우선)
+
+  return selected;
+}

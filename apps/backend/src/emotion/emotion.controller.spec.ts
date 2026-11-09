@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import * as request from 'supertest';
 import { EmotionController } from './emotion.controller';
 import { EmotionService } from './emotion.service';
-import { THROTTLE_OPTIONS, TRUSTED_PROXY_HOPS } from '../throttle.config';
+import { THROTTLE_OPTIONS } from '../throttle.config';
 
 /**
  * SSE Observable의 방출을 수집한다.
@@ -212,7 +212,7 @@ describe('EmotionController', () => {
   });
 });
 
-// 운영과 같은 제한 값·프록시 설정으로 실제 HTTP 요청을 보낸다 (AppModule은 .env를 불러와서 쓰지 않는다)
+// 운영과 같은 제한 값·IP 기준으로 실제 HTTP 요청을 보낸다 (AppModule은 .env를 불러와서 쓰지 않는다)
 describe('요청 제한 (IP당)', () => {
   let app: NestExpressApplication;
   const [{ limit }] = THROTTLE_OPTIONS.throttlers;
@@ -230,18 +230,15 @@ describe('요청 제한 (IP당)', () => {
       ],
     }).compile();
     app = moduleRef.createNestApplication<NestExpressApplication>();
-    app.set('trust proxy', TRUSTED_PROXY_HOPS);
     await app.init();
   });
 
   afterEach(() => app.close());
 
-  // Railway 프록시가 붙이는 것처럼 클라이언트 IP를 X-Forwarded-For로 보낸다
+  const post = () => request(app.getHttpServer()).post('/emotion/analyze');
+  // Railway 엣지가 넣는 것처럼 클라이언트 IP를 X-Real-IP로 보낸다
   const analyze = (ip: string) =>
-    request(app.getHttpServer())
-      .post('/emotion/analyze')
-      .set('X-Forwarded-For', ip)
-      .send({ text: '오늘 좋았어' });
+    post().set('X-Real-IP', ip).send({ text: '오늘 좋았어' });
 
   it('같은 IP가 분당 한도를 넘으면 429와 안내 문구를 돌려준다', async () => {
     for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
@@ -250,9 +247,28 @@ describe('요청 제한 (IP당)', () => {
     expect(res.body.message).toBe(THROTTLE_OPTIONS.errorMessage);
   });
 
-  it('프록시가 전달한 클라이언트 IP별로 따로 센다', async () => {
+  it('X-Real-IP별로 따로 센다', async () => {
     for (let i = 0; i < limit; i++) await analyze('203.0.113.1').expect(201);
 
     await analyze('203.0.113.2').expect(201);
+  });
+
+  // 11/9 운영: X-Forwarded-For로 센 IP가 요청마다 달라 한도가 걸리지 않았다
+  it('X-Forwarded-For가 요청마다 달라도 X-Real-IP가 같으면 한 사람으로 센다', async () => {
+    const send = (i: number) =>
+      post()
+        .set('X-Real-IP', '203.0.113.1')
+        .set('X-Forwarded-For', `198.51.100.${i}`)
+        .send({ text: '오늘 좋았어' });
+    for (let i = 0; i < limit; i++) await send(i).expect(201);
+
+    await send(limit).expect(429);
+  });
+
+  it('X-Real-IP가 없으면(로컬) 접속 주소로 센다', async () => {
+    const send = () => post().send({ text: '오늘 좋았어' });
+    for (let i = 0; i < limit; i++) await send().expect(201);
+
+    await send().expect(429);
   });
 });

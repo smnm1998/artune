@@ -6,6 +6,7 @@
 
 - 기준선: 앱 코드 커밋 `e4cda32` (캐시·필터 수정, 의존성 보안 업데이트, 포맷 정리 반영 후 · 재설계 전). 하네스·입력 파일은 이후 커밋에 추가되지만 앱 코드(`apps/*/src`, `packages/`, lockfile)는 바뀌지 않는다
 - 재측정: 재설계 단계마다 같은 입력·조건으로
+- 기준선 하네스(`apps/backend/scripts/eval/run.cjs`·`instrument.cjs`)는 Last.fm 경로를 감싸 재는 코드라 R4(11/9, Last.fm 경로 삭제)에서 지웠다. 재현은 하네스를 추가한 커밋 `56dd4dd`(앱 코드는 `e4cda32`와 같음)를 체크아웃해 아래 절차로 한다. `summarize.cjs`는 결과 파일만 읽으므로 남겨 두었다
 
 ## 입력
 
@@ -55,10 +56,10 @@
 - 저장 범위: iTunes는 메타데이터만 저장, 미리듣기 오디오는 저장하지 않는다(약관)
 - Last.fm 응답 내용(유사곡의 가수·곡명·유사도)은 저장소에 올리지 않는다. 공개 저장소에 올리면 제3자에게 제공하는 셈이라 Last.fm API 약관 4.3.3(제3자 재라이선스 금지)에 걸린다. 원본은 로컬에만 둔다(비상업·100MB 한도, 4.3.4)
   - `2026-11-02-baseline/raw.jsonl`은 이 내용을 뺀 버전이다: `candidates` 삭제, `resolve.*.resolved[].match` 삭제, LLM 시드가 아닌 `resolveCalls`의 가수·곡명은 `null`. 이 파일로 `summary.md`를 다시 만들면 원본과 같다
-  - 하네스는 여전히 원본 필드를 기록하므로, Last.fm 경로로 새로 측정하면 커밋 전에 같은 정리를 거친다
+  - 기준선 하네스는 원본 필드를 기록하므로, 커밋 `56dd4dd`에서 다시 측정하면 커밋 전에 같은 정리를 거친다
 
 ## 절차
 
 1. `git status` clean + 앱 코드가 기준선과 같은지 확인: `git diff --quiet e4cda32 HEAD -- apps/backend/src apps/frontend/src packages package-lock.json && echo same` (실행 커밋 해시는 `meta.json`에 자동 기록)
-2. 실행 명령 — 하네스 완성 후 기입
+2. 실행 (`apps/backend`에서): `npm run build` → `node scripts/eval/run.cjs --label baseline` (실제 API, 요청 간 120초). 키 없이 자체 검증은 `--mock --limit 4`
 3. 산출물 폴더를 커밋

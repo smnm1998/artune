@@ -13,6 +13,7 @@ import {
 } from '@/components';
 import useAppStore from '@/stores/useAppStore';
 import useMediaQuery from '@/hooks/ui/useMediaQuery';
+import { NOTICES } from '@/constants/notices';
 import {
   containerStyle,
   leftSectionStyle,
@@ -22,6 +23,7 @@ import {
   toggleWrapperStyle,
   actionButtonWrapperStyle,
   emptyStateStyle,
+  footerStyle,
 } from './ResultPage.styles';
 
 type Mode = 'immerse' | 'soothe';
@@ -61,121 +63,129 @@ function ResultPage() {
     !currentPlaylist.tracks || currentPlaylist.tracks.length === 0;
 
   return (
-    <motion.div
-      css={containerStyle}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* 아트워크 섹션 
+    <>
+      <motion.div
+        css={containerStyle}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* 아트워크 섹션 
         - PC: 항상 표시
         - Compact View: viewMode가 'artwork'일 때만 표시 
       */}
-      {(!isCompactView || viewMode === 'artwork') && (
-        <div css={leftSectionStyle}>
-          {emotionResult.crisis && <CrisisNotice />}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <ArtworkDisplay
-              artwork={emotionResult.artwork}
-              emotionLabel={emotionResult.emotionLabel}
-              description={emotionResult.description}
-            />
-          </motion.div>
+        {(!isCompactView || viewMode === 'artwork') && (
+          <div css={leftSectionStyle}>
+            {emotionResult.crisis && <CrisisNotice />}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <ArtworkDisplay
+                artwork={emotionResult.artwork}
+                emotionLabel={emotionResult.emotionLabel}
+                description={emotionResult.description}
+              />
+            </motion.div>
 
-          {/* 하단 액션 버튼 그룹 */}
-          <motion.div
-            css={actionButtonWrapperStyle}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <ActionButtons
-              // Compact View일 때만 '음악 보기' 버튼 활성화
-              onNext={isCompactView ? () => setViewMode('music') : undefined}
-            />
-          </motion.div>
-        </div>
-      )}
+            {/* 하단 액션 버튼 그룹 */}
+            <motion.div
+              css={actionButtonWrapperStyle}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <ActionButtons
+                // Compact View일 때만 '음악 보기' 버튼 활성화
+                onNext={isCompactView ? () => setViewMode('music') : undefined}
+              />
+            </motion.div>
+          </div>
+        )}
 
-      {/* 플레이리스트 섹션 
+        {/* 플레이리스트 섹션 
         - PC: 항상 표시
         - Compact View: viewMode가 'music'일 때만 표시 
       */}
-      {(!isCompactView || viewMode === 'music') && (
-        <div css={rightSectionStyle}>
-          {/* 헤더 (뒤로가기 + 토글) */}
-          <div css={mobileMusicHeaderStyle}>
-            {/* Compact View 전용 뒤로가기 버튼 */}
-            {isCompactView && (
-              <button
-                css={backButtonStyle}
-                onClick={() => setViewMode('artwork')}
-                aria-label="아트워크로 돌아가기"
-              >
-                <IoArrowBack size={24} />
-              </button>
-            )}
+        {(!isCompactView || viewMode === 'music') && (
+          <div css={rightSectionStyle}>
+            {/* 헤더 (뒤로가기 + 토글) */}
+            <div css={mobileMusicHeaderStyle}>
+              {/* Compact View 전용 뒤로가기 버튼 */}
+              {isCompactView && (
+                <button
+                  css={backButtonStyle}
+                  onClick={() => setViewMode('artwork')}
+                  aria-label="아트워크로 돌아가기"
+                >
+                  <IoArrowBack size={24} />
+                </button>
+              )}
 
-            {/* 플레이리스트 모드 토글 */}
-            <div css={toggleWrapperStyle}>
-              <PlaylistToggle
-                selectedMode={selectedMode}
-                onModeChange={setSelectedMode}
-                immerseLabel={emotionResult.playlists.immerse.modeLabel}
-                sootheLabel={emotionResult.playlists.soothe.modeLabel}
-                // PC에서만 툴팁 표시 (터치 디바이스 방해 방지)
-                immerseDescription={
-                  !isCompactView
-                    ? emotionResult.playlists.immerse.description
-                    : undefined
-                }
-                sootheDescription={
-                  !isCompactView
-                    ? emotionResult.playlists.soothe.description
-                    : undefined
-                }
-              />
-            </div>
-          </div>
-
-          <motion.div
-            key={selectedMode}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ width: '100%', flex: 1 }}
-          >
-            {isEmpty ? (
-              <div css={emptyStateStyle}>
-                <div className="empty-icon">🎵</div>
-                <h3>플레이리스트를 찾을 수 없어요</h3>
-                <p>
-                  죄송합니다. 지금은 추천할 수 있는 음악이 없어요.
-                  <br />
-                  다른 감정을 입력하거나 잠시 후 다시 시도해주세요.
-                </p>
+              {/* 플레이리스트 모드 토글 */}
+              <div css={toggleWrapperStyle}>
+                <PlaylistToggle
+                  selectedMode={selectedMode}
+                  onModeChange={setSelectedMode}
+                  immerseLabel={emotionResult.playlists.immerse.modeLabel}
+                  sootheLabel={emotionResult.playlists.soothe.modeLabel}
+                  // PC에서만 툴팁 표시 (터치 디바이스 방해 방지)
+                  immerseDescription={
+                    !isCompactView
+                      ? emotionResult.playlists.immerse.description
+                      : undefined
+                  }
+                  sootheDescription={
+                    !isCompactView
+                      ? emotionResult.playlists.soothe.description
+                      : undefined
+                  }
+                />
               </div>
-            ) : (
-              <AlbumGrid
-                tracks={currentPlaylist.tracks}
-                onTrackClick={isCompactView ? handleTrackClick : undefined}
-              />
-            )}
-          </motion.div>
-        </div>
-      )}
+            </div>
 
-      {/* 모바일 플레이어 모달 */}
-      <MobilePlayerModal
-        isOpen={!!selectedTrack}
-        onClose={closePlayerModal}
-        track={selectedTrack}
-      />
-    </motion.div>
+            <motion.div
+              key={selectedMode}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              style={{ width: '100%', flex: 1 }}
+            >
+              {isEmpty ? (
+                <div css={emptyStateStyle}>
+                  <div className="empty-icon">🎵</div>
+                  <h3>플레이리스트를 찾을 수 없어요</h3>
+                  <p>
+                    죄송합니다. 지금은 추천할 수 있는 음악이 없어요.
+                    <br />
+                    다른 감정을 입력하거나 잠시 후 다시 시도해주세요.
+                  </p>
+                </div>
+              ) : (
+                <AlbumGrid
+                  tracks={currentPlaylist.tracks}
+                  onTrackClick={isCompactView ? handleTrackClick : undefined}
+                />
+              )}
+            </motion.div>
+          </div>
+        )}
+
+        {/* 모바일 플레이어 모달 */}
+        <MobilePlayerModal
+          isOpen={!!selectedTrack}
+          onClose={closePlayerModal}
+          track={selectedTrack}
+        />
+      </motion.div>
+
+      {/* 맨 아래 고지 — 두 뷰(아트워크·플레이리스트) 모두 이 아래에 온다. 상표 문구는 사이트에 한 번 */}
+      <footer css={footerStyle}>
+        <p>{NOTICES.AI_RESULT}</p>
+        <p>{NOTICES.TRADEMARK}</p>
+      </footer>
+    </>
   );
 }
 

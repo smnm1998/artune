@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoPlayCircle, IoWarning } from 'react-icons/io5';
 import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import PreviewSource from '@/components/PreviewSource/PreviewSource';
 import { Track } from '@/types/track';
 import {
   modalOverlayStyle,
@@ -77,6 +78,8 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                   </>
                 )}
               </div>
+
+              <PreviewSource url={album.appleMusicUrl} />
             </div>
           </motion.div>
         )}

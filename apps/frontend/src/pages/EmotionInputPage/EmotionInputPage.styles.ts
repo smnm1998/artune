@@ -3,6 +3,7 @@ import { colors } from '@/styles/theme';
 import { MOBILE_BP } from '@/constants/size';
 
 export const containerStyle = css`
+  position: relative; /* 맨 아래 고지(footerStyle)의 기준 */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -57,4 +58,17 @@ export const inputWrapperStyle = css`
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid ${colors.border.medium};
+`;
+
+// 맨 아래 고정 한 줄 — 입력 화면은 스크롤이 없고 아래가 비어 있어 겹치지 않는다
+export const footerStyle = css`
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  padding: 0 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: ${colors.text.tertiary};
 `;

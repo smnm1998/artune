@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { IoClose, IoWarning } from 'react-icons/io5';
 import { Track } from '@/types/track';
 import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import PreviewSource from '@/components/PreviewSource/PreviewSource';
 import * as styles from './MobilePlayerModal.styles';
 
 interface MobilePlayerModalProps {
@@ -94,6 +95,8 @@ function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
                   <span>{error || '미리듣기를 제공하지 않는 곡입니다'}</span>
                 </div>
               )}
+
+              <PreviewSource url={activeTrack.appleMusicUrl} />
             </div>
 
             {/* 닫기 버튼 */}

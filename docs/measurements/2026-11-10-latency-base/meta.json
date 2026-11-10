@@ -1,0 +1,42 @@
+{
+  "harness": "probe-latency",
+  "startedAt": "2026-11-10T04:37:04.313Z",
+  "commit": "35513b4",
+  "dirty": false,
+  "node": "v24.22.2",
+  "mock": false,
+  "intervalSec": 120,
+  "inputs": {
+    "file": "docs/measurements/eval/inputs.json",
+    "sha1": "e10a06bf1544",
+    "seed": 20261110,
+    "ids": [
+      "dreamy-ambig",
+      "confident-clear",
+      "sadness-ambig",
+      "fear-ambig",
+      "romance-ambig",
+      "sentimental-clear"
+    ]
+  },
+  "servers": [
+    {
+      "name": "baseline",
+      "transport": "sse",
+      "dist": "apps/backend/.measure/baseline/dist",
+      "frozen": {
+        "name": "baseline",
+        "commit": "35513b4",
+        "dirty": false,
+        "frozenAt": "2026-11-10T04:37:04.283Z",
+        "node": "v24.22.2"
+      }
+    }
+  ],
+  "order": null,
+  "pass": {
+    "firstSongMs": 2500,
+    "completeMs": 8000
+  },
+  "finishedAt": "2026-11-10T04:48:22.878Z"
+}

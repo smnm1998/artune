@@ -57,13 +57,13 @@
 - **전·후 비교 = 얼린 빌드 A/B**: 바꾸기 전 빌드를 `freeze`로 `apps/backend/.measure/<이름>/dist`에 얼리고(커밋 해시 기록, `dist` 규칙으로 git 무시), 바꾼 뒤 얼린 서버와 새 서버를 **같은 실행에서 번갈아** 부른다(입력마다 순서도 바꿈). LLM 속도의 시간대 변동(11/4 판정 불가의 원인)을 상쇄하려는 것
 - **입력**: 기본 12개 = `inputs.json`에서 감정 순서대로 명확·애매를 번갈아 고른 것(12감정 한 번씩, 명확 6 · 애매 6, 문맥 함정 제외)을 시드 20261110으로 섞는다. `--ids`·`--inputs`로 바꿀 수 있다
 - **간격**: 앞 요청이 끝난 뒤 120초. 요청마다 다른 `X-Real-IP`를 보내 요청 제한(IP당 분당 5회)에 걸리지 않게 한다 — 실제 사용자도 각자 따로 세어진다
-- **첫 곡**: 곡이 담긴 첫 이벤트(응답)를 받은 시점. 지금의 SSE·POST는 곡이 완료 시점에 한꺼번에 와서 첫 곡 = 전체
+- **첫 곡**: 곡이 담긴 첫 이벤트(응답)를 받은 시점. 전송 `stream`(POST 스트림)은 첫 `track` 이벤트, `sse`(옛 GET)·`post`(한 번에 받는 POST `/analyze`)는 곡이 완료 시점에 한꺼번에 와서 첫 곡 = 전체. 머리말(`meta` 이벤트: 감정·공감 문구·아트워크) 시점도 따로 기록한다
 - **판정**: 합격 기준(위)의 p50, 같은 입력끼리 짝지은 차이의 중앙값
 - 실행 (`apps/backend`에서, 실제 API — 사용자가):
   ```bash
   node scripts/eval/probe-latency.cjs freeze --as baseline       # 바꾸기 전, 커밋된 상태에서
   node scripts/eval/probe-latency.cjs run --label latency-base --servers baseline:sse --limit 6
-  node scripts/eval/probe-latency.cjs run --label latency-ab --servers baseline:sse,current:stream   # 스트리밍 뒤 (stream 전송은 그때 추가)
+  node scripts/eval/probe-latency.cjs run --label latency-ab --servers baseline:sse,current:stream   # 스트리밍 뒤 (npm run build 후)
   ```
   키 없이 자체 검증: `--mock --interval 0` — `net-mock.cjs`가 OpenAI·iTunes를 흉내 내고, 서버는 `.env`가 없는 빈 폴더에서 띄운다
 - 산출물은 아래와 같은 폴더 규약(`meta.json`·`raw.jsonl`·`summary.md`)

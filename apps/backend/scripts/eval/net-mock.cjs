@@ -5,8 +5,10 @@
  * - 서버의 axios 기본 어댑터를 바꿔 OpenAI 선곡 응답과 iTunes 검색·조회 응답을 흉내 낸다 → 밖으로 아무것도 나가지 않는다
  * - 진짜 네트워크를 타지 않아 net-tap이 못 보므로, 호출 기록은 여기서 net-tap 형식으로 직접 남긴다
  * - 실패 경로도 지나가게: iTunes 40번째 호출마다 403(차단), 검색어 9개 중 1개는 다른 곡명(곡명 대조 실패)
+ * - OpenAI 스트림 요청(stream: true)에는 SSE 조각을 시간차를 두고 흘려보낸다 — 곡이 하나씩 써지는 흉내
  * - 측정값 자체는 의미 없다 (지연은 흉내일 뿐) — 하네스가 서버를 띄우고, 요청하고, 기록·요약하는지만 본다
  */
+const { Readable } = require('node:stream');
 const axios = require('axios');
 const { record } = require('./net-tap.cjs');
 
@@ -76,7 +78,6 @@ function pickFor(text, counts, salt) {
 async function openai(config) {
   const body = JSON.parse(config.data);
   const text = body.messages.at(-1).content;
-  await sleep(1200 + (hash(text) % 600));
   const pick = {
     emotion: EMOTIONS[hash(text) % EMOTIONS.length],
     crisis: false,
@@ -84,6 +85,26 @@ async function openai(config) {
     immerse: pickFor(text, { korea: 7, pop: 3, jpop: 2 }, 'immerse'),
     soothe: pickFor(text, { korea: 8, pop: 5, jpop: 2 }, 'soothe'),
   };
+  if (body.stream) {
+    // 첫 조각까지 잠깐, 그 뒤 몇 글자씩 30ms 간격 (실제 속도가 아니라 "조각으로 온다"만 흉내)
+    await sleep(300);
+    const content = JSON.stringify(pick);
+    const frame = (choice) =>
+      Buffer.from(`data: ${JSON.stringify({ choices: [choice] })}\n\n`);
+    async function* frames() {
+      for (let i = 0; i < content.length; i += 24) {
+        await sleep(30);
+        yield frame({
+          delta: { content: content.slice(i, i + 24) },
+          finish_reason: null,
+        });
+      }
+      yield frame({ delta: {}, finish_reason: 'stop' });
+      yield Buffer.from('data: [DONE]\n\n');
+    }
+    return { status: 200, data: Readable.from(frames()), streaming: true };
+  }
+  await sleep(1200 + (hash(text) % 600));
   return {
     status: 200,
     data: {
@@ -132,17 +153,27 @@ async function mockAdapter(config) {
   else if (url.host === 'itunes.apple.com')
     result = await itunes(url.pathname, config.params ?? {});
   else throw new Error(`net-mock: 모르는 호스트 ${url.host}`);
-  const tEnd = Date.now();
-  record({
+  const tHead = Date.now();
+  const call = {
     host: url.host,
     method: (config.method ?? 'get').toUpperCase(),
     path: url.pathname,
     t0,
-    tHead: tEnd,
-    tEnd,
+    tHead,
     status: result.status,
     mock: true,
-  });
+  };
+  // 스트림은 다 흘려보낸 뒤에 끝 시각을 남긴다
+  if (result.streaming) {
+    let recorded = false;
+    const finish = () => {
+      if (recorded) return;
+      recorded = true;
+      record({ ...call, tEnd: Date.now() });
+    };
+    result.data.once('end', finish);
+    result.data.once('close', finish);
+  } else record({ ...call, tEnd: tHead });
 
   const response = {
     data: result.data,

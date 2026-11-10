@@ -11,7 +11,8 @@
  *   node scripts/eval/probe-latency.cjs run --label latency-base --servers baseline:sse --limit 6
  *   node scripts/eval/probe-latency.cjs run --label latency-ab --servers baseline:sse,current:stream
  *   node scripts/eval/probe-latency.cjs summary --label latency-ab               # 결과 폴더에서 summary.md 다시 쓰기
- * 서버 지정: 이름:전송 — 이름은 current(apps/backend/dist) 또는 freeze로 얼린 이름, 전송은 sse | post
+ * 서버 지정: 이름:전송 — 이름은 current(apps/backend/dist) 또는 freeze로 얼린 이름,
+ *   전송은 stream(POST 스트림, 지금 프론트) | sse(옛 GET SSE) | post(한 번에 받는 POST /analyze)
  * 옵션: --interval <초>(앞 요청이 끝난 뒤 다음 요청까지 쉼, 기본 120 — iTunes 차단 회복) --limit <n> --ids a,b
  *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json) --mock(키·네트워크 없이 자체 검증)
  *       --allow-dirty(freeze: 커밋 안 된 변경이 있어도 얼림 — frozen.json에 dirty로 남는다)
@@ -35,7 +36,7 @@ const MOCK = path.join(__dirname, 'net-mock.cjs');
 
 /** 합격 기준 (👤 11/4, eval README "합격 기준") — 둘 다 p50 */
 const PASS = { firstSongMs: 2500, completeMs: 8000 };
-const TRANSPORTS = ['sse', 'post']; // stream(POST 스트리밍)은 4일차에 전송 형식이 정해지면 추가
+const TRANSPORTS = ['sse', 'post', 'stream'];
 const SHUFFLE_SEED = 20261110; // 입력 순서를 고정 시드로 섞는다 (eval README 조건)
 const REQUEST_TIMEOUT_MS = 90_000;
 const SERVER_START_TIMEOUT_MS = 30_000;
@@ -215,7 +216,7 @@ function parseServer(spec) {
   const [name, transport] = spec.split(':');
   if (!TRANSPORTS.includes(transport)) {
     throw new Error(
-      `전송 ${transport ?? '(없음)'} — 지금은 ${TRANSPORTS.join(' | ')} (stream은 4일차 형식이 정해지면 추가)`,
+      `전송 ${transport ?? '(없음)'} — ${TRANSPORTS.join(' | ')} 중 하나`,
     );
   }
   const dist =
@@ -345,15 +346,13 @@ const clientHeaders = () => {
   };
 };
 
-/** 지금 운영 경로: GET SSE. 곡은 complete 이벤트에만 실려 오므로 첫 곡 = 완료 시점 */
-async function viaSse(proc, text, t0) {
-  const url = `${proc.base}/api/emotion/analyze-stream?${new URLSearchParams({ text })}`;
-  const res = await fetch(url, {
-    headers: { Accept: 'text/event-stream', ...clientHeaders() },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+/**
+ * SSE 형식 본문을 끝까지 읽는다 (GET SSE · POST 스트림 공통).
+ * 첫 곡 = 곡이 담긴 첫 이벤트: stream은 첫 track 이벤트, GET SSE는 곡이 complete에만 실려 와서 완료 시점
+ */
+async function readEvents(res, t0) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const out = { progress: [] };
+  const out = { progress: [], trackEvents: 0 };
   const decoder = new TextDecoder();
   let buffer = '';
   for await (const chunk of res.body) {
@@ -372,7 +371,12 @@ async function viaSse(proc, text, t0) {
       const t = Date.now();
       if (event.type === 'progress')
         out.progress.push({ ms: t - t0, value: event.progress });
-      if (out.tFirstSong == null && countTracks(event.data) > 0)
+      if (event.type === 'meta') out.tMeta ??= t;
+      if (event.type === 'track') out.trackEvents += 1;
+      if (
+        out.tFirstSong == null &&
+        (event.type === 'track' || countTracks(event.data) > 0)
+      )
         out.tFirstSong = t;
       if (event.type === 'error')
         throw new Error(`error 이벤트: ${event.message}`);
@@ -381,6 +385,31 @@ async function viaSse(proc, text, t0) {
     }
   }
   throw new Error('complete 이벤트 없이 스트림이 끝남');
+}
+
+/** 옛 운영 경로: GET SSE (글이 주소에 실린다) */
+async function viaSse(proc, text, t0) {
+  const url = `${proc.base}/api/emotion/analyze-stream?${new URLSearchParams({ text })}`;
+  const res = await fetch(url, {
+    headers: { Accept: 'text/event-stream', ...clientHeaders() },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  return readEvents(res, t0);
+}
+
+/** 지금 운영 경로: POST 스트림 — 곡이 track 이벤트로 하나씩 온다 */
+async function viaStream(proc, text, t0) {
+  const res = await fetch(`${proc.base}/api/emotion/analyze-stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      ...clientHeaders(),
+    },
+    body: JSON.stringify({ text }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  return readEvents(res, t0);
 }
 
 /** 한 번에 받는 POST /analyze — 응답이 다 와야 곡이 보인다 */
@@ -430,21 +459,22 @@ function summarizeCalls(calls) {
   };
 }
 
-/** [timing] total=…ms openai=…ms parallel_block=…ms tracks=a/b seen=x/y */
+/**
+ * [timing] 줄의 이름=값ms 들 — 한 번에 받는 경로(total·openai·parallel_block)와
+ * 스트림 경로(total·openai·meta·first_track)의 항목이 달라 이름 그대로 읽는다
+ */
 function parseTiming(lines) {
   const line = lines.find((l) => l.includes('[timing]'));
-  const m = line?.match(
-    /total=(\d+)ms openai=(\d+)ms parallel_block=(\d+)ms tracks=(\d+)\/(\d+)/,
-  );
-  return m
-    ? {
-        totalMs: +m[1],
-        openaiMs: +m[2],
-        parallelMs: +m[3],
-        tracks: [+m[4], +m[5]],
-      }
-    : null;
+  if (!line) return null;
+  const timing = {};
+  for (const [, name, ms] of line.matchAll(/(\w+)=(-?\d+)ms/g))
+    timing[name] = Number(ms);
+  const tracks = line.match(/tracks=(\d+)\/(\d+)/);
+  if (tracks) timing.tracks = [Number(tracks[1]), Number(tracks[2])];
+  return timing;
 }
+
+const VIA = { sse: viaSse, post: viaPost, stream: viaStream };
 
 async function measureOne(proc, input, index) {
   const t0 = Date.now();
@@ -458,10 +488,7 @@ async function measureOne(proc, input, index) {
   };
   let result;
   try {
-    result =
-      proc.transport === 'sse'
-        ? await viaSse(proc, input.text, t0)
-        : await viaPost(proc, input.text);
+    result = await VIA[proc.transport](proc, input.text, t0);
   } catch (error) {
     result = { error: error.message };
   }
@@ -472,6 +499,8 @@ async function measureOne(proc, input, index) {
   if (result.error) row.error = result.error;
   row.firstSongMs = result.tFirstSong != null ? result.tFirstSong - t0 : null;
   row.completeMs = result.tComplete != null ? result.tComplete - t0 : null;
+  row.metaMs = result.tMeta != null ? result.tMeta - t0 : null;
+  row.trackEvents = result.trackEvents ?? 0;
   row.emotionLabel = result.response?.emotionLabel ?? null;
   row.crisis = result.response?.crisis ?? null;
   row.tracks = {
@@ -642,6 +671,10 @@ function writeSummary(outDir) {
         pick((r) => r.completeMs),
         0.9,
       ),
+      meta50: quantile(
+        pick((r) => r.metaMs),
+        0.5,
+      ),
       openai50: quantile(
         pick((r) => r.openai.ms),
         0.5,
@@ -669,7 +702,7 @@ function writeSummary(outDir) {
     `- 실행: ${meta.startedAt}${meta.finishedAt ? ` ~ ${meta.finishedAt}` : ' (끝나지 않음)'} · 커밋 ${meta.commit ?? '?'}${meta.dirty ? ' (커밋 안 된 변경 있음)' : ''} · Node ${meta.node}${meta.mock ? ' · **모의 실행 — 수치 의미 없음**' : ''}`,
     `- 입력 ${meta.inputs.ids.length}개 (${meta.inputs.file}, sha1 ${meta.inputs.sha1}${meta.inputs.seed != null ? `, 시드 ${meta.inputs.seed}로 섞음` : ''}) · 요청 사이 ${meta.intervalSec}초 · 서버는 실행마다 새로 띄움(캐시 빈 상태에서 시작)`,
     `- 서버: ${meta.servers.map((s) => `\`${s.name}\`(${s.transport}, ${s.frozen ? `얼린 빌드 ${s.frozen.commit ?? '?'}${s.frozen.dirty ? ' dirty' : ''}` : '지금 빌드'})`).join(' · ')}${meta.order ? ` · ${meta.order}` : ''}`,
-    '- 첫 곡 = 클라이언트가 곡이 담긴 첫 이벤트(응답)를 받은 시점. SSE·POST는 곡이 완료 시점에 한꺼번에 오므로 첫 곡 = 전체',
+    '- 첫 곡 = 클라이언트가 곡이 담긴 첫 이벤트(응답)를 받은 시점. stream은 첫 track 이벤트, sse·post는 곡이 완료 시점에 한꺼번에 와서 첫 곡 = 전체. 머리말 = stream의 meta 이벤트(감정·공감 문구·아트워크)',
     `- 합격 기준(p50): 첫 곡 ≤ ${PASS.firstSongMs / 1000}s · 전체 ≤ ${PASS.completeMs / 1000}s`,
     '',
     '## 서버별',
@@ -682,6 +715,7 @@ function writeSummary(outDir) {
         '첫 곡 p90',
         '전체 p50',
         '전체 p90',
+        '머리말 p50',
         'OpenAI p50',
         'iTunes 호출 p50 (최대)',
         '차단 난 요청',
@@ -695,6 +729,7 @@ function writeSummary(outDir) {
         seconds(stat.first90),
         seconds(stat.done50),
         seconds(stat.done90),
+        seconds(stat.meta50),
         seconds(stat.openai50),
         stat.itunes50 == null ? '—' : `${stat.itunes50} (${stat.itunesMax})`,
         `${stat.blocked}`,

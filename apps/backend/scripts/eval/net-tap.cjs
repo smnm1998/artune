@@ -35,11 +35,15 @@ dc.subscribe('http.client.response.finish', ({ request, response }) => {
   if (!call) return;
   call.tHead = Date.now();
   call.status = response.statusCode;
-  // 'end' 리스너만 단다 — 'data'를 달면 스트림 흐름이 바뀐다
-  response.once('end', () => {
+  // 'end'·'close' 리스너만 단다 — 'data'를 달면 스트림 흐름이 바뀐다.
+  // 읽는 쪽이 다 읽기 전에 그만두면 'end' 없이 'close'만 오므로 둘 중 먼저 오는 쪽에서 한 번 남긴다
+  const finish = () => {
+    if (!httpCalls.has(request)) return;
     httpCalls.delete(request);
     record({ ...call, tEnd: Date.now() });
-  });
+  };
+  response.once('end', finish);
+  response.once('close', finish);
 });
 
 dc.subscribe('http.client.request.error', ({ request, error }) => {

@@ -76,6 +76,21 @@ export interface ProgressEvent {
   message: string;
 }
 
+/** 감정·공감 문구·아트워크가 정해졌을 때 한 번 (곡보다 먼저) — 응답과 같은 모양, 곡 목록은 비어 있다. POST만 */
+export interface MetaEvent {
+  type: 'meta';
+  data: EmotionResponse;
+}
+
+/** 고른 곡 하나 — 모드별 최종 순서대로 오고, index는 그 모드에서 몇 번째인지. POST만 */
+export interface TrackEvent {
+  type: 'track';
+  mode: PlaylistMode;
+  index: number;
+  track: Track;
+}
+
+/** 끝 — 최종 응답 전체 (곡 이벤트를 다 모은 것과 같다) */
 export interface CompleteEvent {
   type: 'complete';
   data: EmotionResponse;
@@ -86,4 +101,9 @@ export interface ErrorEvent {
   message: string;
 }
 
-export type EmotionStreamEvent = ProgressEvent | CompleteEvent | ErrorEvent;
+export type EmotionStreamEvent =
+  | ProgressEvent
+  | MetaEvent
+  | TrackEvent
+  | CompleteEvent
+  | ErrorEvent;

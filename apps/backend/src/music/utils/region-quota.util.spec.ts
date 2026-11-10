@@ -1,6 +1,7 @@
 import {
   selectByRegionQuota,
   selectByRegionQuotaLazily,
+  selectByRegionQuotaStream,
   QuotaCandidate,
   RegionedTrack,
   Region,
@@ -369,5 +370,168 @@ describe('selectByRegionQuotaLazily — 규칙이 볼 때만 해석', () => {
     expect(most).toBe(3);
     // 묶음: 한국 3 · 3, 팝 3, 일본 1 → 4묶음, 사이 3번
     expect(pause).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('selectByRegionQuotaStream — 후보가 하나씩 도착해도 같은 결과', () => {
+  const random = (seed: number) => () =>
+    (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  type Pick = QuotaCandidate & {
+    id: number;
+    found: ITunesTrack | null;
+    fresh: boolean;
+  };
+  const regions: Region[] = ['korea', 'pop', 'jpop'];
+  const quotas = [undefined, { korea: 2, pop: 1, jpop: 1 }];
+  /** 이벤트 루프를 n번 돌린다 — 도착·해석 사이 간격을 흉내 낸다 */
+  const ticks = async (n: number) => {
+    for (let i = 0; i < n; i++) await new Promise((r) => setImmediate(r));
+  };
+  const pick = (id: number, region: Region, fresh = true): Pick => ({
+    id,
+    region,
+    match: 100 - id,
+    found: track(id, `${region}-${id}`),
+    fresh,
+  });
+
+  /** AI가 쓴 순서처럼: 처음 보는 곡은 순위 순서로, 뒤로 민 곡(머리 곡·본 곡)은 그 사이 아무 데나 */
+  const arrivalOrder = (rnd: () => number): Pick[] => {
+    const picks: Pick[] = Array.from(
+      { length: Math.floor(rnd() * 22) },
+      (_, id) => {
+        const found = track(
+          Math.floor(rnd() * 25),
+          `a${Math.floor(rnd() * 12)}`,
+        );
+        if (rnd() < 0.5) found.artistId = Math.floor(rnd() * 12);
+        return {
+          id,
+          region: regions[Math.floor(rnd() * 3)],
+          match: Math.round(rnd() * 5) / 5,
+          found: rnd() < 0.85 ? found : null,
+          fresh: rnd() < 0.7,
+        };
+      },
+    );
+    const arrival = picks
+      .filter((p) => p.fresh)
+      .sort((a, b) => b.match - a.match);
+    for (const p of picks.filter((p) => !p.fresh)) {
+      arrival.splice(Math.floor(rnd() * (arrival.length + 1)), 0, p);
+    }
+    return arrival;
+  };
+
+  it('다 모인 뒤 고른 결과와 같고, 고를 때마다 최종 순서대로 알리며, 같은 후보만 한 번씩 해석한다 (무작위 500가지)', async () => {
+    const rnd = random(31);
+    for (let n = 0; n < 500; n++) {
+      const arrival = arrivalOrder(rnd);
+      const quota = quotas[n % 2];
+      const lazyCalls: number[] = [];
+      const lazy = await selectByRegionQuotaLazily(
+        arrival,
+        async (p) => {
+          lazyCalls.push(p.id);
+          return p.found;
+        },
+        { quota, isFresh: (p) => p.fresh },
+      );
+
+      const calls: number[] = [];
+      const takes: unknown[] = [];
+      const stream = selectByRegionQuotaStream<Pick>(
+        async (p) => {
+          calls.push(p.id);
+          await ticks(Math.floor(rnd() * 4));
+          return p.found;
+        },
+        { quota, isFresh: (p) => p.fresh, onTake: (s) => takes.push(s) },
+      );
+      for (const p of arrival) {
+        await ticks(Math.floor(rnd() * 3));
+        stream.push(p);
+      }
+      stream.end();
+      const result = await stream.result;
+
+      expect(result.map((s) => s.candidate.id)).toEqual(
+        lazy.map((s) => s.candidate.id),
+      );
+      expect(takes).toEqual(result);
+      expect(new Set(calls)).toEqual(new Set(lazyCalls));
+      expect(calls).toHaveLength(new Set(calls).size);
+    }
+  });
+
+  it('처음 보는 한국 곡은 후보가 다 오기 전에 고른다 — 첫 곡을 바로 내보낼 수 있다', async () => {
+    const onTake = jest.fn();
+    const stream = selectByRegionQuotaStream<Pick>(async (p) => p.found, {
+      onTake,
+    });
+
+    stream.push(pick(0, 'korea'));
+    await ticks(3);
+
+    expect(onTake).toHaveBeenCalledTimes(1);
+    stream.end();
+    await stream.result;
+  });
+
+  it('앞 지역이 다 차기 전에는 다음 지역 곡을 고르지 않는다 — 내보내는 순서가 최종 순서', async () => {
+    const taken: number[] = [];
+    const stream = selectByRegionQuotaStream<Pick>(async (p) => p.found, {
+      onTake: (s) => taken.push(s.candidate.id),
+    });
+
+    stream.push(pick(0, 'pop'));
+    await ticks(3);
+    expect(taken).toEqual([]);
+
+    for (let id = 1; id <= 6; id++) stream.push(pick(id, 'korea'));
+    await ticks(10);
+    expect(taken).toEqual([1, 2, 3, 4, 5, 6, 0]);
+
+    stream.end();
+    await stream.result;
+  });
+
+  it('동시에 concurrency개까지만 해석한다', async () => {
+    let inFlight = 0;
+    let most = 0;
+    const stream = selectByRegionQuotaStream<Pick>(
+      async (p) => {
+        most = Math.max(most, ++inFlight);
+        await ticks(2);
+        inFlight--;
+        return p.found;
+      },
+      { concurrency: 3 },
+    );
+
+    for (let id = 0; id < 8; id++) stream.push(pick(id, 'korea'));
+    stream.end();
+    await stream.result;
+
+    expect(most).toBe(3);
+  });
+
+  it('취소하면 새 해석을 시작하지 않고 결과가 거부된다', async () => {
+    const controller = new AbortController();
+    const resolve = jest.fn(async (p: Pick) => {
+      await ticks(2);
+      return p.found;
+    });
+    const stream = selectByRegionQuotaStream<Pick>(resolve, {
+      signal: controller.signal,
+    });
+
+    stream.push(pick(0, 'korea'));
+    await ticks(1);
+    controller.abort();
+    for (let id = 1; id <= 5; id++) stream.push(pick(id, 'korea'));
+
+    await expect(stream.result).rejects.toMatchObject({ name: 'AbortError' });
+    expect(resolve).toHaveBeenCalledTimes(1);
   });
 });

@@ -102,6 +102,48 @@ export interface LazyQuotaOptions<C> {
   pause?: () => Promise<void>;
 }
 
+export interface Selected<C> {
+  candidate: C;
+  track: ITunesTrack;
+}
+
+/**
+ * 고른 목록과 고르는 규칙(1아티스트 1곡 · 같은 트랙 한 번 · 남은 자리) — 게으른 판과 스트리밍 판이 같이 쓴다
+ * @param onTake 고를 때마다 (고른 순서 = 최종 순서)
+ */
+function createSelection<C extends QuotaCandidate>(
+  quota: Record<Region, number>,
+  onTake?: (selected: Selected<C>) => void,
+) {
+  const total = Object.values(quota).reduce((a, b) => a + b, 0);
+  const selected: Selected<C>[] = [];
+  const filled: Record<Region, number> = { korea: 0, pop: 0, jpop: 0 };
+  const usedArtists = new Set<string>();
+  const usedTrackIds = new Set<number>();
+
+  const take = (candidate: C, track: ITunesTrack | null): boolean => {
+    if (!track) return false;
+    const artistKey =
+      track.artistId != null
+        ? `id:${track.artistId}`
+        : (track.artistName?.toLowerCase() ?? '');
+    if (usedTrackIds.has(track.trackId)) return false;
+    if (usedArtists.has(artistKey)) return false; // 1아티스트 1곡
+    const entry = { candidate, track };
+    selected.push(entry);
+    filled[candidate.region]++;
+    usedArtists.add(artistKey);
+    usedTrackIds.add(track.trackId);
+    onTake?.(entry);
+    return true;
+  };
+  const left = () => total - selected.length;
+  /** 그 지역 단계의 남은 자리 */
+  const roomIn = (region: Region) => () =>
+    Math.min(quota[region] - filled[region], left());
+  return { selected, take, left, roomIn };
+}
+
 /**
  * selectByRegionQuota와 같은 규칙으로 고르되, 후보를 미리 다 해석하지 않고 규칙이 그 후보를 볼 때 해석한다.
  * - 결과는 "후보를 전부 해석한 뒤 selectByRegionQuota"와 같다(테스트로 묶음). 해석 실패(null)는 없는 후보로 본다
@@ -119,8 +161,7 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
     concurrency = 3,
     pause = async () => {},
   }: LazyQuotaOptions<C> = {},
-): Promise<{ candidate: C; track: ITunesTrack }[]> {
-  const total = Object.values(quota).reduce((a, b) => a + b, 0);
+): Promise<Selected<C>[]> {
   const sorted = [...candidates].sort((a, b) => b.match - a.match);
   const fresh = sorted.filter(isFresh);
   const stale = sorted.filter((c) => !isFresh(c));
@@ -136,25 +177,7 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
     return Promise.all(batch.map((c) => resolutions.get(c)!));
   };
 
-  const selected: { candidate: C; track: ITunesTrack }[] = [];
-  const filled: Record<Region, number> = { korea: 0, pop: 0, jpop: 0 };
-  const usedArtists = new Set<string>();
-  const usedTrackIds = new Set<number>();
-
-  const take = (candidate: C, track: ITunesTrack | null): boolean => {
-    if (!track) return false;
-    const artistKey =
-      track.artistId != null
-        ? `id:${track.artistId}`
-        : (track.artistName?.toLowerCase() ?? '');
-    if (usedTrackIds.has(track.trackId)) return false;
-    if (usedArtists.has(artistKey)) return false; // 1아티스트 1곡
-    selected.push({ candidate, track });
-    filled[candidate.region]++;
-    usedArtists.add(artistKey);
-    usedTrackIds.add(track.trackId);
-    return true;
-  };
+  const { selected, take, left, roomIn } = createSelection<C>(quota);
 
   // pool 앞에서부터 남은 자리(room)만큼씩 묶어 해석하며 채운다
   const fill = async (pool: C[], room: () => number) => {
@@ -166,12 +189,11 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
       batch.forEach((c, j) => take(c, tracks[j]));
     }
   };
-  const left = () => total - selected.length;
   const fillQuota = async (pool: C[]) => {
     for (const region of Object.keys(quota) as Region[]) {
       await fill(
         pool.filter((c) => c.region === region),
-        () => Math.min(quota[region] - filled[region], left()),
+        roomIn(region),
       );
     }
   };
@@ -188,4 +210,144 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
   await fillAny(sorted); // 그래도 모자라면 남은 후보 아무 지역에서나 (A안 — 곡 수 우선)
 
   return selected;
+}
+
+export interface StreamQuotaOptions<C> {
+  quota?: Record<Region, number>;
+  isFresh?: (candidate: C) => boolean;
+  /** 동시에 해석하는 최대 후보 수 */
+  concurrency?: number;
+  /** 고를 때마다 (고른 순서 = 최종 순서) — 화면에 바로 내보낼 수 있다 */
+  onTake?: (selected: Selected<C>) => void;
+  /** 취소되면 새 해석을 시작하지 않고 result가 그 이유로 거부된다 */
+  signal?: AbortSignal;
+}
+
+export interface QuotaStream<C> {
+  /** 후보 하나 도착 — 처음 보는 곡끼리는 순위(match) 내림차순으로 넣는다 (AI가 쓴 순서) */
+  push(candidate: C): void;
+  /** 후보가 다 왔다 */
+  end(): void;
+  /** 고른 후보와 트랙, 뽑힌 순서 */
+  result: Promise<Selected<C>[]>;
+}
+
+/**
+ * selectByRegionQuotaLazily의 스트리밍 판 — 후보가 하나씩 도착하는 동안 같은 규칙으로 고른다.
+ * 결과(고른 후보와 순서)와 해석하는 후보는 "후보가 다 모인 뒤 selectByRegionQuotaLazily"와 같다(테스트로 묶음).
+ * - 규칙은 단계마다 순위 순서로, 자리가 찰 때까지 해석에 성공한 후보를 고르는 것이라 묶음 경계와 상관없다.
+ *   그래서 처음 보는 곡은 도착하는 대로 해석하고 고를 수 있다 → 첫 곡을 생성이 끝나기 전에 내보낸다
+ * - 지역 단계 순서(한국 → 팝 → 일본)는 그대로라, 앞 지역이 다 찬 뒤에 다음 지역 곡을 고른다(최종 순서 유지)
+ * - 빌리기·뒤로 민 곡(머리 곡·본 곡)·남은 자리 채우기는 전체 순위가 필요하다 — 1단계가 자리를 다 못 채웠다면 입력이 끝난 뒤라 그때 한다
+ * - 해석은 지금 단계의 남은 자리만큼(최대 concurrency) 앞서 시작한다. 기다리는 동안 도착한 후보도 그 안이면 바로 시작
+ * - 묶음 사이 쉼은 없다 — 후보가 AI 생성 속도로 도착해 호출 간격이 저절로 벌어진다 (차단은 측정으로 확인)
+ */
+export function selectByRegionQuotaStream<C extends QuotaCandidate>(
+  resolve: (candidate: C) => Promise<ITunesTrack | null>,
+  {
+    quota = REGION_QUOTA,
+    isFresh = () => true,
+    concurrency = 3,
+    onTake,
+    signal,
+  }: StreamQuotaOptions<C> = {},
+): QuotaStream<C> {
+  const arrived: C[] = [];
+  let ended = false;
+  // 후보 도착·입력 끝·취소를 기다리는 쪽에 알린다
+  let wake = () => {};
+  const nextChange = () => new Promise<void>((r) => (wake = r));
+  let changed = nextChange();
+  let prefetch: (() => void) | null = null;
+  const notify = () => {
+    prefetch?.();
+    const done = wake;
+    changed = nextChange();
+    done();
+  };
+  signal?.addEventListener('abort', notify, { once: true });
+
+  const resolutions = new Map<C, Promise<ITunesTrack | null>>();
+  const resolveOnce = (candidate: C) => {
+    let pending = resolutions.get(candidate);
+    if (!pending) {
+      pending = resolve(candidate);
+      pending.catch(() => {}); // 앞서 시작만 하고 안 쓴 해석의 실패가 처리 안 된 거부로 남지 않게
+      resolutions.set(candidate, pending);
+    }
+    return pending;
+  };
+  const { selected, take, left, roomIn } = createSelection<C>(quota, onTake);
+
+  /** pool의 i번째 후보 — 아직 안 왔으면 오거나 입력이 끝날 때까지 기다린다 */
+  const at = async (pool: () => C[], i: number) => {
+    while (pool().length <= i && !ended) {
+      signal?.throwIfAborted();
+      await changed;
+    }
+    signal?.throwIfAborted();
+    return pool()[i];
+  };
+
+  const fill = async (pool: () => C[], room: () => number) => {
+    for (let i = 0; room() > 0; i++) {
+      const candidate = await at(pool, i);
+      if (!candidate) return;
+      prefetch = () => {
+        if (signal?.aborted) return;
+        pool()
+          .slice(i, i + Math.min(room(), concurrency))
+          .forEach(resolveOnce);
+      };
+      prefetch();
+      const track = await resolveOnce(candidate);
+      prefetch = null;
+      signal?.throwIfAborted();
+      take(candidate, track);
+    }
+  };
+  const fillAny = (pool: C[], limit = Infinity) => {
+    const before = selected.length;
+    return fill(
+      () => pool,
+      () => Math.min(limit - (selected.length - before), left()),
+    );
+  };
+  const regions = Object.keys(quota) as Region[];
+
+  const run = async () => {
+    for (const region of regions) {
+      await fill(
+        () => arrived.filter((c) => isFresh(c) && c.region === region),
+        roomIn(region),
+      );
+    }
+    // 여기 왔다면 입력이 끝났거나(그래서 1단계가 후보를 다 봤거나) 세 지역 자리가 다 찼다.
+    // 다 찼으면 아래 단계는 남은 자리가 0이라 아무것도 하지 않으므로, 따로 입력 끝을 기다리지 않아도 전체 순위로 고른 것과 같다
+    const sorted = [...arrived].sort((a, b) => b.match - a.match);
+    const fresh = sorted.filter(isFresh);
+    const stale = sorted.filter((c) => !isFresh(c));
+    await fillAny(fresh, FRESH_BORROW_LIMIT);
+    for (const region of regions) {
+      await fill(
+        () => stale.filter((c) => c.region === region),
+        roomIn(region),
+      );
+    }
+    await fillAny(sorted); // 그래도 모자라면 남은 후보 아무 지역에서나 (A안 — 곡 수 우선)
+    return selected;
+  };
+
+  return {
+    push(candidate) {
+      if (ended) return;
+      arrived.push(candidate);
+      notify();
+    },
+    end() {
+      ended = true;
+      notify();
+    },
+    result: run(),
+  };
 }

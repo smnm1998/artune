@@ -6,6 +6,7 @@ import { MusicService, ServedTrack } from '../music/music.service';
 import { DalleService } from '../dalle/dalle.service';
 import { ITunesTrack } from '../itunes/itunes-track.type';
 import { HISTORY_LIMIT } from '../music/utils/freshness-order.util';
+import type { PlaylistMode } from '../music/exposure-window';
 
 const makeTrack = (overrides: Partial<ITunesTrack> = {}): ITunesTrack => ({
   trackId: 1,
@@ -90,8 +91,14 @@ describe('EmotionService', () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         EmotionService,
-        { provide: OpenAIService, useValue: { pickSongs: jest.fn() } },
-        { provide: MusicService, useValue: { servePicks: jest.fn() } },
+        {
+          provide: OpenAIService,
+          useValue: { pickSongs: jest.fn(), pickSongsStream: jest.fn() },
+        },
+        {
+          provide: MusicService,
+          useValue: { servePicks: jest.fn(), servePicksStream: jest.fn() },
+        },
         {
           provide: DalleService,
           useValue: { generateDessertImage: jest.fn() },
@@ -361,6 +368,176 @@ describe('EmotionService', () => {
       expect(service.getSootheDescription('joy')).toBe(
         '차분히 마음을 정리해보세요',
       );
+    });
+  });
+
+  describe('analyzeStream', () => {
+    type Event = { type: string; [key: string]: unknown };
+
+    /** AI가 루트 값 → 심취 곡 → 완화 곡 순서로 쓰는 흉내 */
+    const writePicks = (picks: PickResult = mockPicks) =>
+      openAIService.pickSongsStream.mockImplementation(
+        async (_text, { onField, onPick } = {}) => {
+          onField?.('emotion', picks.emotion);
+          onField?.('crisis', picks.crisis);
+          onField?.('description', picks.description);
+          for (const pick of picks.immerse) onPick?.('immerse', pick);
+          for (const pick of picks.soothe) onPick?.('soothe', pick);
+          return picks;
+        },
+      );
+    /** 받은 곡을 그대로 고르는 흉내 — 받은 순서·모드를 기록한다 */
+    const consumed: Record<string, string[]> = {};
+    const serveAll = () =>
+      musicService.servePicksStream.mockImplementation(
+        async (picks, mode, _seen, { onTrack } = {}) => {
+          consumed[mode] = [];
+          const out: ServedTrack[] = [];
+          for await (const pick of picks) {
+            consumed[mode].push(pick.title);
+            const served = {
+              track: makeTrack({
+                trackId: (mode === 'immerse' ? 100 : 200) + out.length,
+                trackName: pick.title,
+                artistName: pick.artist,
+              }),
+              key: `${mode === 'immerse' ? 'a' : 'b'}000000${out.length}`,
+            };
+            out.push(served);
+            onTrack?.(served, out.length - 1);
+          }
+          return out;
+        },
+      );
+    const record = () => {
+      const events: Event[] = [];
+      return {
+        events,
+        handlers: {
+          onProgress: (progress: number, message: string) =>
+            events.push({ type: 'progress', progress, message }),
+          onMeta: (data: unknown) => events.push({ type: 'meta', data }),
+          onTrack: (mode: PlaylistMode, index: number, track: unknown) =>
+            events.push({ type: 'track', mode, index, track }),
+        },
+      };
+    };
+
+    beforeEach(() => {
+      writePicks();
+      serveAll();
+      dalleService.generateDessertImage.mockResolvedValue(mockDessertImage);
+    });
+
+    it('meta를 곡보다 먼저 한 번 보내고, 곡을 모드별 순서대로 보내며, 최종 응답은 보낸 곡을 다 모은 것과 같다', async () => {
+      const { events, handlers } = record();
+
+      const result = await service.analyzeStream('행복했어', {}, handlers);
+
+      const metas = events.filter((e) => e.type === 'meta');
+      const tracks = events.filter((e) => e.type === 'track');
+      expect(metas).toHaveLength(1);
+      expect(metas[0].data).toEqual({
+        ...result,
+        playlists: {
+          immerse: { ...result.playlists.immerse, tracks: [] },
+          soothe: { ...result.playlists.soothe, tracks: [] },
+        },
+      });
+      expect(events.indexOf(metas[0])).toBeLessThan(events.indexOf(tracks[0]));
+      for (const mode of ['immerse', 'soothe'] as const) {
+        const sent = tracks.filter((e) => e.mode === mode);
+        expect(sent.map((e) => e.index)).toEqual([0, 1, 2]);
+        expect(sent.map((e) => e.track)).toEqual(result.playlists[mode].tracks);
+      }
+      const progress = events
+        .filter((e) => e.type === 'progress')
+        .map((e) => e.progress as number);
+      expect(progress.slice(0, 2)).toEqual([0, 10]);
+      expect(progress.at(-1)).toBe(100);
+      expect(progress).toEqual([...progress].sort((a, b) => a - b));
+      expect(result.emotionLabel).toBe('기쁨');
+      expect(result.artwork.url).toBe(mockDessertImage.imageUrl);
+    });
+
+    it('곡을 AI가 쓴 모드로 쓴 순서대로 넘기고, 모드별 이력과 취소 신호를 넘긴다', async () => {
+      const signal = new AbortController().signal;
+      const seen = { immerse: ['0000000a'], soothe: '0000000b,zzz' };
+
+      await service.analyzeStream('행복했어', seen, { signal });
+
+      expect(consumed.immerse).toEqual(mockPicks.immerse.map((p) => p.title));
+      expect(consumed.soothe).toEqual(mockPicks.soothe.map((p) => p.title));
+      expect(musicService.servePicksStream).toHaveBeenCalledWith(
+        expect.anything(),
+        'immerse',
+        ['0000000a'],
+        expect.objectContaining({ signal }),
+      );
+      expect(musicService.servePicksStream).toHaveBeenCalledWith(
+        expect.anything(),
+        'soothe',
+        ['0000000b'],
+        expect.objectContaining({ signal }),
+      );
+      expect(openAIService.pickSongsStream).toHaveBeenCalledWith(
+        '행복했어',
+        expect.objectContaining({ signal }),
+      );
+    });
+
+    it('빈 글은 아무것도 보내기 전에 거절한다', async () => {
+      const { events, handlers } = record();
+
+      await expect(service.analyzeStream('  ', {}, handlers)).rejects.toThrow(
+        '분석할 텍스트가 필요합니다.',
+      );
+      expect(events).toEqual([]);
+      expect(openAIService.pickSongsStream).not.toHaveBeenCalled();
+    });
+
+    it('선곡 스트림이 실패하면 모드별 해석에도 그 오류를 넘기고 그대로 던진다', async () => {
+      const failure = new Error('OpenAI API 에러 (500)');
+      openAIService.pickSongsStream.mockImplementation(
+        async (_text, { onPick } = {}) => {
+          onPick?.('immerse', mockPicks.immerse[0]);
+          throw failure;
+        },
+      );
+      const seenErrors: unknown[] = [];
+      musicService.servePicksStream.mockImplementation(async (picks) => {
+        try {
+          for await (const _ of picks) {
+            // 곡을 받다가 생성 실패를 만난다
+          }
+        } catch (error) {
+          seenErrors.push(error);
+          throw error;
+        }
+        return [];
+      });
+
+      await expect(service.analyzeStream('행복했어')).rejects.toBe(failure);
+      await new Promise((r) => setImmediate(r));
+      expect(seenErrors).toEqual([failure, failure]);
+    });
+
+    it('아트워크 매핑이 늦게 끝나도 meta가 곡보다 먼저 나간다', async () => {
+      dalleService.generateDessertImage.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(mockDessertImage), 20),
+          ),
+      );
+      const { events, handlers } = record();
+
+      await service.analyzeStream('행복했어', {}, handlers);
+
+      const kinds = events
+        .filter((e) => e.type !== 'progress')
+        .map((e) => e.type);
+      expect(kinds[0]).toBe('meta');
+      expect(kinds.filter((k) => k === 'track')).toHaveLength(6);
     });
   });
 });

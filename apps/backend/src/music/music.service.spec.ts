@@ -208,4 +208,178 @@ describe('MusicService', () => {
       expect(exposure.heads('soothe')).toEqual(new Set());
     });
   });
+
+  describe('servePicksStream', () => {
+    const picks = (counts: Partial<Record<Region, number>>): PickedTrack[] =>
+      (Object.entries(counts) as [Region, number][]).flatMap(([region, n]) =>
+        Array.from({ length: n }, (_, i) => ({
+          artist: `${region}-artist-${i}`,
+          title: `${region} song ${i}`,
+          region,
+        })),
+      );
+    const ticks = async (n: number) => {
+      for (let i = 0; i < n; i++) await new Promise((r) => setImmediate(r));
+    };
+    /** AI가 곡을 하나씩 쓰는 것처럼 흘려보낸다 */
+    async function* written(items: PickedTrack[]) {
+      for (const item of items) {
+        await ticks(1);
+        yield item;
+      }
+    }
+    /** 순서와 상관없이 같은 가수에 같은 트랙 — 스트리밍은 해석 순서가 servePicks와 다를 수 있다 */
+    const ids = new Map<string, number>();
+    beforeEach(() => {
+      itunesService.resolveTrack.mockImplementation(({ artist }) => {
+        if (!ids.has(artist)) ids.set(artist, ids.size + 1);
+        return Promise.resolve(makeTrack(ids.get(artist)!, artist));
+      });
+    });
+
+    it('곡이 다 모인 뒤 servePicks와 같은 목록·순서이고, 고른 곡을 그 순서대로 하나씩 내보낸다 (머리 곡·본 곡 포함)', async () => {
+      // 두 서비스가 같은 노출 기록에서 시작하게 첫 요청을 각각 한 번씩 → 'korea song 0'이 머리 곡
+      const batchService = new MusicService(
+        itunesService,
+        new ExposureWindow({ warmup: 1 }),
+      );
+      const first = picks({ korea: 7, pop: 4, jpop: 1 });
+      await service.servePicks(first, 'immerse');
+      await batchService.servePicks(first, 'immerse');
+      const pick = (title: string, region: Region = 'korea'): PickedTrack => ({
+        artist: `${title}-artist`,
+        title,
+        region,
+      });
+      const second = [
+        pick('본 곡 1'),
+        first[0],
+        pick('새 곡 1'),
+        pick('본 곡 2'),
+        pick('새 곡 2'),
+        pick('new pop 1', 'pop'),
+        pick('새 곡 3'),
+        pick('new pop 2', 'pop'),
+        pick('새 곡 4'),
+        pick('新しい歌', 'jpop'),
+        pick('new pop 3', 'pop'),
+      ];
+      const seen = [songKey(second[0]), songKey(second[3])];
+      const expected = await batchService.servePicks(second, 'immerse', seen);
+      const onTrack = jest.fn();
+
+      const served = await service.servePicksStream(
+        written(second),
+        'immerse',
+        seen,
+        { onTrack },
+      );
+
+      expect(served).toEqual(expected);
+      expect(onTrack.mock.calls).toEqual(served.map((item, i) => [item, i]));
+    });
+
+    it('KR 표기를 마친 곡만 내보내고, 조회가 도는 동안 고른 곡은 모아서 한 번에 조회한다', async () => {
+      let release!: () => void;
+      const gate = new Promise<void>((r) => (release = r));
+      const batches: number[] = [];
+      itunesService.localizeTracks.mockImplementation(async (tracks) => {
+        batches.push(tracks.length);
+        if (batches.length === 1) await gate;
+        return tracks.map((t) => ({ ...t, trackName: `KR ${t.trackName}` }));
+      });
+      const onTrack = jest.fn();
+
+      const done = service.servePicksStream(
+        written(picks({ korea: 6, pop: 3, jpop: 1 })),
+        'soothe',
+        [],
+        { onTrack },
+      );
+      await ticks(40); // 첫 곡의 조회가 막혀 있는 동안 나머지 9곡이 골라진다
+      expect(onTrack).not.toHaveBeenCalled();
+      release();
+      const served = await done;
+
+      expect(batches).toEqual([1, 9]);
+      expect(
+        served.every(({ track }) => track.trackName.startsWith('KR ')),
+      ).toBe(true);
+      expect(onTrack.mock.calls.map(([item]) => item)).toEqual(served);
+    });
+
+    it('고르는 동안에는 KR 조회 사이에 간격을 두고 그동안 고른 곡을 모은다 — 곡마다 조회하지 않는다', async () => {
+      service['krLookupGapMs'] = 40;
+      const starts: number[] = [];
+      const sizes: number[] = [];
+      itunesService.localizeTracks.mockImplementation(async (tracks) => {
+        starts.push(Date.now());
+        sizes.push(tracks.length);
+        return tracks;
+      });
+      async function* paced(items: PickedTrack[]) {
+        for (const item of items) {
+          await new Promise((r) => setTimeout(r, 8));
+          yield item;
+        }
+      }
+
+      const served = await service.servePicksStream(
+        paced(picks({ korea: 6, pop: 3, jpop: 1 })),
+        'immerse',
+      );
+
+      expect(served).toHaveLength(10);
+      expect(sizes[0]).toBe(1); // 첫 곡은 기다리지 않는다
+      expect(sizes.reduce((a, b) => a + b, 0)).toBe(10);
+      expect(sizes.length).toBeLessThan(5);
+      expect(starts[1] - starts[0]).toBeGreaterThanOrEqual(35);
+    });
+
+    it('첫 곡은 AI가 곡을 다 쓰기 전에 내보낸다', async () => {
+      let release!: () => void;
+      const gate = new Promise<void>((r) => (release = r));
+      const items = picks({ korea: 6, pop: 3, jpop: 1 });
+      async function* slow() {
+        yield items[0];
+        await gate;
+        yield* items.slice(1);
+      }
+      const onTrack = jest.fn();
+
+      const done = service.servePicksStream(slow(), 'immerse', [], { onTrack });
+      await ticks(5);
+
+      expect(onTrack).toHaveBeenCalledTimes(1);
+      release();
+      await expect(done).resolves.toHaveLength(10);
+    });
+
+    it('AI 스트림이 실패하면 남은 해석을 멈추고 그 오류를 던진다 — 노출 기록에도 남기지 않는다', async () => {
+      const failure = new Error('OpenAI API 에러 (500)');
+      let release!: () => void;
+      const gate = new Promise<void>((r) => (release = r));
+      itunesService.resolveTrack.mockImplementation(async ({ artist }) => {
+        await gate;
+        return makeTrack(artist.length, artist);
+      });
+      const items = picks({ korea: 6 });
+      async function* broken() {
+        yield* items;
+        await ticks(2);
+        throw failure;
+      }
+
+      await expect(service.servePicksStream(broken(), 'immerse')).rejects.toBe(
+        failure,
+      );
+      const callsAtFailure = itunesService.resolveTrack.mock.calls.length;
+      release(); // 실패 전에 시작한 해석이 끝나도 다음 곡 해석을 새로 시작하지 않는다
+      await ticks(10);
+
+      expect(callsAtFailure).toBe(3);
+      expect(itunesService.resolveTrack.mock.calls.length).toBe(callsAtFailure);
+      expect(exposure.heads('immerse')).toEqual(new Set());
+    });
+  });
 });

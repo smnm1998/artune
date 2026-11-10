@@ -4,13 +4,23 @@ import type {
   AnalyzeRequest,
   EmotionResponse,
   EmotionStreamEvent,
+  PlaylistMode,
   SeenHistory,
+  Track,
 } from '@artune/shared-types';
 import { readSseEvents } from './sse';
 
 export type { EmotionResponse };
 
-type ProgressCallback = (progress: number, message: string) => void;
+export interface AnalyzeOptions {
+  seen?: SeenHistory;
+  signal?: AbortSignal;
+  onProgress?: (progress: number, message: string) => void;
+  /** 감정·공감 문구·아트워크가 정해졌을 때 한 번, 곡보다 먼저 (곡 목록은 비어 있다) */
+  onMeta?: (meta: EmotionResponse) => void;
+  /** 곡 하나 — 모드별 최종 순서대로 오고, index는 그 모드에서 몇 번째인지 */
+  onTrack?: (mode: PlaylistMode, index: number, track: Track) => void;
+}
 
 export const CONNECTION_LOST =
   '서버와의 연결이 끊어졌습니다. 다시 시도해주세요.';
@@ -30,16 +40,15 @@ async function httpErrorMessage(response: Response): Promise<string> {
 }
 
 /**
- * 감정 분석 + 추천 (POST 스트리밍). 글과 이력은 본문으로 보내고, 진행률·결과는 SSE 형식으로 흘러온다.
+ * 감정 분석 + 추천 (POST 스트리밍). 글과 이력은 본문으로 보내고, 진행률·머리말·곡·결과는 SSE 형식으로 흘러온다.
  * - 취소는 signal로: fetch와 본문 읽기가 함께 멈추고 연결이 닫힌다
  * - 취소·시간 초과 오류는 그대로 넘긴다(스토어가 signal.reason으로 구분). 그 밖의 네트워크 실패는
  *   브라우저 영어 메시지(Failed to fetch) 대신 연결 끊김 문구로 바꾼다
+ * @returns 최종 응답 (곡 이벤트를 다 모은 것과 같다)
  */
 export async function analyzeEmotionWithProgress(
   text: string,
-  onProgress: ProgressCallback,
-  signal?: AbortSignal,
-  seen?: SeenHistory,
+  { seen, signal, onProgress, onMeta, onTrack }: AnalyzeOptions = {},
 ): Promise<EmotionResponse> {
   const request: AnalyzeRequest = { text, seen };
   let response: Response;
@@ -68,7 +77,11 @@ export async function analyzeEmotionWithProgress(
     for await (const event of readSseEvents<EmotionStreamEvent>(
       response.body,
     )) {
-      if (event.type === 'progress') onProgress(event.progress, event.message);
+      if (event.type === 'progress')
+        onProgress?.(event.progress, event.message);
+      if (event.type === 'meta') onMeta?.(event.data);
+      if (event.type === 'track')
+        onTrack?.(event.mode, event.index, event.track);
       if (event.type === 'complete') return event.data;
       if (event.type === 'error') {
         failure = event.message;

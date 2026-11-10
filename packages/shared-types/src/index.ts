@@ -68,7 +68,7 @@ export interface EmotionResponse {
   };
 }
 
-/* ── SSE (GET /api/emotion/analyze-stream) 이벤트 ── */
+/* ── 스트림 이벤트 (POST /api/emotion/analyze-stream, SSE 형식 — 전환 기간의 GET도 같은 형식) ── */
 
 export interface ProgressEvent {
   type: 'progress';

@@ -1,3 +1,4 @@
+import { BadRequestException, Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -209,6 +210,93 @@ describe('EmotionController', () => {
       ]);
       expect(completed).toBe(true);
     });
+  });
+});
+
+// 응답에 직접 쓰는(@Res) 경로라 실제 HTTP 요청으로 본문의 이벤트 순서를 확인한다
+describe('POST /emotion/analyze-stream (스트리밍)', () => {
+  let app: NestExpressApplication;
+  const service = { analyzeAndRecommendWithProgress: jest.fn() };
+
+  beforeEach(async () => {
+    service.analyzeAndRecommendWithProgress.mockReset();
+    const moduleRef = await Test.createTestingModule({
+      controllers: [EmotionController],
+      providers: [{ provide: EmotionService, useValue: service }],
+    }).compile();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
+    await app.init();
+  });
+
+  afterEach(() => app.close());
+
+  const post = (body: object) =>
+    request(app.getHttpServer()).post('/emotion/analyze-stream').send(body);
+  /** 응답 본문(data: …\n\n 프레임들)을 이벤트 배열로 */
+  const events = (body: string) =>
+    body
+      .split('\n\n')
+      .filter(Boolean)
+      .map((frame) => JSON.parse(frame.replace(/^data: /, '')));
+
+  it('진행률을 progress 이벤트로 흘려보내고 complete로 끝낸다', async () => {
+    service.analyzeAndRecommendWithProgress.mockImplementation(
+      async (_text, onProgress) => {
+        onProgress(0, '시작');
+        onProgress(50, '중간');
+        return { emotionLabel: '기쁨' };
+      },
+    );
+
+    const res = await post({ text: '오늘 좋았어' }).expect(200);
+
+    expect(res.headers['content-type']).toMatch(/^text\/event-stream/);
+    expect(events(res.text)).toEqual([
+      { type: 'progress', progress: 0, message: '시작' },
+      { type: 'progress', progress: 50, message: '중간' },
+      { type: 'complete', data: { emotionLabel: '기쁨' } },
+    ]);
+  });
+
+  it('본문의 글과 이력(seen)을 서비스에 넘긴다', async () => {
+    service.analyzeAndRecommendWithProgress.mockResolvedValue({});
+    const seen = { immerse: ['0000000a'], soothe: [] };
+
+    await post({ text: '기분 좋아', seen }).expect(200);
+
+    expect(service.analyzeAndRecommendWithProgress).toHaveBeenCalledWith(
+      '기분 좋아',
+      expect.any(Function),
+      seen,
+    );
+  });
+
+  it('스트림을 열기 전 실패(빈 글)는 HTTP 400과 안내 문구로 응답한다', async () => {
+    service.analyzeAndRecommendWithProgress.mockRejectedValue(
+      new BadRequestException('분석할 텍스트가 필요합니다.'),
+    );
+
+    const res = await post({ text: '' }).expect(400);
+
+    expect(res.body.message).toBe('분석할 텍스트가 필요합니다.');
+  });
+
+  it('스트림을 연 뒤 실패하면 error 이벤트로 알리고, 서버 내부 메시지는 내보내지 않는다', async () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    service.analyzeAndRecommendWithProgress.mockImplementation(
+      async (_text, onProgress) => {
+        onProgress(10, '분석 중');
+        throw new Error('OpenAI API 에러 (401): Incorrect API key provided');
+      },
+    );
+
+    const res = await post({ text: '오늘 좋았어' }).expect(200);
+
+    expect(events(res.text).at(-1)).toEqual({
+      type: 'error',
+      message: EmotionController.STREAM_FAILED,
+    });
+    expect(res.text).not.toContain('OpenAI');
   });
 });
 

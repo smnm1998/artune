@@ -10,13 +10,16 @@
  *   node scripts/eval/probe-latency.cjs freeze --as baseline                      # 지금 빌드를 .measure/baseline/dist 로 얼림
  *   node scripts/eval/probe-latency.cjs run --label latency-base --servers baseline:sse --limit 6
  *   node scripts/eval/probe-latency.cjs run --label latency-ab --servers baseline:sse,current:stream
+ *   node scripts/eval/probe-latency.cjs run --label r5 --servers current:stream --all --repeat   # R5 (eval README "R5 최종 비교")
  *   node scripts/eval/probe-latency.cjs summary --label latency-ab               # 결과 폴더에서 summary.md 다시 쓰기
  * 서버 지정: 이름:전송 — 이름은 current(apps/backend/dist) 또는 freeze로 얼린 이름,
  *   전송은 stream(POST 스트림, 지금 프론트) | sse(옛 GET SSE) | post(한 번에 받는 POST /analyze)
  * 옵션: --interval <초>(앞 요청이 끝난 뒤 다음 요청까지 쉼, 기본 120 — iTunes 차단 회복) --limit <n> --ids a,b
  *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json) --mock(키·네트워크 없이 자체 검증)
+ *       --all(기본 입력 파일도 12개로 줄이지 않고 전부) --repeat(본 실행 뒤 repeat: true 입력을 한 번 더 — 같은 서버에서 받은
+ *       첫 화면의 곡 키를 seen으로 보낸다: 같은 사람이 같은 글을 바로 다시 쓴 경우)
  *       --allow-dirty(freeze: 커밋 안 된 변경이 있어도 얼림 — frozen.json에 dirty로 남는다)
- * 결과: docs/measurements/<날짜>-<label>/ meta.json · raw.jsonl(요청 한 줄씩) · summary.md
+ * 결과: docs/measurements/<날짜>-<label>/ meta.json · raw.jsonl(요청 한 줄씩 — 감정·화면 곡 포함) · summary.md
  * API 키는 서버가 ConfigModule로 apps/backend/.env 에서 읽는다 — 하네스는 env 파일을 열지 않는다. 실제 실행은 사용자가 한다.
  */
 const fs = require('node:fs');
@@ -71,6 +74,8 @@ function parseArgs(argv) {
     interval: 120,
     mock: false,
     allowDirty: false,
+    all: false,
+    repeat: false,
     inputs: DEFAULT_INPUTS,
   };
   for (let i = 0; i < rest.length; i++) {
@@ -89,6 +94,8 @@ function parseArgs(argv) {
     else if (key === '--as') args.as = next();
     else if (key === '--mock') args.mock = true;
     else if (key === '--allow-dirty') args.allowDirty = true;
+    else if (key === '--all') args.all = true;
+    else if (key === '--repeat') args.repeat = true;
     else throw new Error(`알 수 없는 옵션: ${key}`);
   }
   if (!['freeze', 'run', 'summary'].includes(command))
@@ -196,9 +203,9 @@ function selectInputs(args) {
         })(),
     );
   } else {
-    // 기본 12개 규칙은 기본 입력 파일에만 — 다른 파일(홀드아웃 등)은 전부 쓴다
+    // 기본 12개 규칙은 기본 입력 파일에만(--all이면 전부) — 다른 파일(홀드아웃 등)은 전부 쓴다
     chosen = shuffled(
-      args.inputs === DEFAULT_INPUTS ? defaultSet(inputs) : inputs,
+      args.inputs === DEFAULT_INPUTS && !args.all ? defaultSet(inputs) : inputs,
       SHUFFLE_SEED,
     );
   }
@@ -262,6 +269,17 @@ function onLines(stream, callback) {
   });
 }
 
+/** 응답에는 화면 라벨(기쁨)만 온다 — 그 빌드의 상수로 감정 enum(joy)을 되찾아 정답과 맞춘다 */
+function emotionLookup(dist) {
+  const file = path.join(dist, 'emotion/constants/emotions.constant.js');
+  if (!fs.existsSync(file)) return () => null;
+  const { EMOTION_LABELS } = require(file);
+  const byLabel = new Map(
+    Object.entries(EMOTION_LABELS).map(([emotion, label]) => [label, emotion]),
+  );
+  return (label) => byLabel.get(label) ?? null;
+}
+
 async function startServer(server, args) {
   const port = await freePort();
   // 실제 실행은 apps/backend에서 띄워 서버가 그곳의 .env를 읽는다.
@@ -285,6 +303,7 @@ async function startServer(server, args) {
     base: `http://127.0.0.1:${port}`,
     calls: [],
     logs: [],
+    emotionOf: emotionLookup(server.dist),
   };
   const take = (line) => {
     const clean = line.replace(ANSI, '');
@@ -388,8 +407,13 @@ async function readEvents(res, t0) {
 }
 
 /** 옛 운영 경로: GET SSE (글이 주소에 실린다) */
-async function viaSse(proc, text, t0) {
-  const url = `${proc.base}/api/emotion/analyze-stream?${new URLSearchParams({ text })}`;
+async function viaSse(proc, text, t0, seen) {
+  const query = { text };
+  if (seen) {
+    query.seenImmerse = seen.immerse.join(',');
+    query.seenSoothe = seen.soothe.join(',');
+  }
+  const url = `${proc.base}/api/emotion/analyze-stream?${new URLSearchParams(query)}`;
   const res = await fetch(url, {
     headers: { Accept: 'text/event-stream', ...clientHeaders() },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -397,8 +421,8 @@ async function viaSse(proc, text, t0) {
   return readEvents(res, t0);
 }
 
-/** 지금 운영 경로: POST 스트림 — 곡이 track 이벤트로 하나씩 온다 */
-async function viaStream(proc, text, t0) {
+/** 지금 운영 경로: POST 스트림 — 곡이 track 이벤트로 하나씩 온다. seen이 없으면 본문은 { text }만 */
+async function viaStream(proc, text, t0, seen) {
   const res = await fetch(`${proc.base}/api/emotion/analyze-stream`, {
     method: 'POST',
     headers: {
@@ -406,18 +430,18 @@ async function viaStream(proc, text, t0) {
       Accept: 'text/event-stream',
       ...clientHeaders(),
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, seen }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   return readEvents(res, t0);
 }
 
 /** 한 번에 받는 POST /analyze — 응답이 다 와야 곡이 보인다 */
-async function viaPost(proc, text) {
+async function viaPost(proc, text, t0, seen) {
   const res = await fetch(`${proc.base}/api/emotion/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...clientHeaders() },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, seen }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -476,19 +500,32 @@ function parseTiming(lines) {
 
 const VIA = { sse: viaSse, post: viaPost, stream: viaStream };
 
-async function measureOne(proc, input, index) {
+/** 화면 곡 — 블라인드 시트(blind-sheet.cjs)와 "같은 글 다시" 지표가 쓴다 */
+const songsOf = (response, mode) =>
+  (response?.playlists?.[mode]?.tracks ?? []).map((t) => ({
+    id: t.id,
+    name: t.name,
+    artist: t.artists.map((a) => a.name).join(', '),
+    key: t.key ?? null,
+  }));
+
+/** round 2 = 반복 실행, seen = 보낸 이력(모드별 곡 키) */
+async function measureOne(proc, input, index, { round = 1, seen } = {}) {
   const t0 = Date.now();
   const row = {
     index,
     id: input.id,
     kind: input.kind,
+    expected: input.expected ?? null,
+    round,
+    seen: seen ?? null,
     server: proc.name,
     transport: proc.transport,
     startedAt: new Date(t0).toISOString(),
   };
   let result;
   try {
-    result = await VIA[proc.transport](proc, input.text, t0);
+    result = await VIA[proc.transport](proc, input.text, t0, seen);
   } catch (error) {
     result = { error: error.message };
   }
@@ -502,10 +539,15 @@ async function measureOne(proc, input, index) {
   row.metaMs = result.tMeta != null ? result.tMeta - t0 : null;
   row.trackEvents = result.trackEvents ?? 0;
   row.emotionLabel = result.response?.emotionLabel ?? null;
+  row.emotion = proc.emotionOf(row.emotionLabel);
   row.crisis = result.response?.crisis ?? null;
   row.tracks = {
     immerse: result.response?.playlists?.immerse?.tracks?.length ?? 0,
     soothe: result.response?.playlists?.soothe?.tracks?.length ?? 0,
+  };
+  row.songs = {
+    immerse: songsOf(result.response, 'immerse'),
+    soothe: songsOf(result.response, 'soothe'),
   };
   row.progress = result.progress ?? [];
   // 요청은 한 번에 하나씩이라, 이 서버에서 이 요청 시간 안에 시작된 외부 호출은 모두 이 요청 것이다
@@ -534,6 +576,9 @@ async function run(args) {
   if (new Set(servers.map((s) => s.name)).size !== servers.length)
     throw new Error('같은 서버 이름을 두 번 지정함');
   const selection = selectInputs(args);
+  const repeats = args.repeat ? selection.inputs.filter((x) => x.repeat) : [];
+  if (args.repeat && !repeats.length)
+    throw new Error('--repeat: 고른 입력 중 repeat: true 인 것이 없음');
   const outDir = path.join(MEASUREMENTS, `${today()}-${args.label}`);
   if (fs.existsSync(outDir))
     throw new Error(
@@ -556,6 +601,7 @@ async function run(args) {
       sha1: selection.sha1,
       seed: args.ids ? null : SHUFFLE_SEED,
       ids: selection.inputs.map((x) => x.id),
+      repeatIds: args.repeat ? repeats.map((x) => x.id) : undefined,
     },
     servers: servers.map(({ name, transport, dist, frozen }) => ({
       name,
@@ -573,10 +619,10 @@ async function run(args) {
   const rawFile = path.join(outDir, 'raw.jsonl');
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
 
-  const total = selection.inputs.length * servers.length;
+  const total = (selection.inputs.length + repeats.length) * servers.length;
   const minutes = Math.ceil(((total - 1) * args.interval) / 60);
   log(
-    `입력 ${selection.inputs.length}개 × 서버 ${servers.length}개 = 요청 ${total}회, 요청 사이 ${args.interval}초 → 최소 ${minutes}분`,
+    `입력 ${selection.inputs.length}개${repeats.length ? ` + 반복 ${repeats.length}개` : ''} × 서버 ${servers.length}개 = 요청 ${total}회, 요청 사이 ${args.interval}초 → 최소 ${minutes}분`,
   );
 
   const procs = [];
@@ -592,21 +638,43 @@ async function run(args) {
     for (const server of servers) procs.push(await startServer(server, args));
     let lastEnd = null;
     let done = 0;
+    const firstRows = new Map(); // 서버|입력 → 본 실행 결과 (반복 때 보낼 이력)
+    const step = async (proc, input, index, options) => {
+      const wait =
+        lastEnd == null ? 0 : lastEnd + args.interval * 1000 - Date.now();
+      if (wait > 0) await sleep(wait);
+      const row = await measureOne(proc, input, index, options);
+      lastEnd = Date.now();
+      done += 1;
+      fs.appendFileSync(rawFile, `${JSON.stringify(row)}\n`);
+      log(
+        `${done}/${total} ${row.id}${row.round > 1 ? ' (반복)' : ''} @${row.server}: ${row.status === 'ok' ? '' : `실패(${row.error}) `}` +
+          `첫 곡 ${seconds(row.firstSongMs)} · 전체 ${seconds(row.completeMs)} · OpenAI ${seconds(row.openai.ms)} · ` +
+          `iTunes ${row.itunes.calls}회(차단 ${row.itunes.blocked}) · 곡 ${row.tracks.immerse}/${row.tracks.soothe}`,
+      );
+      return row;
+    };
     for (const [index, input] of selection.inputs.entries()) {
       const order = index % 2 === 0 ? procs : [...procs].reverse();
-      for (const proc of order) {
-        const wait =
-          lastEnd == null ? 0 : lastEnd + args.interval * 1000 - Date.now();
-        if (wait > 0) await sleep(wait);
-        const row = await measureOne(proc, input, index);
-        lastEnd = Date.now();
-        done += 1;
-        fs.appendFileSync(rawFile, `${JSON.stringify(row)}\n`);
-        log(
-          `${done}/${total} ${row.id} @${row.server}: ${row.status === 'ok' ? '' : `실패(${row.error}) `}` +
-            `첫 곡 ${seconds(row.firstSongMs)} · 전체 ${seconds(row.completeMs)} · OpenAI ${seconds(row.openai.ms)} · ` +
-            `iTunes ${row.itunes.calls}회(차단 ${row.itunes.blocked}) · 곡 ${row.tracks.immerse}/${row.tracks.soothe}`,
+      for (const proc of order)
+        firstRows.set(
+          `${proc.name}|${input.id}`,
+          await step(proc, input, index),
         );
+    }
+    // 반복: 같은 서버에서 받은 첫 화면의 곡 키를 이력으로 보낸다 (브라우저가 화면 곡을 이력에 쌓는 것과 같게)
+    for (const [k, input] of repeats.entries()) {
+      const order = k % 2 === 0 ? procs : [...procs].reverse();
+      for (const proc of order) {
+        const first = firstRows.get(`${proc.name}|${input.id}`);
+        const seen = {
+          immerse: first.songs.immerse.map((t) => t.key).filter(Boolean),
+          soothe: first.songs.soothe.map((t) => t.key).filter(Boolean),
+        };
+        await step(proc, input, selection.inputs.length + k, {
+          round: 2,
+          seen,
+        });
       }
     }
   } finally {
@@ -650,8 +718,11 @@ function writeSummary(outDir) {
   const mark = (value, limit) =>
     value == null ? '—' : value <= limit ? '✅' : '❌';
 
+  // 서버별 표·같은 입력 비교는 본 실행만 — 반복 실행은 이력·캐시가 달라 아래 "같은 글 다시"에서 따로 본다
   const perServer = meta.servers.map((server) => {
-    const all = rows.filter((r) => r.server === server.name);
+    const all = rows.filter(
+      (r) => r.server === server.name && (r.round ?? 1) === 1,
+    );
     const ok = all.filter((r) => r.status === 'ok');
     const pick = (f) => ok.map(f);
     const stat = {
@@ -704,6 +775,11 @@ function writeSummary(outDir) {
     `- 서버: ${meta.servers.map((s) => `\`${s.name}\`(${s.transport}, ${s.frozen ? `얼린 빌드 ${s.frozen.commit ?? '?'}${s.frozen.dirty ? ' dirty' : ''}` : '지금 빌드'})`).join(' · ')}${meta.order ? ` · ${meta.order}` : ''}`,
     '- 첫 곡 = 클라이언트가 곡이 담긴 첫 이벤트(응답)를 받은 시점. stream은 첫 track 이벤트, sse·post는 곡이 완료 시점에 한꺼번에 와서 첫 곡 = 전체. 머리말 = stream의 meta 이벤트(감정·공감 문구·아트워크)',
     `- 합격 기준(p50): 첫 곡 ≤ ${PASS.firstSongMs / 1000}s · 전체 ≤ ${PASS.completeMs / 1000}s`,
+    ...(meta.inputs.repeatIds
+      ? [
+          `- 반복: 본 실행 뒤 ${meta.inputs.repeatIds.length}개(${meta.inputs.repeatIds.join(', ')})를 한 번 더 — 같은 서버의 첫 화면 곡 키를 seen으로 보냄. 서버별 표는 본 실행만`,
+        ]
+      : []),
     '',
     '## 서버별',
     '',
@@ -777,6 +853,109 @@ function writeSummary(outDir) {
     );
   }
 
+  // 감정·화면 곡 — 이 기록이 들어간 뒤(11/11, R5)의 결과 폴더에만 나온다
+  const main = rows.filter((r) => (r.round ?? 1) === 1 && r.status === 'ok');
+  if (main.some((r) => r.expected)) {
+    const rate = (rs) => {
+      const hit = rs.filter((r) => r.expected.includes(r.emotion)).length;
+      return rs.length
+        ? `${Math.round((hit / rs.length) * 100)}% (${hit}/${rs.length})`
+        : '—';
+    };
+    const yieldOf = (rs, mode) => {
+      const counts = rs.map((r) => r.tracks[mode]);
+      return counts.length
+        ? `${(counts.reduce((a, b) => a + b, 0) / counts.length).toFixed(1)} / ${Math.min(...counts)}곡`
+        : '—';
+    };
+    lines.push(
+      '',
+      '## 감정 · 화면 곡 (본 실행)',
+      '',
+      table(
+        [
+          '서버',
+          '감정 명확',
+          '감정 애매',
+          '문맥 함정',
+          '감정 전체',
+          '심취 곡 평균 / 최소',
+          '완화 곡 평균 / 최소',
+          '10곡 채운 모드',
+        ],
+        meta.servers.map((server) => {
+          const rs = main.filter((r) => r.server === server.name);
+          const of = (kind) => rs.filter((r) => r.kind === kind);
+          const full = rs.flatMap((r) =>
+            ['immerse', 'soothe'].filter((m) => r.tracks[m] >= 10),
+          ).length;
+          return [
+            `\`${server.name}\` ${server.transport}`,
+            rate(of('clear')),
+            rate(of('ambiguous')),
+            rate(of('context')),
+            rate(rs),
+            yieldOf(rs, 'immerse'),
+            yieldOf(rs, 'soothe'),
+            `${full}/${rs.length * 2}`,
+          ];
+        }),
+      ),
+    );
+    const misses = main.filter((r) => !r.expected.includes(r.emotion));
+    if (misses.length)
+      lines.push(
+        '',
+        `- 감정이 틀린 입력: ${misses.map((r) => `${r.id}@${r.server} → ${r.emotion ?? r.emotionLabel} (정답 ${r.expected.join('·')})`).join(' · ')}`,
+      );
+  }
+
+  // 같은 글 다시 + 이력 — 반복 실행의 화면에 첫 화면(보낸 이력) 곡이 몇 곡 다시 나왔나
+  const again = rows.filter((r) => r.round === 2 && r.status === 'ok');
+  if (again.length) {
+    const seenAgain = (r, mode) => {
+      const keys = new Set(r.seen?.[mode] ?? []);
+      return r.songs[mode].filter((t) => keys.has(t.key)).length;
+    };
+    const avg = (xs) =>
+      xs.length ? (xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1) : '—';
+    lines.push(
+      '',
+      '## 같은 글 다시 + 이력 (반복 실행)',
+      '',
+      '- 두 번째 화면 곡 중 첫 화면에서 본 곡 수(분모 = 두 번째 화면 곡 수). 판단(eval README "R5 최종 비교"): 심취 평균 3곡 이상이면 심취 15곡 안을 응답 시간과 함께 다시 잰다',
+      '',
+      table(
+        [
+          '서버',
+          '입력',
+          '심취 다시 본 곡',
+          '완화 다시 본 곡',
+          '보낸 이력 심취/완화',
+        ],
+        [
+          ...again.map((r) => [
+            `\`${r.server}\``,
+            r.id,
+            `${seenAgain(r, 'immerse')}/${r.tracks.immerse}`,
+            `${seenAgain(r, 'soothe')}/${r.tracks.soothe}`,
+            `${r.seen?.immerse.length ?? 0}/${r.seen?.soothe.length ?? 0}`,
+          ]),
+          ...meta.servers.map((server) => {
+            const rs = again.filter((r) => r.server === server.name);
+            return [
+              `\`${server.name}\``,
+              '**평균**',
+              `**${avg(rs.map((r) => seenAgain(r, 'immerse')))}**`,
+              `**${avg(rs.map((r) => seenAgain(r, 'soothe')))}**`,
+              '',
+            ];
+          }),
+        ],
+      ),
+    );
+  }
+
   lines.push(
     '',
     '## 요청별',
@@ -805,9 +984,12 @@ function writeSummary(outDir) {
         `${r.tracks.immerse}/${r.tracks.soothe}`,
         r.emotionLabel ?? '—',
         r.status === 'ok'
-          ? r.otherHosts?.length
-            ? `기타 호출: ${r.otherHosts.join(', ')}`
-            : ''
+          ? [
+              r.round === 2 && '반복(이력 보냄)',
+              r.otherHosts?.length && `기타 호출: ${r.otherHosts.join(', ')}`,
+            ]
+              .filter(Boolean)
+              .join(' · ')
           : `실패: ${r.error}`,
       ]),
     ),

@@ -6,10 +6,8 @@ import { EMOTION_LABELS } from '../emotion/constants/emotions.constant';
 import {
   buildPickFormat,
   buildPickPrompt,
-  PICK_VARIANTS,
   PickOutput,
   PickResult,
-  PRODUCTION_PICK_VARIANT,
 } from './pick-prompt';
 import {
   PickStreamHandlers,
@@ -41,17 +39,16 @@ export class OpenAIService {
   }
 
   /**
-   * 사용자 글 → 감정·위기 신호·공감 문구 + 모드별 곡 (LLM 직접 선곡, R2). 변형은 PRODUCTION_PICK_VARIANT
+   * 사용자 글 → 감정·위기 신호·공감 문구 + 모드별 곡 (LLM 직접 선곡, R2)
    *
    * @throws {BadRequestException} 텍스트가 비어있을 때
    * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림·모드 곡이 3곡 미만일 때
    */
   async pickSongs(text: string): Promise<PickResult> {
     this.assertText(text);
-    const options = PICK_VARIANTS[PRODUCTION_PICK_VARIANT];
     const result = await this.complete<PickOutput>(
-      buildPickPrompt(options),
-      buildPickFormat(options),
+      buildPickPrompt(),
+      buildPickFormat(),
       text,
     );
     return this.toPickResult(result);
@@ -70,7 +67,6 @@ export class OpenAIService {
     { signal, ...handlers }: PickStreamHandlers & { signal?: AbortSignal } = {},
   ): Promise<PickResult> {
     this.assertText(text);
-    const options = PICK_VARIANTS[PRODUCTION_PICK_VARIANT];
     const parser = new PickStreamParser(handlers);
     let refusal = '';
     let finishReason: string | null = null;
@@ -78,11 +74,7 @@ export class OpenAIService {
       const response = await axios.post<Readable>(
         this.apiUrl,
         {
-          ...this.requestBody(
-            buildPickPrompt(options),
-            buildPickFormat(options),
-            text,
-          ),
+          ...this.requestBody(buildPickPrompt(), buildPickFormat(), text),
           stream: true,
         },
         { headers: this.headers(), responseType: 'stream', signal },

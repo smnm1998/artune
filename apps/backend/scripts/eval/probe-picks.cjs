@@ -4,13 +4,13 @@
  * 선곡(pick)과 해석(resolve)을 나눠 해석은 분당 호출 수를 제한해 천천히 돌린다.
  *
  * 실행 (apps/backend 에서, 먼저 npm run build — 프롬프트·스키마와 해석기 모두 운영 빌드를 그대로 쓴다):
- *   node scripts/eval/probe-picks.cjs pick    --label pick-probe   # 변형·모델별 선곡 (OpenAI만, 수 분)
+ *   node scripts/eval/probe-picks.cjs pick    --label pick-probe   # 운영 프롬프트로 선곡 (OpenAI만, 수 분)
  *   node scripts/eval/probe-picks.cjs resolve --label pick-probe   # iTunes 해석 (분당 15회, 이어서 실행 가능)
  *   node scripts/eval/probe-picks.cjs summary --label pick-probe
  * 옵션: --per-minute <n>  --limit <입력 수>  --out <폴더>  --mock(키·네트워크 없이 자체 검증)
  *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json — 홀드아웃 입력 등)
- *       --variants V3,V5(src/openai/pick-prompt.ts 의 PICK_VARIANTS, 기본 = 운영 변형 PRODUCTION_PICK_VARIANT)
  *       --models(MODELS에 있는 것만 — 지금은 운영 모델 하나)
+ * 기록의 variant = 운영 프롬프트 버전(PICK_PROMPT_VERSION). 선곡 변형 V0~V4와 --variants 는 11/11에 걷었다(V5로 고정) — 다시 재려면 커밋 ed3ebaf를 체크아웃
  * 11/2·11/3 결과(변형 표기 없음)는 이 파일에 있던 프롬프트(promptSha1 eb886af1b088)로 잰 것 = V0에서 위기·공감 문구 규칙을 뺀 것.
  * 그때의 모델 비교(gpt-4.1-mini · gpt-6.1-terra)와 --reasoning 옵션은 11/11에 걷었다 — 다시 재려면 커밋 b0e6760을 체크아웃
  */
@@ -40,7 +40,7 @@ function loadPickPrompt() {
   return require(file);
 }
 
-// 같은 입력이라도 변형·모델이 다르면 다른 실행이다 (11/2·11/3 기록은 변형 표기가 없어 A0)
+// 같은 입력이라도 변형(프롬프트 버전)·모델이 다르면 다른 실행이다 (11/2·11/3 기록은 변형 표기가 없어 A0)
 const groupOf = (r) => `${r.variant ?? 'A0'} ${r.model}`;
 
 function parseArgs(argv) {
@@ -53,7 +53,6 @@ function parseArgs(argv) {
     limit: null,
     out: null,
     inputs: INPUTS,
-    variants: null, // pick에서 운영 변형으로 채운다(빌드를 읽어야 알 수 있음)
     mock: false,
   };
   for (let i = 0; i < rest.length; i++) {
@@ -65,7 +64,6 @@ function parseArgs(argv) {
     else if (key === '--limit') args.limit = Number(next());
     else if (key === '--out') args.out = next();
     else if (key === '--inputs') args.inputs = path.resolve(REPO, next());
-    else if (key === '--variants') args.variants = next().split(',');
     else if (key === '--mock') args.mock = true;
     else throw new Error(`알 수 없는 옵션: ${key}`);
   }
@@ -98,13 +96,8 @@ function mockPicks(config) {
   const text = body.messages.at(-1).content;
   let h = 0;
   for (const ch of text + body.model) h = (h * 31 + ch.codePointAt(0)) >>> 0;
-  // 시스템 프롬프트로 변형을 찾아 그 변형의 모드별 곡 수만큼 고른다 (V5는 완화 15곡)
-  const { PICK_VARIANTS, buildPickPrompt, picksPerMode } = loadPickPrompt();
-  const counts = picksPerMode(
-    Object.values(PICK_VARIANTS).find(
-      (options) => buildPickPrompt(options) === body.messages[0].content,
-    ),
-  );
+  // 운영 프롬프트의 모드별 곡 수만큼 고른다 (완화 15곡)
+  const counts = loadPickPrompt().PICKS_PER_MODE;
   const list = (mode, perRegion) =>
     REGIONS.flatMap((region) =>
       Array.from({ length: perRegion[region] }, (_, i) => ({
@@ -118,10 +111,6 @@ function mockPicks(config) {
     emotion: properties.emotion.enum[h % properties.emotion.enum.length],
     crisis: false,
     description: '모의 응답',
-    ...('reading' in properties && {
-      reading: '모의 해석',
-      targets: { immerse: 'mock', soothe: 'mock' },
-    }),
     immerse: list('im', counts.immerse),
     soothe: list('so', counts.soothe),
   };
@@ -164,10 +153,7 @@ function setupAxios(args) {
 async function pick(args, outDir) {
   const axios = setupAxios(args);
   const prompts = loadPickPrompt();
-  args.variants ??= [prompts.PRODUCTION_PICK_VARIANT];
-  const unknown = args.variants.filter((v) => !prompts.PICK_VARIANTS[v]);
-  if (unknown.length)
-    throw new Error(`PICK_VARIANTS 에 없는 변형: ${unknown.join(', ')}`);
+  const variant = prompts.PICK_PROMPT_VERSION;
   const { inputs } = JSON.parse(fs.readFileSync(args.inputs, 'utf8'));
   const targets = inputs.slice(0, args.limit ?? undefined);
   const file = path.join(outDir, 'picks.jsonl');
@@ -187,7 +173,7 @@ async function pick(args, outDir) {
   const sha1 = (text) =>
     createHash('sha1').update(text).digest('hex').slice(0, 12);
 
-  // 결과가 어떤 코드·프롬프트에서 나왔는지. 이어서 실행하면 처음 기록을 유지하고 새 변형·모델만 덧붙인다
+  // 결과가 어떤 코드·프롬프트에서 나왔는지. 이어서 실행하면 처음 기록을 유지하고 새 프롬프트 버전·모델만 덧붙인다
   const metaFile = path.join(outDir, 'meta.json');
   const meta = fs.existsSync(metaFile)
     ? JSON.parse(fs.readFileSync(metaFile, 'utf8'))
@@ -211,82 +197,77 @@ async function pick(args, outDir) {
         inputsFile: path.relative(REPO, args.inputs),
       };
   for (const model of args.models) meta.models[model] ??= MODELS[model];
-  for (const variant of args.variants)
-    meta.variants[variant] ??= {
-      options: prompts.PICK_VARIANTS[variant],
-      promptSha1: sha1(prompts.buildPickPrompt(prompts.PICK_VARIANTS[variant])),
-      // 모드별 지역 곡 수 — 변형마다 다르다 (V5는 완화 15곡)
-      perMode: prompts.picksPerMode(prompts.PICK_VARIANTS[variant]),
-    };
+  meta.variants[variant] ??= {
+    promptSha1: sha1(prompts.buildPickPrompt()),
+    // 모드별 지역 곡 수 — 요약이 운영 코드 대신 이 값을 읽는다 (V5는 완화 15곡)
+    perMode: prompts.PICKS_PER_MODE,
+  };
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
 
-  for (const variant of args.variants) {
-    const options = prompts.PICK_VARIANTS[variant];
-    const system = prompts.buildPickPrompt(options);
-    const format = prompts.buildPickFormat(options);
-    for (const model of args.models) {
-      const params = MODELS[model];
-      for (const [index, input] of targets.entries()) {
-        const line = {
-          variant,
-          model,
-          params,
-          id: input.id,
-          kind: input.kind,
-          expected: input.expected,
-          text: input.text,
-        };
-        if (done.has(runKey(line))) continue;
-        const start = performance.now();
-        try {
-          const res = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-              model,
-              messages: [
-                { role: 'system', content: system },
-                { role: 'user', content: input.text },
-              ],
-              response_format: format,
-              ...params,
+  const system = prompts.buildPickPrompt();
+  const format = prompts.buildPickFormat();
+  for (const model of args.models) {
+    const params = MODELS[model];
+    for (const [index, input] of targets.entries()) {
+      const line = {
+        variant,
+        model,
+        params,
+        id: input.id,
+        kind: input.kind,
+        expected: input.expected,
+        text: input.text,
+      };
+      if (done.has(runKey(line))) continue;
+      const start = performance.now();
+      try {
+        const res = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: input.text },
+            ],
+            response_format: format,
+            ...params,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
             },
-            {
-              headers: {
-                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-              },
-              timeout: 60000,
-            },
-          );
-          // strict 스키마 밖 결과: 거절·토큰 한도 잘림
-          const choice = res.data.choices[0];
-          if (choice.message.refusal)
-            throw new Error(`refusal: ${choice.message.refusal}`);
-          if (choice.finish_reason === 'length')
-            throw new Error('finish_reason length');
-          Object.assign(line, {
-            ms: Math.round(performance.now() - start),
-            usage: res.data.usage,
-            output: JSON.parse(choice.message.content),
-          });
-        } catch (error) {
-          const message = error.response?.data?.error?.message ?? error.message;
-          Object.assign(line, {
-            ms: Math.round(performance.now() - start),
-            error: `${error.response?.status ?? ''} ${message}`.trim(),
-          });
-        }
-        console.log(
-          `[pick] ${groupOf(line)} ${index + 1}/${targets.length} ${input.id} ${(line.ms / 1000).toFixed(1)}s ${line.error ? `ERROR ${line.error}` : `emotion=${line.output.emotion} picks=${line.output.immerse.length}/${line.output.soothe.length}`}`,
+            timeout: 60000,
+          },
         );
-        // 첫 요청부터 실패하면 파라미터 문제일 가능성이 커서 기록하지 않고 그 모델을 건너뛴다 (같은 오류로 반복 과금되지 않게)
-        if (line.error && index === 0) {
-          console.log(
-            `[pick] ${groupOf(line)} 첫 요청 실패 — 건너뜀. 오류를 확인한 뒤 다시 실행하면 이어서 진행`,
-          );
-          break;
-        }
-        fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
+        // strict 스키마 밖 결과: 거절·토큰 한도 잘림
+        const choice = res.data.choices[0];
+        if (choice.message.refusal)
+          throw new Error(`refusal: ${choice.message.refusal}`);
+        if (choice.finish_reason === 'length')
+          throw new Error('finish_reason length');
+        Object.assign(line, {
+          ms: Math.round(performance.now() - start),
+          usage: res.data.usage,
+          output: JSON.parse(choice.message.content),
+        });
+      } catch (error) {
+        const message = error.response?.data?.error?.message ?? error.message;
+        Object.assign(line, {
+          ms: Math.round(performance.now() - start),
+          error: `${error.response?.status ?? ''} ${message}`.trim(),
+        });
       }
+      console.log(
+        `[pick] ${groupOf(line)} ${index + 1}/${targets.length} ${input.id} ${(line.ms / 1000).toFixed(1)}s ${line.error ? `ERROR ${line.error}` : `emotion=${line.output.emotion} picks=${line.output.immerse.length}/${line.output.soothe.length}`}`,
+      );
+      // 첫 요청부터 실패하면 파라미터 문제일 가능성이 커서 기록하지 않고 그 모델을 건너뛴다 (같은 오류로 반복 과금되지 않게)
+      if (line.error && index === 0) {
+        console.log(
+          `[pick] ${groupOf(line)} 첫 요청 실패 — 건너뜀. 오류를 확인한 뒤 다시 실행하면 이어서 진행`,
+        );
+        break;
+      }
+      fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
     }
   }
 }

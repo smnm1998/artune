@@ -22,7 +22,7 @@
 - **단, probe-picks 요약의 "D3 후순위" 표는 지금 운영의 순서 규칙(곡 키 · 빌리기)으로 다시 재생한다** — 규칙이 바뀌면 예전 폴더를 다시 요약한 결과도 달라진다. 커밋된 `summary.md`는 그 측정 시점 코드의 출력이다. 재생은 입력 파일 순서를 따르므로 같은 입력 파일이 있어야 같은 결과가 나온다
 - **키 없는 자체 검증** — 하네스마다 `--mock` 경로를 둔다. 실제 API 실행은 사용자가
 - **측정 중 repo 수정 금지**, iTunes를 부르는 실행은 동시에 하나
-- **걷어 낸 하네스·옵션은 마지막으로 들어 있던 커밋을 적는다** — 기준선 하네스 `run.cjs`·`instrument.cjs` → `56dd4dd` · probe-picks의 모델 비교(gpt-4.1-mini · gpt-6.1-terra)와 `--reasoning` → `b0e6760`
+- **걷어 낸 하네스·옵션은 마지막으로 들어 있던 커밋을 적는다** — 기준선 하네스 `run.cjs`·`instrument.cjs` → `56dd4dd` · probe-picks의 모델 비교(gpt-4.1-mini · gpt-6.1-terra)와 `--reasoning` → `b0e6760` · 선곡 변형 V0~V4(플래그 6개)와 probe-picks `--variants` → `ed3ebaf` (11/11 R5 뒤 V5로 고정, 이후 기록의 변형 칸 = `PICK_PROMPT_VERSION`)
 
 ## 대상
 

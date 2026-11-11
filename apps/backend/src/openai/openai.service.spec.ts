@@ -1,12 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai.service';
-import {
-  buildPickFormat,
-  buildPickPrompt,
-  PICK_VARIANTS,
-  PickOutput,
-} from './pick-prompt';
+import { buildPickFormat, buildPickPrompt, PickOutput } from './pick-prompt';
 import axios from 'axios';
 import { PassThrough, Readable } from 'node:stream';
 
@@ -67,7 +62,7 @@ describe('OpenAIService', () => {
       soothe: [track('korea', 2), track('pop', 2), track('jpop', 2)],
     });
 
-    it('운영 변형 V5(완화 15곡)의 프롬프트·스키마로 선곡하고 화면 라벨을 붙인다', async () => {
+    it('운영 프롬프트·스키마로 선곡하고 화면 라벨을 붙인다', async () => {
       const picks = makePicks();
       mockedAxios.post.mockResolvedValueOnce(
         mockChatCompletion(JSON.stringify(picks)),
@@ -77,15 +72,15 @@ describe('OpenAIService', () => {
 
       // 화면 라벨은 LLM이 아니라 enum에서 붙는다
       expect(result).toEqual({ ...picks, emotionLabel: '기쁨' });
-      // 측정(D4)으로 고른 변형 — 바꾸려면 다시 측정한다
+      // 측정(D4)으로 고른 프롬프트 — 바꾸려면 다시 측정하고 PICK_PROMPT_VERSION을 올린다
       expect(mockedAxios.post).toHaveBeenCalledWith(
         'https://api.openai.com/v1/chat/completions',
         expect.objectContaining({
           model: 'gpt-6-luna',
           reasoning_effort: 'none',
-          response_format: buildPickFormat(PICK_VARIANTS.V5),
+          response_format: buildPickFormat(),
           messages: [
-            { role: 'system', content: buildPickPrompt(PICK_VARIANTS.V5) },
+            { role: 'system', content: buildPickPrompt() },
             { role: 'user', content: '오늘 정말 행복한 하루였어요!' },
           ],
         }),
@@ -230,7 +225,7 @@ describe('OpenAIService', () => {
         'https://api.openai.com/v1/chat/completions',
         expect.objectContaining({
           stream: true,
-          response_format: buildPickFormat(PICK_VARIANTS.V5),
+          response_format: buildPickFormat(),
         }),
         expect.objectContaining({ responseType: 'stream', signal }),
       );

@@ -37,6 +37,8 @@ type ViewMode = 'artwork' | 'music';
  */
 function ResultPage() {
   const emotionResult = useAppStore((state) => state.emotionResult);
+  // 첫 곡이 와서 넘어온 뒤에도 남은 곡을 받는 중이면 true — 빈 목록은 '못 찾음'이 아니라 '고르는 중'
+  const isLoading = useAppStore((state) => state.isLoading);
   const [selectedMode, setSelectedMode] = useState<Mode>('immerse');
 
   // 뷰 상태: 'artwork' | 'music'
@@ -152,7 +154,13 @@ function ResultPage() {
               transition={{ duration: 0.5 }}
               style={{ width: '100%', flex: 1 }}
             >
-              {isEmpty ? (
+              {isEmpty && isLoading ? (
+                <div css={emptyStateStyle}>
+                  <div className="empty-icon">🎵</div>
+                  <h3>곡을 고르고 있어요</h3>
+                  <p>곧 이어서 보여 드릴게요.</p>
+                </div>
+              ) : isEmpty ? (
                 <div css={emptyStateStyle}>
                   <div className="empty-icon">🎵</div>
                   <h3>플레이리스트를 찾을 수 없어요</h3>

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import useAppStore from '@/stores/useAppStore';
 import { analyzeEmotionWithProgress } from '@/api/emotionApi';
-import type { EmotionResponse } from '@/api/emotionApi';
+import type { AnalyzeOptions, EmotionResponse } from '@/api/emotionApi';
+import type { PlaylistMode } from '@artune/shared-types';
 import type { Track } from '@/types/track';
 import { ERROR_MESSAGES } from '@/constants/errorMessages';
 import { loadSeen } from '@/utils/seenHistory';
@@ -11,6 +12,9 @@ vi.mock('@/api/emotionApi', () => ({
 }));
 
 const mockedAnalyze = vi.mocked(analyzeEmotionWithProgress);
+
+/** n번째 요청에 넘긴 옵션 (이력·signal·콜백) */
+const optionsOf = (call: number) => mockedAnalyze.mock.calls[call][1] ?? {};
 
 const mockResult: EmotionResponse = {
   emotionLabel: '기쁨',
@@ -57,7 +61,35 @@ const abortable = (signal?: AbortSignal) =>
     );
   });
 
+/** 테스트가 직접 흘려보내는 스트림 요청 — 머리말·곡·완료·실패를 차례로. 취소되면 실제처럼 AbortError */
+function streamControl() {
+  let options: AnalyzeOptions = {};
+  let finish: (result: EmotionResponse) => void = () => {};
+  let fail: (error: unknown) => void = () => {};
+  mockedAnalyze.mockImplementationOnce((_text, given = {}) => {
+    options = given;
+    return new Promise<EmotionResponse>((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+      given.signal?.addEventListener('abort', () =>
+        reject(new DOMException('취소되었습니다.', 'AbortError')),
+      );
+    });
+  });
+  return {
+    meta: () => options.onMeta?.(mockResult),
+    track: (mode: PlaylistMode, index: number, key: string) =>
+      options.onTrack?.(mode, index, trackOf(key)),
+    finish: (result: EmotionResponse) => finish(result),
+    fail: (error: unknown) => fail(error),
+  };
+}
+
 const state = () => useAppStore.getState();
+
+/** 지금 결과에 붙어 있는 곡 키 */
+const keysOf = (mode: PlaylistMode) =>
+  state().emotionResult?.playlists[mode].tracks.map((track) => track.key);
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -104,15 +136,11 @@ describe('useAppStore', () => {
     });
 
     it('진행률은 역행하지 않고 메시지는 갱신된다', () => {
-      let report: (progress: number, message: string) => void = () => {};
-      mockedAnalyze.mockImplementationOnce((_text, onProgress) => {
-        report = onProgress;
-        return pending();
-      });
+      mockedAnalyze.mockImplementationOnce(pending);
 
       void state().analyzeEmotion('테스트 텍스트');
-      report(30, '분석 중');
-      report(20, '늦게 온 낮은 값');
+      optionsOf(0).onProgress?.(30, '분석 중');
+      optionsOf(0).onProgress?.(20, '늦게 온 낮은 값');
 
       expect(state().progress).toBe(30);
       expect(state().loadingMessage).toBe('늦게 온 낮은 값');
@@ -159,7 +187,7 @@ describe('useAppStore', () => {
 
         void state().analyzeEmotion('테스트 텍스트');
 
-        const signal = mockedAnalyze.mock.calls[0][2];
+        const { signal } = optionsOf(0);
         expect(signal).toBeInstanceOf(AbortSignal);
         expect(signal?.aborted).toBe(false);
       });
@@ -168,11 +196,11 @@ describe('useAppStore', () => {
         mockedAnalyze.mockImplementation(pending);
 
         void state().analyzeEmotion('첫 번째 요청');
-        const firstSignal = mockedAnalyze.mock.calls[0][2];
+        const firstSignal = optionsOf(0).signal;
         void state().analyzeEmotion('두 번째 요청');
 
         expect(firstSignal?.aborted).toBe(true);
-        expect(mockedAnalyze.mock.calls[1][2]?.aborted).toBe(false);
+        expect(optionsOf(1).signal?.aborted).toBe(false);
       });
 
       it('밀려난 이전 요청의 늦은 결과는 최신 상태를 덮어쓰지 않는다', async () => {
@@ -193,8 +221,8 @@ describe('useAppStore', () => {
       });
 
       it('reset() 은 진행 중인 요청을 취소하고, 취소가 에러로 표시되지 않는다', async () => {
-        mockedAnalyze.mockImplementationOnce((_t, _p, signal) =>
-          abortable(signal),
+        mockedAnalyze.mockImplementationOnce((_t, options) =>
+          abortable(options?.signal),
         );
 
         const request = state().analyzeEmotion('테스트 텍스트');
@@ -211,8 +239,8 @@ describe('useAppStore', () => {
 
       it('제한 시간을 넘기면 타임아웃 에러와 함께 input 페이지로 돌아간다', async () => {
         vi.useFakeTimers();
-        mockedAnalyze.mockImplementationOnce((_t, _p, signal) =>
-          abortable(signal),
+        mockedAnalyze.mockImplementationOnce((_t, options) =>
+          abortable(options?.signal),
         );
 
         const request = state().analyzeEmotion('테스트 텍스트');
@@ -236,7 +264,7 @@ describe('useAppStore', () => {
 
       void state().analyzeEmotion('테스트 텍스트');
 
-      expect(mockedAnalyze.mock.calls[0][3]).toEqual({
+      expect(optionsOf(0).seen).toEqual({
         immerse: [],
         soothe: [],
       });
@@ -252,7 +280,7 @@ describe('useAppStore', () => {
       await state().analyzeEmotion('첫 번째 요청');
       void state().analyzeEmotion('두 번째 요청');
 
-      expect(mockedAnalyze.mock.calls[1][3]).toEqual({
+      expect(optionsOf(1).seen).toEqual({
         immerse: ['0000000a', '0000000b'],
         soothe: ['0000000c'],
       });
@@ -272,6 +300,143 @@ describe('useAppStore', () => {
       await first;
 
       expect(loadSeen()).toEqual({ immerse: [], soothe: [] });
+    });
+  });
+
+  describe('곡 단위 스트림 (첫 곡부터 화면에)', () => {
+    beforeEach(() => localStorage.clear());
+
+    it('머리말은 곡 없는 결과 뼈대로 저장하고, 화면은 로딩에 머문다', () => {
+      const stream = streamControl();
+
+      void state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+
+      expect(state()).toMatchObject({
+        emotionResult: mockResult,
+        currentPage: 'loading',
+        isLoading: true,
+        progress: 0,
+      });
+    });
+
+    it('곡은 모드·자리대로 붙고, 첫 곡이 오면 진행률을 채워 로딩 화면을 끝낸다', () => {
+      const stream = streamControl();
+
+      void state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.track('immerse', 0, '0000000a');
+      expect(state().progress).toBe(100);
+      stream.track('immerse', 1, '0000000b');
+      stream.track('soothe', 0, '0000000c');
+
+      expect(keysOf('immerse')).toEqual(['0000000a', '0000000b']);
+      expect(keysOf('soothe')).toEqual(['0000000c']);
+      // 남은 곡을 받는 중 — 결과 화면 전환은 Loading 애니메이션 몫
+      expect(state()).toMatchObject({
+        isLoading: true,
+        currentPage: 'loading',
+      });
+    });
+
+    it('완료되면 최종 응답으로 바꾸고, 이력은 그때 남긴다', async () => {
+      const stream = streamControl();
+
+      const request = state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.track('immerse', 0, '0000000a');
+      expect(loadSeen()).toEqual({ immerse: [], soothe: [] });
+
+      const final = resultWithKeys(['0000000a'], ['0000000c']);
+      stream.finish(final);
+      await request;
+
+      expect(state()).toMatchObject({ emotionResult: final, isLoading: false });
+      expect(loadSeen()).toEqual({
+        immerse: ['0000000a'],
+        soothe: ['0000000c'],
+      });
+    });
+
+    it('곡을 받은 뒤 실패하면 결과 화면과 받은 곡은 그대로 두고 알림만 띄운다 (이력은 남기지 않음)', async () => {
+      const stream = streamControl();
+
+      const request = state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.track('immerse', 0, '0000000a');
+      state().setPage('result'); // Loading 애니메이션이 넘긴 뒤
+      stream.fail(new Error('감정 분석에 실패했습니다.'));
+      await request;
+
+      expect(state()).toMatchObject({
+        error: '감정 분석에 실패했습니다.',
+        isLoading: false,
+        currentPage: 'result',
+      });
+      expect(keysOf('immerse')).toEqual(['0000000a']);
+      expect(loadSeen()).toEqual({ immerse: [], soothe: [] });
+    });
+
+    it('곡을 받은 뒤 시간 초과가 나도 받은 곡은 지킨다', async () => {
+      vi.useFakeTimers();
+      const stream = streamControl();
+
+      const request = state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.track('immerse', 0, '0000000a');
+      await vi.advanceTimersByTimeAsync(60_000);
+      await request;
+
+      expect(state()).toMatchObject({
+        error: ERROR_MESSAGES.TIMEOUT_ERROR,
+        isLoading: false,
+      });
+      expect(keysOf('immerse')).toEqual(['0000000a']);
+    });
+
+    it('곡을 받기 전에 실패하면 입력 화면으로 돌아가고, 받아 둔 뼈대도 지운다', async () => {
+      const stream = streamControl();
+
+      const request = state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.fail(new Error('감정 분석에 실패했습니다.'));
+      await request;
+
+      expect(state()).toMatchObject({
+        error: '감정 분석에 실패했습니다.',
+        currentPage: 'input',
+        emotionResult: null,
+        progress: 0,
+      });
+    });
+
+    it('남은 곡을 받는 중에 처음으로(reset) 돌아가면 스트림을 취소하고, 오류로 띄우지 않는다', async () => {
+      const stream = streamControl();
+
+      const request = state().analyzeEmotion('테스트 텍스트');
+      stream.meta();
+      stream.track('immerse', 0, '0000000a');
+      state().reset();
+      await request;
+
+      expect(optionsOf(0).signal?.aborted).toBe(true);
+      expect(state()).toMatchObject({
+        currentPage: 'input',
+        error: null,
+        emotionResult: null,
+      });
+    });
+
+    it('밀려난 요청의 늦은 머리말·곡은 최신 상태를 덮어쓰지 않는다', () => {
+      const first = streamControl();
+      mockedAnalyze.mockImplementationOnce(pending);
+
+      void state().analyzeEmotion('첫 번째 요청');
+      void state().analyzeEmotion('두 번째 요청');
+      first.meta();
+      first.track('immerse', 0, '0000000a');
+
+      expect(state()).toMatchObject({ emotionResult: null, progress: 0 });
     });
   });
 

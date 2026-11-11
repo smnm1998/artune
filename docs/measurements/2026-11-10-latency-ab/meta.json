@@ -1,0 +1,54 @@
+{
+  "harness": "probe-latency",
+  "startedAt": "2026-11-10T07:05:44.844Z",
+  "commit": "6fe8e99",
+  "dirty": false,
+  "node": "v22.23.4",
+  "mock": false,
+  "intervalSec": 120,
+  "inputs": {
+    "file": "docs/measurements/eval/inputs.json",
+    "sha1": "e10a06bf1544",
+    "seed": 20261110,
+    "ids": [
+      "dreamy-ambig",
+      "confident-clear",
+      "sadness-ambig",
+      "fear-ambig",
+      "romance-ambig",
+      "sentimental-clear",
+      "joy-clear",
+      "lonely-clear",
+      "anger-clear",
+      "excited-ambig",
+      "surprise-clear",
+      "neutral-ambig"
+    ]
+  },
+  "servers": [
+    {
+      "name": "baseline",
+      "transport": "sse",
+      "dist": "apps/backend/.measure/baseline/dist",
+      "frozen": {
+        "name": "baseline",
+        "commit": "35513b4",
+        "dirty": false,
+        "frozenAt": "2026-11-10T04:37:04.283Z",
+        "node": "v24.22.2"
+      }
+    },
+    {
+      "name": "current",
+      "transport": "stream",
+      "dist": "apps/backend/dist",
+      "frozen": null
+    }
+  ],
+  "order": "입력마다 서버 순서를 번갈아 (짝수 번째 입력은 지정 순서, 홀수 번째는 반대)",
+  "pass": {
+    "firstSongMs": 2500,
+    "completeMs": 8000
+  },
+  "finishedAt": "2026-11-10T07:56:06.343Z"
+}

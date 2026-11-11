@@ -1,86 +1,165 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { EmotionResponse } from '@artune/shared-types';
-import { analyzeEmotionWithProgress, buildStreamUrl } from '@/api/emotionApi';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import type { EmotionResponse, Track } from '@artune/shared-types';
+import { analyzeEmotionWithProgress, CONNECTION_LOST } from '@/api/emotionApi';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 
-const query = (url: string) => new URL(url).searchParams;
+const encoder = new TextEncoder();
+const frame = (event: unknown) => `data: ${JSON.stringify(event)}\n\n`;
 
-describe('buildStreamUrl', () => {
-  it('이력이 없으면 text 쿼리만 붙인다', () => {
-    const url = buildStreamUrl('오늘 너무 힘들었어');
-
-    expect(
-      url.startsWith(`${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}?`),
-    ).toBe(true);
-    expect([...query(url).keys()]).toEqual(['text']);
-    expect(query(url).get('text')).toBe('오늘 너무 힘들었어');
+/** 이벤트 프레임들을 흘려보내는 스트림 응답 */
+function streamResponse(...frames: string[]) {
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const f of frames) controller.enqueue(encoder.encode(f));
+      controller.close();
+    },
   });
-
-  it('이력은 모드별 쿼리에 쉼표로 이어 붙인다', () => {
-    const url = buildStreamUrl('기분 좋아', {
-      immerse: ['0000000a', '0000000b'],
-      soothe: ['0000000c'],
-    });
-
-    expect(query(url).get('seenImmerse')).toBe('0000000a,0000000b');
-    expect(query(url).get('seenSoothe')).toBe('0000000c');
+  return new Response(body, {
+    status: 200,
+    headers: { 'Content-Type': 'text/event-stream' },
   });
+}
 
-  it('빈 모드는 쿼리에서 뺀다', () => {
-    const url = buildStreamUrl('기분 좋아', {
-      immerse: [],
-      soothe: ['0000000c'],
-    });
+function stubFetch(impl: (...args: unknown[]) => Promise<Response>) {
+  const fetchMock = vi.fn(impl);
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
 
-    expect(query(url).has('seenImmerse')).toBe(false);
-    expect(query(url).get('seenSoothe')).toBe('0000000c');
-  });
-
-  it('글 속 &·=·+ 문자가 다른 쿼리로 새지 않는다', () => {
-    const text = '기분 좋아&seenImmerse=ffffffff+1';
-    const url = buildStreamUrl(text);
-
-    expect(query(url).get('text')).toBe(text);
-    expect(query(url).has('seenImmerse')).toBe(false);
-  });
-});
+afterEach(() => vi.unstubAllGlobals());
 
 describe('analyzeEmotionWithProgress', () => {
-  /** jsdom에는 EventSource가 없어서 주소와 이벤트만 흉내 낸다 */
-  class FakeEventSource {
-    static last: FakeEventSource;
-    onmessage: ((event: { data: string }) => void) | null = null;
-    onerror: (() => void) | null = null;
-    closed = false;
-    constructor(public url: string) {
-      FakeEventSource.last = this;
-    }
-    close() {
-      this.closed = true;
-    }
-    emit(data: unknown) {
-      this.onmessage?.({ data: JSON.stringify(data) });
-    }
-  }
+  const result = { emotionLabel: '기쁨' } as EmotionResponse;
 
-  beforeEach(() => vi.stubGlobal('EventSource', FakeEventSource));
-  afterEach(() => vi.unstubAllGlobals());
-
-  it('이력을 실은 주소로 연결하고, complete 이벤트의 응답을 돌려준다', async () => {
-    const seen = { immerse: ['0000000a'], soothe: ['0000000b'] };
-    const result = { emotionLabel: '기쁨' } as EmotionResponse;
-
-    const request = analyzeEmotionWithProgress(
-      '기분 좋아',
-      () => {},
-      undefined,
-      seen,
+  it('글과 이력을 본문에 실어 POST로 보내고, complete 이벤트의 응답을 돌려준다', async () => {
+    const fetchMock = stubFetch(async () =>
+      streamResponse(frame({ type: 'complete', data: result })),
     );
-    const source = FakeEventSource.last;
-    source.emit({ type: 'complete', data: result });
+    const seen = { immerse: ['0000000a'], soothe: ['0000000b'] };
+    const controller = new AbortController();
 
-    await expect(request).resolves.toEqual(result);
-    expect(source.url).toBe(buildStreamUrl('기분 좋아', seen));
-    expect(source.closed).toBe(true);
+    await expect(
+      analyzeEmotionWithProgress('기분 좋아', {
+        signal: controller.signal,
+        seen,
+      }),
+    ).resolves.toEqual(result);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${API_BASE_URL}${API_ENDPOINTS.ANALYZE_EMOTION_STREAM}`);
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({
+      text: '기분 좋아',
+      seen,
+    });
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it('progress 이벤트마다 진행률을 알린다', async () => {
+    stubFetch(async () =>
+      streamResponse(
+        frame({ type: 'progress', progress: 10, message: '분석 중' }),
+        frame({ type: 'progress', progress: 60, message: '찾는 중' }),
+        frame({ type: 'complete', data: result }),
+      ),
+    );
+    const onProgress = vi.fn();
+
+    await analyzeEmotionWithProgress('기분 좋아', { onProgress });
+
+    expect(onProgress.mock.calls).toEqual([
+      [10, '분석 중'],
+      [60, '찾는 중'],
+    ]);
+  });
+
+  it('meta·track 이벤트를 받은 순서대로 알린다', async () => {
+    const meta = { emotionLabel: '기쁨' } as EmotionResponse;
+    const first = { id: '1' } as Track;
+    const second = { id: '2' } as Track;
+    stubFetch(async () =>
+      streamResponse(
+        frame({ type: 'meta', data: meta }),
+        frame({ type: 'track', mode: 'immerse', index: 0, track: first }),
+        frame({ type: 'track', mode: 'soothe', index: 0, track: second }),
+        frame({ type: 'complete', data: result }),
+      ),
+    );
+    const received: unknown[] = [];
+
+    await expect(
+      analyzeEmotionWithProgress('기분 좋아', {
+        onMeta: (data) => received.push(['meta', data]),
+        onTrack: (mode, index, track) =>
+          received.push(['track', mode, index, track]),
+      }),
+    ).resolves.toEqual(result);
+
+    expect(received).toEqual([
+      ['meta', meta],
+      ['track', 'immerse', 0, first],
+      ['track', 'soothe', 0, second],
+    ]);
+  });
+
+  it('error 이벤트는 서버가 보낸 문구로 실패한다', async () => {
+    stubFetch(async () =>
+      streamResponse(
+        frame({ type: 'error', message: '감정 분석에 실패했습니다.' }),
+      ),
+    );
+
+    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+      '감정 분석에 실패했습니다.',
+    );
+  });
+
+  it('스트림을 열기 전 HTTP 오류(요청 제한 429)는 서버 본문의 문구로 실패한다', async () => {
+    stubFetch(
+      async () =>
+        new Response(
+          JSON.stringify({ statusCode: 429, message: '요청이 너무 많아요.' }),
+          { status: 429, headers: { 'Content-Type': 'application/json' } },
+        ),
+    );
+
+    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+      '요청이 너무 많아요.',
+    );
+  });
+
+  it('complete 없이 스트림이 끝나면 연결 끊김으로 실패한다', async () => {
+    stubFetch(async () =>
+      streamResponse(
+        frame({ type: 'progress', progress: 10, message: '분석 중' }),
+      ),
+    );
+
+    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+      CONNECTION_LOST,
+    );
+  });
+
+  it('네트워크 오류는 브라우저 영어 메시지 대신 연결 끊김 문구로 바꾼다', async () => {
+    stubFetch(async () => {
+      throw new TypeError('Failed to fetch');
+    });
+
+    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+      CONNECTION_LOST,
+    );
+  });
+
+  it('취소·시간 초과는 바꾸지 않고 그대로 넘긴다', async () => {
+    const controller = new AbortController();
+    const timeout = new DOMException('시간 초과', 'TimeoutError');
+    controller.abort(timeout);
+    stubFetch(async () => {
+      throw controller.signal.reason;
+    });
+
+    await expect(
+      analyzeEmotionWithProgress('기분 좋아', { signal: controller.signal }),
+    ).rejects.toBe(timeout);
   });
 });

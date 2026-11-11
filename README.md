@@ -40,7 +40,7 @@
   - 곡마다 **30초 미리듣기**를 제공합니다. PC는 커버에 마우스를 올리면, 모바일은 곡을 탭하면 재생됩니다.
   - **CD 인터랙션**: PC에서는 재생할 때 CD가 커버 안으로 들어가고, 멈출 때는 볼륨이 서서히 줄어들며(fade-out) 멈춥니다.
 - **감정 맞춤 아트워크**: 감정마다 디저트 픽셀 아트를 보여 줍니다. Gemini로 미리 만든 이미지이며, DALL·E 실시간 생성은 비용 때문에 멈췄습니다.
-- **실시간 분석 경험**: Server-Sent Events(SSE)로 감정 분석 → 음악 탐색 → 아트워크 준비의 진행 상황을 프로그레스 바로 보여 줍니다.
+- **첫 곡부터 바로**: AI가 곡을 쓰는 동안 한 곡씩 iTunes에서 찾아 바로 보냅니다(POST 스트림, SSE 형식). 첫 곡이 도착하면 결과 화면으로 넘어가고, 나머지 곡은 오는 대로 붙습니다. 첫 곡까지 p50 12.2초 → 3.2초. 첫 곡 전까지는 진행률을 프로그레스 바로 보여 줍니다.
 - **안전과 표기**:
   - 글에서 위기 신호(자해·자살 의도)가 보이면 추천 위에 상담 전화(109) 안내를 띄웁니다.
   - 입력·결과 화면 맨 아래에 생성형 AI를 쓴다는 사실을 알립니다.
@@ -50,7 +50,7 @@
 ## 🏗️ 시스템 아키텍처
 
 사용자의 텍스트가 어떻게 음악과 이미지로 변환되는지 보여주는 데이터 흐름도입니다.  
-**Server-Sent Events (SSE)** 로 각 단계가 끝날 때마다 진행률을 보내고, 심취·완화·아트워크는 병렬로 준비합니다.
+**POST 스트림(SSE 형식)** 으로, AI가 응답을 다 쓰기 전에 곡이 하나 완성될 때마다 iTunes에서 찾아 바로 보냅니다. 심취·완화는 각자 따로 곡을 받아 해석합니다.
 
 ```mermaid
 sequenceDiagram
@@ -59,28 +59,26 @@ sequenceDiagram
     participant OpenAI as 🧠 OpenAI (gpt-6-luna)
     participant iTunes as 🎵 iTunes Search API
 
-    User->>Server: 글 + 모드별 최근 본 곡 키 (GET /api/emotion/analyze-stream)
-    Note over Server: IP당 분당 5회 제한 · 입력 500자 검증
-    Server-->>User: 📡 SSE 연결 · 진행률 0% → 10%
+    User->>Server: 글 + 모드별 최근 본 곡 키 (POST /api/emotion/analyze-stream)
+    Note over Server: IP당 분당 5회 제한 · 입력 500자 검증 (걸리면 HTTP 429·400)
+    Server-->>User: 📡 스트림 시작 · 진행률 0% → 10%
 
-    Server->>OpenAI: 감정 분석 + 모드별 선곡 요청 (Structured Outputs)
-    OpenAI-->>Server: 감정 · 위기 신호 · 심취 12곡 · 완화 15곡 (곡마다 지역 태그)
-    Server-->>User: 🔄 진행률 30% → 40%
+    Server->>OpenAI: 감정 분석 + 모드별 선곡 요청 (Structured Outputs, 스트림)
+    OpenAI-->>Server: 감정 · 위기 신호 · 공감 문구 (조각으로 흘러옴)
+    Server-->>User: 💬 meta — 감정 · 공감 문구 · 아트워크 · 진행률 30%
 
-    par 감정 심취 (Immerse)
-        Server->>Server: 처음 보는 곡 → 머리 곡 → 이미 본 곡 순으로 정렬
-        Server->>iTunes: 10곡이 찰 때까지만 곡 단위 해석 (곡명·아티스트 대조, 6시간 캐시)
+    loop AI가 곡 하나를 다 쓸 때마다 (심취 12곡 → 완화 15곡)
+        OpenAI-->>Server: 곡 하나 (아티스트 · 곡명 · 지역)
+        Server->>iTunes: 자리가 남았으면 바로 해석 (곡명·아티스트 대조, 6시간 캐시)
         iTunes-->>Server: 트랙 + 30초 미리듣기
-        Server->>Server: 한국 6 · 팝 3 · 일본 1 → 10곡
-        Server->>iTunes: KR 스토어 표기 조회 (요청당 1회)
-    and 감정 완화 (Soothe)
-        Server->>iTunes: 같은 과정
-    and 아트워크
-        Server->>Server: 감정별 디저트 아트워크 매핑
+        Server->>Server: 처음 보는 곡 → 머리 곡 → 이미 본 곡 순으로 한국 6 · 팝 3 · 일본 1 자리에 배정
+        Server->>iTunes: KR 스토어 표기 조회 (첫 곡은 바로, 이후 1.5초마다 모아서)
+        Server-->>User: 🎵 track — 모드 · 순서 · 곡 (진행률 → 95%)
     end
-    Server-->>User: 🔄 끝난 순서대로 60% → 80% → 95%
-    Server-->>User: ✅ 완료 이벤트 — 플레이리스트 2종 + 아트워크
+    Note over User: 첫 곡이 오면 결과 화면으로, 나머지 곡은 오는 대로 카드 추가
+    Server-->>User: ✅ complete — 플레이리스트 2종 전체 (track을 모은 것과 같음)
     User->>User: 받은 곡 키를 브라우저 이력에 저장 (모드별 최근 40곡)
+    Note over User,Server: 연결이 끊기면(창 닫기·다시하기) OpenAI 생성 · iTunes 해석 중단
 ```
 
 ## 🛠 기술 스택
@@ -110,14 +108,14 @@ sequenceDiagram
 - **Caching**: NestJS CacheModule (곡 해석 결과 6시간, 차단·네트워크 오류는 캐시하지 않고 다음 요청에서 재시도)
 - **Rate Limit**: `@nestjs/throttler` (IP당 분당 5회, Railway가 넣는 `X-Real-IP` 기준)
 - **Testing**: Jest (서비스·유틸 단위 테스트, 요청 제한은 실제 HTTP 요청으로 검증)
-- **Protocol**: HTTP, SSE (Server-Sent Events)
+- **Protocol**: HTTP, POST 스트리밍 (SSE 형식 — 프론트는 `fetch` + `ReadableStream`으로 읽음)
 - **Deploy**: Railway (Railpack)
 
 ## 📱 UI/UX 미리보기
 
-> 아래 화면은 Apple Music 배지와 하단 고지를 넣기 전 버전입니다.
+> 아래 화면은 곡 스트리밍, Apple Music 배지, 하단 고지를 넣기 전 버전입니다.
 
-|                     감정 입력 및 로딩 (SSE)                      |                         결과 페이지 (PC View)                          |                                    모바일/태블릿 반응형                                     |
+|                        감정 입력 및 로딩                         |                         결과 페이지 (PC View)                          |                                    모바일/태블릿 반응형                                     |
 | :--------------------------------------------------------------: | :--------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
 | <img src="./docs/loading.gif" width="280" alt="Loading Process"> | <img src="./docs/pc_result_page.gif" width="280" alt="PC Result Page"> | <img src="./docs/mobile_result_page.gif" width="125" height="250" alt="Mobile Result Page"> |
 |                     실시간 분석 진행률 표시                      |                    아트워크와 플레이리스트 분할 뷰                     |                               토글형 뷰 전환 & 터치 인터랙션                                |
@@ -178,19 +176,19 @@ artune/
 ├── apps/
 │   ├── backend/                    # NestJS Server
 │   │   ├── src/
-│   │   │   ├── emotion/            # 요청 흐름 · SSE · 입력 검증 (Core)
-│   │   │   ├── openai/             # 선곡 프롬프트 · 응답 스키마
+│   │   │   ├── emotion/            # 요청 흐름 · 스트리밍 · 입력 검증 (Core)
+│   │   │   ├── openai/             # 선곡 프롬프트 · 응답 스키마 · 스트림 JSON 조각 읽기
 │   │   │   ├── music/              # 지역 쿼터 · 본 곡 후순위 · 노출 기록(머리 곡)
 │   │   │   ├── itunes/             # 곡 해석(곡명·아티스트 대조) · KR 표기 · 캐시 · rate limit 처리
 │   │   │   ├── dalle/              # 감정별 아트워크 매핑 (DALL·E 호출은 정지)
 │   │   │   └── throttle.config.ts  # IP당 요청 제한
-│   │   └── scripts/eval/           # 선곡 품질 측정 프로브
+│   │   └── scripts/eval/           # 선곡 품질 · 응답 시간 측정 하네스
 │   └── frontend/                   # React Client
 │       └── src/
 │           ├── components/         # AlbumCard · AlbumGrid · AlbumHoverModal · MobilePlayerModal · PreviewSource 등
 │           ├── hooks/              # useAudioScratch · useMediaQuery · useHover 등
 │           ├── stores/             # Zustand Store (요청 · 취소 · 결과)
-│           ├── api/                # SSE 연결
+│           ├── api/                # POST 스트림 읽기 (SSE 형식)
 │           ├── utils/              # 본 곡 이력(localStorage) · 입력 검증
 │           ├── constants/          # 고지 문구 등
 │           └── pages/
@@ -212,9 +210,29 @@ Spotify API 정책 변경(Developer Mode 유저 제한, Premium 강제)에 대�
 - **LLM 큐레이션 전환**: 오디오 피쳐(valence/energy/tempo) 기반 필터링 대신, GPT가 감정·모드별 아티스트 풀을 직접 큐레이션하는 구조로 재설계. 추천 요청당 Spotify API 호출 65회 전부 제거.
 - **Rate Limit 방어**: 429/403을 상태별로 판별해 국가 폴백의 호출 증폭(최대 3배)을 차단하고, 일시적 차단 결과가 캐시에 남는 문제를 수정. throttle 상황에서도 트랙 수율 20/20 유지.
 
-### 2. 측정 기반 응답시간 최적화 (17.9초 → 11.6초, -35%)
+### 2. 첫 곡까지 12.2초 → 3.2초 — AI 선곡 스트리밍
 
-> 초기 아티스트 기반 버전(7월) 기준 수치입니다. 지금 구조(AI 직접 선곡)에서는 다시 측정할 예정입니다.
+AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 때까지(p50 약 7.6초) 기다렸다가 곡을 찾기 시작해서, **첫 곡이 곧 전체 완료 시점(12.2초)** 이었습니다.
+
+- **곡 단위 스트리밍**: OpenAI 응답을 스트림으로 받고, 직접 만든 JSON 조각 스캐너(문자열·이스케이프·깊이 추적)가 곡 객체 하나가 닫히는 순간 꺼내 바로 iTunes에서 찾습니다. 찾은 곡은 POST 스트림의 `track` 이벤트로 하나씩, 감정·공감 문구는 곡보다 먼저 `meta` 이벤트로 보냅니다.
+- **결과는 그대로**: 지역 쿼터는 "지역 순서대로, 순위대로, 자리가 찰 때까지" 고르는 규칙이라 곡이 어떤 묶음으로 도착해도 결과가 같습니다. 무작위 500가지 경우에서 고른 10곡·순서·iTunes 해석 대상이 다 모은 뒤 고를 때와 같은지 테스트로 확인합니다.
+- **끊기면 멈춤**: 창을 닫거나 다시하기를 눌러 연결이 끊기면, 서버가 이를 감지해 OpenAI 생성과 iTunes 해석을 함께 멈춥니다.
+
+측정은 서버를 직접 띄워 HTTP로 부르는 응답 시간 하네스로 했습니다. 바꾸기 전 빌드를 얼려 두고 같은 입력을 두 서버에 번갈아 보내, LLM 속도가 시간대마다 달라지는 영향을 상쇄했습니다(12개 입력, 요청 간 120초, 외부 호출은 Node `diagnostics_channel`로 기록). ([결과](./docs/measurements/2026-11-10-latency-ab/summary.md) · [측정 조건](./docs/measurements/eval/README.md))
+
+| p50 (12개 입력) | 이전 (완료 때 한 번에) | 스트리밍 | 목표 |
+| :-- | :-- | :-- | :-- |
+| 첫 곡 도착 | 12.19s | **3.18s** | ≤ 2.5s ❌ |
+| 전체 완료 | 12.19s | **8.88s** | ≤ 8s ❌ |
+
+- 12개 입력 모두 첫 곡이 빨라졌습니다(같은 입력끼리 차이의 중앙값 8.61초). 곡 채움 100%, iTunes 차단 0건.
+- **목표는 아직 못 맞췄습니다.** 첫 곡 3.18초는 대략 OpenAI 첫 응답 1.6초 + 공감 문구 0.8초 + 첫 곡 생성·iTunes 검색·KR 표기 조회 0.8초입니다. 전체 8.88초는 OpenAI가 27곡을 다 쓰는 데만 7.8초가 걸리고, 그 뒤 남은 해석이 1.1초입니다. 다음 후보는 곡을 공감 문구보다 먼저 쓰게 하기(선곡 품질 재확인 필요)와 완화 곡을 15 → 12곡으로 줄이기입니다.
+- 대가: KR 표기 조회를 곡이 오는 대로 나눠 하느라 요청당 iTunes 호출이 27 → 29.5회(p50)로 늘었습니다.
+- 첫 곡 시점은 브라우저가 첫 곡을 받은 때이고, 결과 화면으로 넘어가는 애니메이션(1.6초)은 포함하지 않았습니다.
+
+### 3. 측정 기반 응답시간 최적화 (17.9초 → 11.6초, -35%)
+
+> 초기 아티스트 기반 버전(7월)의 작업입니다. 지금 구조(AI 직접 선곡)의 측정은 위 2번입니다.
 
 단계별 타이밍 계측을 심어 병목을 실측으로 식별한 뒤 최적화했습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing.log))
 
@@ -224,13 +242,13 @@ Spotify API 정책 변경(Developer Mode 유저 제한, Premium 강제)에 대�
 | SSE 병렬화 | ~13.8s | iTunes 구간 8.6s → 4.5s. 완료 카운트 기반 마일스톤으로 진행률 단조 증가 보장 |
 | LLM 출력 축소 | **11.6s** | 아티스트 40→25명/모드로 출력 토큰 절감 (수율 20/20 유지 검증) |
 
-### 3. 오디오 UX 디테일 (HTMLAudioElement & Interaction)
+### 4. 오디오 UX 디테일 (HTMLAudioElement & Interaction)
 
 - 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`useAudioScratch`)을 구현했습니다.
 - `requestAnimationFrame`으로 프레임마다 볼륨을 줄여 페이드아웃한 뒤 멈춥니다. 호버를 풀면 0.5초로 짧게 줄입니다.
 - 탭이 가려지면 바로 멈추고, 이벤트 리스너와 타이머를 정리합니다.
 
-### 4. 반응형 디자인과 Glassmorphism
+### 5. 반응형 디자인과 Glassmorphism
 
 - Emotion을 활용해 세련된 Dark Glassmorphism 테마를 구축했습니다.
 - PC에서는 한 화면에 아트워크와 리스트를, 모바일에서는 토글 방식을 적용하여 디바이스별 최적화된 레이아웃을 제공합니다.

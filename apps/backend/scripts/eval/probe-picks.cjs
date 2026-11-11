@@ -7,11 +7,12 @@
  *   node scripts/eval/probe-picks.cjs pick    --label pick-probe   # 변형·모델별 선곡 (OpenAI만, 수 분)
  *   node scripts/eval/probe-picks.cjs resolve --label pick-probe   # iTunes 해석 (분당 15회, 이어서 실행 가능)
  *   node scripts/eval/probe-picks.cjs summary --label pick-probe
- * 옵션: --models a,b  --per-minute <n>  --limit <입력 수>  --out <폴더>  --mock(키·네트워크 없이 자체 검증)
+ * 옵션: --per-minute <n>  --limit <입력 수>  --out <폴더>  --mock(키·네트워크 없이 자체 검증)
  *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json — 홀드아웃 입력 등)
- *       --variants V0,V1(src/openai/pick-prompt.ts 의 PICK_VARIANTS, 기본 V0)
- *       --reasoning <none|low|…>(추론 모델의 reasoning_effort 덮어쓰기)
- * 11/2·11/3 결과(변형 표기 없음)는 이 파일에 있던 프롬프트(promptSha1 eb886af1b088)로 잰 것 = V0에서 위기·공감 문구 규칙을 뺀 것
+ *       --variants V3,V5(src/openai/pick-prompt.ts 의 PICK_VARIANTS, 기본 = 운영 변형 PRODUCTION_PICK_VARIANT)
+ *       --models(MODELS에 있는 것만 — 지금은 운영 모델 하나)
+ * 11/2·11/3 결과(변형 표기 없음)는 이 파일에 있던 프롬프트(promptSha1 eb886af1b088)로 잰 것 = V0에서 위기·공감 문구 규칙을 뺀 것.
+ * 그때의 모델 비교(gpt-4.1-mini · gpt-6.1-terra)와 --reasoning 옵션은 11/11에 걷었다 — 다시 재려면 커밋 b0e6760을 체크아웃
  */
 const fs = require('node:fs');
 const os = require('node:os');
@@ -27,11 +28,9 @@ const INPUTS = path.join(REPO, 'docs/measurements/eval/inputs.json');
 
 const REGIONS = ['korea', 'pop', 'jpop'];
 
-// 모델별 요청 파라미터. 4.1-mini는 운영과 같은 temperature, 추론 모델은 지연을 줄이려 reasoning 을 끈다
+// 모델별 요청 파라미터 — 운영과 같게(src/openai/openai.service.ts: luna, 추론 끔)
 const MODELS = {
-  'gpt-4.1-mini': { temperature: 0.7 },
   'gpt-6-luna': { reasoning_effort: 'none' },
-  'gpt-6.1-terra': { reasoning_effort: 'none' },
 };
 
 /** 운영 빌드의 선곡 프롬프트·스키마 (src/openai/pick-prompt.ts) — 잰 프롬프트가 곧 배포하는 프롬프트 */
@@ -41,22 +40,8 @@ function loadPickPrompt() {
   return require(file);
 }
 
-const paramsFor = (model, args) =>
-  args.reasoning && 'reasoning_effort' in MODELS[model]
-    ? { ...MODELS[model], reasoning_effort: args.reasoning }
-    : MODELS[model];
-
-// 같은 입력이라도 변형·모델·추론 수준이 다르면 다른 실행이다 (11/2·11/3 기록은 변형 표기가 없어 A0)
-const groupOf = (r) =>
-  [
-    r.variant ?? 'A0',
-    r.model,
-    r.params?.reasoning_effort && r.params.reasoning_effort !== 'none'
-      ? `reasoning ${r.params.reasoning_effort}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
+// 같은 입력이라도 변형·모델이 다르면 다른 실행이다 (11/2·11/3 기록은 변형 표기가 없어 A0)
+const groupOf = (r) => `${r.variant ?? 'A0'} ${r.model}`;
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
@@ -68,8 +53,7 @@ function parseArgs(argv) {
     limit: null,
     out: null,
     inputs: INPUTS,
-    variants: ['V0'],
-    reasoning: null,
+    variants: null, // pick에서 운영 변형으로 채운다(빌드를 읽어야 알 수 있음)
     mock: false,
   };
   for (let i = 0; i < rest.length; i++) {
@@ -82,7 +66,6 @@ function parseArgs(argv) {
     else if (key === '--out') args.out = next();
     else if (key === '--inputs') args.inputs = path.resolve(REPO, next());
     else if (key === '--variants') args.variants = next().split(',');
-    else if (key === '--reasoning') args.reasoning = next();
     else if (key === '--mock') args.mock = true;
     else throw new Error(`알 수 없는 옵션: ${key}`);
   }
@@ -181,6 +164,7 @@ function setupAxios(args) {
 async function pick(args, outDir) {
   const axios = setupAxios(args);
   const prompts = loadPickPrompt();
+  args.variants ??= [prompts.PRODUCTION_PICK_VARIANT];
   const unknown = args.variants.filter((v) => !prompts.PICK_VARIANTS[v]);
   if (unknown.length)
     throw new Error(`PICK_VARIANTS 에 없는 변형: ${unknown.join(', ')}`);
@@ -226,9 +210,7 @@ async function pick(args, outDir) {
         inputs: targets.length,
         inputsFile: path.relative(REPO, args.inputs),
       };
-  for (const model of args.models)
-    meta.models[model] ??= paramsFor(model, args);
-  if (args.reasoning) meta.reasoningOverride = args.reasoning;
+  for (const model of args.models) meta.models[model] ??= MODELS[model];
   for (const variant of args.variants)
     meta.variants[variant] ??= {
       options: prompts.PICK_VARIANTS[variant],
@@ -243,7 +225,7 @@ async function pick(args, outDir) {
     const system = prompts.buildPickPrompt(options);
     const format = prompts.buildPickFormat(options);
     for (const model of args.models) {
-      const params = paramsFor(model, args);
+      const params = MODELS[model];
       for (const [index, input] of targets.entries()) {
         const line = {
           variant,
@@ -411,8 +393,10 @@ async function resolve(args, outDir) {
 }
 
 async function summary(args, outDir) {
-  const { PICKS_PER_MODE, PICK_VARIANTS, picksPerMode, DEFAULT_SONGS } =
-    loadPickPrompt();
+  const { DEFAULT_SONGS } = loadPickPrompt();
+  const meta = JSON.parse(
+    fs.readFileSync(path.join(outDir, 'meta.json'), 'utf8'),
+  );
   const picks = readJsonl(path.join(outDir, 'picks.jsonl'));
   const resolveFile = path.join(outDir, 'resolve.json');
   const results = fs.existsSync(resolveFile)
@@ -507,11 +491,13 @@ async function summary(args, outDir) {
     );
   }
 
-  // 변형마다 모드별 목표 곡 수가 다르다 (V5는 완화 15곡). 변형 표기가 없는 11/2·11/3 기록은 모드마다 12곡
+  // 모드별 목표 곡 수는 그 측정의 meta.json에 기록된 값 — 운영 코드의 변형이 바뀌거나 사라져도 예전 측정을 다시 요약할 수 있다.
+  // 11/6부터는 변형별 perMode(V5는 완화 15곡), 그 전 기록은 두 모드 공통 perMode(모드마다 12곡)
   const targetsOf = (r) =>
-    r.variant
-      ? picksPerMode(PICK_VARIANTS[r.variant])
-      : { immerse: PICKS_PER_MODE, soothe: PICKS_PER_MODE };
+    meta.variants?.[r.variant]?.perMode ?? {
+      immerse: meta.perMode,
+      soothe: meta.perMode,
+    };
   const total = (perRegion) =>
     Object.values(perRegion).reduce((a, b) => a + b, 0);
   const compliance = groups.map((group) => {

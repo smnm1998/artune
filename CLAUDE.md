@@ -5,8 +5,9 @@
 ## 모노레포 구조
 
 - TurboRepo 기반 모노레포
-- `apps/frontend` - React + Vite (현재 작업 중심)
-- `apps/backend` - API 서버
+- `apps/frontend` - React 19 + Vite
+- `apps/backend` - NestJS 11 API 서버
+- `packages/shared-types` - 프론트·백 공유 응답 타입
 
 ## 절대 하지 말 것
 
@@ -23,34 +24,18 @@
 개발 기록을 매일 한 편씩 페어 블로깅 방식으로 작성한다. `/blog`로 세션 시작.
 글쓰기 세션이 아니라 **코드를 다시 읽고 · 설명해보고 · 고치는** 세션이고, 포스트는 그 기록이다.
 
-- 진행 지침: [.claude/blog-guide.md](.claude/blog-guide.md) — **논지는 사용자, 산문은 클로드.** 사용자가 주장+뼈대를 확정한 뒤에만 클로드가 초안을 쓴다
-- 소재 백로그: [.claude/blog-topics.md](.claude/blog-topics.md)
+- 진행 지침: [.claude/topics/blog/blog-guide.md](.claude/topics/blog/blog-guide.md) — **논지는 사용자, 산문은 클로드.** 사용자가 주장+뼈대를 확정한 뒤에만 클로드가 초안을 쓴다
+- 소재 백로그: [.claude/topics/blog/blog-topics.md](.claude/topics/blog/blog-topics.md)
 - 결과물: `docs/blog/YYYY-MM-DD-slug.md`
 - 세션 중 코드 수정이 나오면 그날 커밋·머지하고 그 이유까지 포스팅한다
 
-## 리팩토링 로드맵
+## 지금 구조 (11월)
 
-Spotify API 2026 정책 변경(Developer Mode 유저 5명 제한, Premium 구독 강제)으로 인해 **iTunes Search API 완전 이전** 결정.
+- 글 → OpenAI가 감정 분류 + 직접 선곡(Structured Outputs, 스트림) → 곡이 하나 완성될 때마다 iTunes에서 해석 → POST 스트림(SSE 형식)으로 곡마다 전송 → 프론트는 첫 곡에서 결과 화면으로
+- 흐름도와 응답 시간 수치는 README, 측정 조건과 하네스는 `docs/measurements/eval/README.md`
+- 지나온 구조: 5월 아티스트 기반(Spotify → iTunes 이전, TS 전환) → 7월 Last.fm 유사곡 하이브리드 → 11월 AI 직접 선곡 · 곡 단위 스트리밍
 
-### 전환 순서:
+## 지금 단계
 
-1. **백엔드 iTunes 이전**
-   - `spotify.service.js` → iTunes 기반으로 교체
-   - `emotion.service.js` SpotifyService 의존성 제거
-   - OpenAI 프롬프트에서 `valence/energy/tempo` 제거, 감정 키워드만 반환하도록 단순화
-   - `spotify-web-api-node` 패키지 제거
-
-2. **API 호출 최적화**
-   - 아티스트 30개 × top tracks 순차 호출 → iTunes 검색 쿼리 1~2회로 대체
-   - immerse/soothe `Promise.all` 병렬 처리 복구
-   - 동일 감정 키워드 반복 요청 캐싱 (NestJS `CacheModule`)
-
-3. **백엔드 TypeScript 전환**
-   - NestJS TS 전환으로 데코레이터 이슈 해결
-   - DTO 타입 정의로 프론트-백 응답 계약 명확화
-
-4. **프론트엔드 TypeScript 전환** (진행 중 → `apps/frontend/CLAUDE.md` 참고)
-
-5. **정리**
-   - 불필요한 주석/JSDoc 제거
-   - 테스트 코드 업데이트 (Spotify mock → iTunes mock)
+- 11/11부터 코드 리팩토링(주석 · 코드 개연성 · 필요성 점검)과 요청 흐름을 따라 로직별 공부
+- 진행 상황과 다음 할 일은 로컬 메모 `.claude/now.md`(git 무시, 지도는 `.claude/README.md`)

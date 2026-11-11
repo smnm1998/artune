@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoClose, IoWarning } from 'react-icons/io5';
 import { Track } from '@/types/track';
-import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
 import PreviewSource from '@/components/PreviewSource/PreviewSource';
 import * as styles from './MobilePlayerModal.styles';
 
@@ -26,11 +26,11 @@ function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
   // 닫힐 때는 track은 null이지만 currentTrack은 남아있어서 애니메이션/페이드아웃 가능
   const activeTrack = track || currentTrack;
 
-  const { audioRef, isPlaying, error } = useAudioScratch({
+  const { audioRef, isPlaying, error } = usePreviewAudio({
     src: activeTrack?.preview_url ?? undefined,
     // isOpen이 true이고 실제 track prop이 있을 때만 재생 (닫히면 isEnabled=false -> 페이드아웃)
     isEnabled: isOpen && !!track?.preview_url,
-    scratchDuration: 1.5,
+    fadeOutSeconds: 1.5,
   });
 
   if (!activeTrack) return null;

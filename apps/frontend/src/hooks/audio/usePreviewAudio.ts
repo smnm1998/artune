@@ -1,16 +1,21 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
-interface UseAudioScratchOptions {
+interface UsePreviewAudioOptions {
   src?: string;
   isEnabled: boolean;
-  scratchDuration?: number;
+  /** 끝나기 몇 초 전부터 볼륨을 줄일지 */
+  fadeOutSeconds?: number;
 }
 
-function useAudioScratch({
+/**
+ * 미리듣기 재생 — 열리면(isEnabled) 0.1초 뒤 틀고, 끝나기 fadeOutSeconds초 전부터 볼륨을 줄여 멈춘다.
+ * 닫히면 0.5초 페이드아웃, 탭이 가려지면 바로 멈춘다
+ */
+function usePreviewAudio({
   src,
   isEnabled,
-  scratchDuration = 2,
-}: UseAudioScratchOptions) {
+  fadeOutSeconds = 2,
+}: UsePreviewAudioOptions) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const isFadingRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
@@ -37,7 +42,6 @@ function useAudioScratch({
     audio.pause();
     audio.currentTime = 0;
     audio.volume = 1.0; // 볼륨 원복
-    // playbackRate는 건드리지 않음 (기본 1.0 유지)
 
     isFadingRef.current = false;
     setIsPlaying(false);
@@ -45,10 +49,10 @@ function useAudioScratch({
   }, []);
 
   /**
-   * 페이드아웃 효과 적용 애니메이션 (기존 스크래치 대체)
+   * 볼륨을 duration초 동안 0으로 줄인 뒤 멈춘다
    */
   const applyFadeOutEffect = useCallback(
-    (duration = scratchDuration) => {
+    (duration = fadeOutSeconds) => {
       const audio = audioRef.current;
       if (!audio) return;
 
@@ -78,7 +82,7 @@ function useAudioScratch({
 
       animationFrameRef.current = requestAnimationFrame(animate);
     },
-    [scratchDuration, stopAndReset],
+    [fadeOutSeconds, stopAndReset],
   );
 
   /**
@@ -92,11 +96,11 @@ function useAudioScratch({
     const timeRemaining = audio.duration - audio.currentTime;
 
     // 종료 N초 전 페이드아웃 시작
-    if (timeRemaining <= scratchDuration && timeRemaining > 0) {
+    if (timeRemaining <= fadeOutSeconds && timeRemaining > 0) {
       isFadingRef.current = true;
-      applyFadeOutEffect(scratchDuration);
+      applyFadeOutEffect(fadeOutSeconds);
     }
-  }, [scratchDuration, applyFadeOutEffect]);
+  }, [fadeOutSeconds, applyFadeOutEffect]);
 
   // 탭 전환(화면 가림) 감지 -> 즉시 정지
   useEffect(() => {
@@ -216,4 +220,4 @@ function useAudioScratch({
   };
 }
 
-export default useAudioScratch;
+export default usePreviewAudio;

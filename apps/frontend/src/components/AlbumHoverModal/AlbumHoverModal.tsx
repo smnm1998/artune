@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoPlayCircle, IoWarning } from 'react-icons/io5';
-import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
 import PreviewSource from '@/components/PreviewSource/PreviewSource';
 import { Track } from '@/types/track';
 import {
@@ -21,10 +21,10 @@ interface AlbumHoverModalProps {
 function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
   const hasPreviewUrl = !!album.preview_url?.trim();
 
-  const { audioRef, isPlaying, error } = useAudioScratch({
+  const { audioRef, isPlaying, error } = usePreviewAudio({
     src: album.preview_url ?? undefined,
     isEnabled: isOpen && hasPreviewUrl,
-    scratchDuration: 2,
+    fadeOutSeconds: 2,
   });
 
   const artistNames = album.artists.map((artist) => artist.name).join(', ');

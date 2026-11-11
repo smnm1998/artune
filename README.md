@@ -186,7 +186,7 @@ artune/
 │   └── frontend/                   # React Client
 │       └── src/
 │           ├── components/         # AlbumCard · AlbumGrid · AlbumHoverModal · MobilePlayerModal · PreviewSource 등
-│           ├── hooks/              # useAudioScratch · useMediaQuery · useHover 등
+│           ├── hooks/              # usePreviewAudio · useMediaQuery · useHover 등
 │           ├── stores/             # Zustand Store (요청 · 취소 · 결과)
 │           ├── api/                # POST 스트림 읽기 (SSE 형식)
 │           ├── utils/              # 본 곡 이력(localStorage) · 입력 검증
@@ -244,7 +244,7 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 
 ### 4. 오디오 UX 디테일 (HTMLAudioElement & Interaction)
 
-- 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`useAudioScratch`)을 구현했습니다.
+- 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`usePreviewAudio`)을 구현했습니다.
 - `requestAnimationFrame`으로 프레임마다 볼륨을 줄여 페이드아웃한 뒤 멈춥니다. 호버를 풀면 0.5초로 짧게 줄입니다.
 - 탭이 가려지면 바로 멈추고, 이벤트 리스너와 타이머를 정리합니다.
 

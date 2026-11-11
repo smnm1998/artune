@@ -227,7 +227,7 @@ if (response.data?.error) {
 | 응답 시간 | 11.0s | **9.4s** |
 
 > ⚠️ 측정 조건: 2026-08-14 로컬, 동일 4개 감정을 12초 간격으로 연타하는 스트레스 조건. 콜드 단발 요청이 아니다.
-> 목표는 모드당 10곡이라, 이건 목표 달성이 아니라 개선이다. 원본 로그: [measurements/2026-08-14-early-stop.log](../measurements/2026-08-14-early-stop.log)
+> 목표는 모드당 10곡이라, 이건 목표 달성이 아니라 개선이다. 원본 로그: [measurements/2026-08-14-early-stop/early-stop.log](../measurements/2026-08-14-early-stop/early-stop.log)
 
 ---
 

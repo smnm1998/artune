@@ -217,7 +217,7 @@ CLAUDE.md 로드맵의 "DTO 타입 정의로 프론트-백 응답 계약 명확�
 
 아티스트 기반 추천은 무드 판단이 아티스트에서 끝나고 곡 선택은 iTunes 인기곡에 맡겨져서
 곡의 분위기가 감정과 어긋났다(RADWIMPS → 발라드). 그래서 LLM이 모드당 (아티스트, 곡) 30쌍을
-직접 지정하고 iTunes는 해석만 하는 구조를 구현해 실측했다. 원본: `measurements/2026-07-22-track-curation.log`
+직접 지정하고 iTunes는 해석만 하는 구조를 구현해 실측했다. 원본: `measurements/2026-07-22-track-curation/track-curation.log`
 
 | 항목 | 직전(아티스트 방식) | A안 |
 |---|---|---|
@@ -234,7 +234,7 @@ CLAUDE.md 로드맵의 "DTO 타입 정의로 프론트-백 응답 계약 명확�
 ## 15. 과잉 해석 self-throttle 진단과 조기 종료 (2026-08-14)
 
 Last.fm 파이프라인을 서버 실동작으로 실측하다 연속 요청에서 수율이 무너지는 현상을 발견했다.
-원본: `measurements/2026-08-14-early-stop.log`
+원본: `measurements/2026-08-14-early-stop/early-stop.log`
 
 **측정 조건**: 로컬(`node dist/main`, PORT=3100), `POST /api/emotion/analyze`,
 동일 4감정(기쁨·고독·분노·중립)을 **12초 간격으로 연속 요청**하는 스트레스 조건. 콜드 단발 요청이 아니다.

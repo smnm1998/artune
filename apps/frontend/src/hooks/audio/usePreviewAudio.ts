@@ -164,6 +164,8 @@ function usePreviewAudio({
 
         const handleCanPlay = () => {
           if (document.hidden) return;
+          // 한 번 열면 한 번만 튼다 — 끝나고 되감으면(currentTime = 0) 브라우저가 canplay를 다시 보내, 남겨 두면 처음부터 끝없이 반복된다
+          audio.removeEventListener('canplay', handleCanPlay);
           audio
             .play()
             .then(() => {

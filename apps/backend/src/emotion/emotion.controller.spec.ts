@@ -18,7 +18,7 @@ describe('EmotionController', () => {
     emotionLabel: '기쁨',
     description: '즐거운 하루였군요.',
     crisis: false,
-    artwork: { url: '/artwork/joy.png', prompt: 'test' },
+    artwork: { url: '/artwork/joy.png' },
     playlists: {
       immerse: { modeLabel: '감정 심취', description: 'd', tracks: [] },
       soothe: { modeLabel: '감정 완화', description: 'd', tracks: [] },

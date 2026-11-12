@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DalleService } from './dalle.service';
+import { EMOTIONS } from '../emotion/constants/emotions.constant';
 
 describe('DalleService', () => {
   let service: DalleService;
@@ -12,51 +15,33 @@ describe('DalleService', () => {
     service = moduleRef.get(DalleService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  describe('getArtwork', () => {
+    it('감정에 매핑된 정적 이미지 주소를 돌려준다 (외부 호출 없음)', () => {
+      expect(service.getArtwork('joy')).toEqual({ url: '/artwork/joy.png' });
+    });
+
+    it('모든 감정의 이미지가 프론트 public/에 실제로 있다', () => {
+      const publicDir = join(__dirname, '../../../frontend/public');
+      const missing = EMOTIONS.filter(
+        (emotion) =>
+          !existsSync(join(publicDir, service.getArtwork(emotion).url)),
+      );
+      expect(missing).toEqual([]);
+    });
   });
 
-  describe('generateDessertImage', () => {
-    it('감정에 매핑된 정적 이미지와 프롬프트를 반환해야 한다.', async () => {
-      // When
-      const result = await service.generateDessertImage('joy', '기쁨');
-
-      // Then — API 호출 없이 정적 매핑 사용 (비용 절약 정책)
-      expect(result.imageUrl).toBe('/artwork/joy.png');
-      expect(result.prompt).toContain('pixel art');
-      expect(result.prompt).toContain('기쁨');
+  describe('createDessertPrompt (재가동용)', () => {
+    it('감정 라벨과 감정별 디저트 분위기가 들어간다', () => {
+      const prompt = service.createDessertPrompt('joy', '기쁨');
+      expect(prompt).toContain('pixel art');
+      expect(prompt).toContain('기쁨 (joy)');
+      expect(prompt).toContain('bright and colorful');
     });
 
-    it('매핑에 없는 감정은 플레이스홀더 이미지를 반환해야 한다.', async () => {
-      const result = await service.generateDessertImage('unknown', '알수없음');
-
-      expect(result.imageUrl).toContain('placeholder');
-    });
-
-    it('빈 감정이 입력되면 에러를 던져야 한다.', async () => {
-      await expect(service.generateDessertImage('', '기쁨')).rejects.toThrow(
-        '감정 정보가 필요합니다.',
+    it('분위기가 없는 감정은 기본 문구를 쓴다', () => {
+      expect(service.createDessertPrompt('dreamy', '몽환')).toContain(
+        'delightful and appealing',
       );
-    });
-
-    it('빈 감정 라벨이 입력되면 에러를 던져야 한다.', async () => {
-      await expect(service.generateDessertImage('joy', '')).rejects.toThrow(
-        '감정 라벨이 필요합니다.',
-      );
-    });
-
-    it('감정별 스타일이 프롬프트에 반영되어야 한다.', async () => {
-      // 기쁨 → bright/colorful/sweet 계열
-      const joyResult = await service.generateDessertImage('joy', '기쁨');
-      expect(joyResult.prompt).toMatch(/bright|colorful|sweet/i);
-
-      // 슬픔 → warm/comfort/soft 계열
-      const sadResult = await service.generateDessertImage('sadness', '슬픔');
-      expect(sadResult.prompt).toMatch(/warm|comfort|soft/i);
-
-      // 스타일 미정의 감정 → 기본 스타일
-      const dreamyResult = await service.generateDessertImage('dreamy', '몽환');
-      expect(dreamyResult.prompt).toMatch(/delightful and appealing/i);
     });
   });
 });

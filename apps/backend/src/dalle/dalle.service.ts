@@ -1,89 +1,32 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import type { Artwork } from '@artune/shared-types';
+import type { Emotion } from '../emotion/constants/emotions.constant';
+import { ARTWORK_URLS } from './artwork.constant';
 
+/** DALL·E 프롬프트에 넣는 감정별 디저트 분위기 — 없는 감정은 기본 문구 */
+const DESSERT_STYLES: Partial<Record<Emotion, string>> = {
+  joy: 'bright and colorful with sweet toppings',
+  sadness: 'warm and comforting with soft textures',
+  anger: 'bold and spicy with intense flavors',
+  fear: 'mysterious and dark with surprising elements',
+  surprise: 'vibrant and unexpected with unique decorations',
+  neutral: 'balanced and harmonious with classic elements',
+};
+
+/**
+ * 감정별 아트워크 — 지금은 미리 만든 정적 이미지를 돌려준다.
+ * 요청마다 DALL·E로 그리던 것을 비용 때문에 멈췄다. 다시 켜면 getArtwork에서 createDessertPrompt로 그린다
+ */
 @Injectable()
 export class DalleService {
-  /**
-   * 감정을 기반으로 디저트 이미지를 생성합니다.
-   * LLM 직접 선곡(R2)에는 장르가 없어 장르를 받지 않는다 — 이미지는 감정별 정적 매핑이다
-   *
-   * @param {string} emotion - 감정 키 (예: 'joy')
-   * @param {string} emotionLabel - 감정 한글 라벨 (예: '기쁨')
-   * @returns {Promise<{imageUrl: string, prompt: string}>} 생성된 이미지 URL과 사용된 프롬프트
-   */
-  async generateDessertImage(emotion, emotionLabel) {
-    // 유효성 검사
-    this.validateParameters(emotion, emotionLabel);
-
-    // 프롬프트 생성 (실제 생성은 안 하더라도 로그나 디버깅용으로 남겨둠)
-    const prompt = this.createDessertPrompt(emotion, emotionLabel);
-
-    // DALL-E API 호출 대신 정적 이미지 매핑 사용
-    // 이미지는 apps/frontend/public/artwork/ 폴더에 저장되어 있어야 합니다.
-    const staticImages = {
-      joy: '/artwork/joy.png',
-      sadness: '/artwork/sadness.png',
-      anger: '/artwork/anger.png',
-      fear: '/artwork/fear.png',
-      surprise: '/artwork/surprise.png',
-      neutral: '/artwork/neutral.png',
-      disgust: '/artwork/disgust.png',
-      sentimental: '/artwork/sentimental.png',
-      excited: '/artwork/excited.png',
-      lonely: '/artwork/lonely.png',
-      dreamy: '/artwork/dreamy.png',
-      confident: '/artwork/confident.png',
-      romance: '/artwork/romance.png',
-    };
-
-    // 해당 감정의 이미지가 없으면 플레이스홀더 이미지 반환
-    const imageUrl =
-      staticImages[emotion] ||
-      'https://via.placeholder.com/1024x1024?text=Default+Artwork';
-
-    // API 호출 비용 절약을 위해 바로 리턴
-    return {
-      imageUrl: imageUrl,
-      prompt: prompt,
-    };
+  /** 감정별 정적 이미지 — 외부 호출 없음 */
+  getArtwork(emotion: Emotion): Artwork {
+    return { url: ARTWORK_URLS[emotion] };
   }
 
-  /**
-   * 입력 파라미터 유효성을 검사합니다.
-   *
-   * @param {string} emotion - 감정 키
-   * @param {string} emotionLabel - 감정 라벨
-   * @throws {BadRequestException} 유효하지 않은 파라미터가 있을 경우
-   */
-  validateParameters(emotion, emotionLabel) {
-    if (!emotion || emotion.trim() === '') {
-      throw new BadRequestException('감정 정보가 필요합니다.');
-    }
-
-    if (!emotionLabel || emotionLabel.trim() === '') {
-      throw new BadRequestException('감정 라벨이 필요합니다.');
-    }
-  }
-
-  /**
-   * 감정을 기반으로 DALL-E 프롬프트를 생성합니다.
-   *
-   * @param {string} emotion - 감정 키
-   * @param {string} emotionLabel - 감정 한글 라벨
-   * @returns {string} 생성된 프롬프트
-   */
-  createDessertPrompt(emotion, emotionLabel) {
-    // 감정별 디저트 스타일 매핑
-    const emotionStyles = {
-      joy: 'bright and colorful with sweet toppings',
-      sadness: 'warm and comforting with soft textures',
-      anger: 'bold and spicy with intense flavors',
-      fear: 'mysterious and dark with surprising elements',
-      surprise: 'vibrant and unexpected with unique decorations',
-      disgust: 'unusual and exotic with rare ingredients',
-      neutral: 'balanced and harmonious with classic elements',
-    };
-
-    const style = emotionStyles[emotion] || 'delightful and appealing';
+  /** DALL·E 프롬프트 — 지금은 부르는 곳이 없다 (재가동할 때 getArtwork에서 쓴다) */
+  createDessertPrompt(emotion: Emotion, emotionLabel: string): string {
+    const style = DESSERT_STYLES[emotion] ?? 'delightful and appealing';
 
     return `A minimalist pixel art illustration with EXACTLY ONE BEVERAGE (drink) and EXACTLY ONE DESSERT (cake, pastry, or sweet treat).
       MANDATORY: The image MUST contain both a drink and a dessert item, no exceptions.

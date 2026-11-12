@@ -43,9 +43,9 @@ export interface Playlist {
   tracks: Track[];
 }
 
+/** 감정별 아트워크 — 지금은 프론트 public/artwork/의 정적 이미지 */
 export interface Artwork {
   url: string;
-  prompt: string;
 }
 
 /** POST /api/emotion/analyze 요청 본문 */

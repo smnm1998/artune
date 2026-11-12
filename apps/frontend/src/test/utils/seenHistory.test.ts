@@ -24,7 +24,7 @@ const response = (immerse: string[], soothe: string[]): EmotionResponse => ({
   emotionLabel: '',
   description: '',
   crisis: false,
-  artwork: { url: '', prompt: '' },
+  artwork: { url: '' },
   playlists: {
     immerse: { modeLabel: '', description: '', tracks: immerse.map(track) },
     soothe: { modeLabel: '', description: '', tracks: soothe.map(track) },

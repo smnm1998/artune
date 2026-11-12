@@ -29,8 +29,7 @@ export interface StreamHandlers {
 }
 
 /**
- * Emotion Service - Orchestrator
- * OpenAI, iTunes, DALLE 서비스를 조합하여 감정 기반 추천 시스템 구현
+ * 감정 분석 + 추천 — OpenAI 선곡을 받아 Music으로 곡을 해석하고, Dalle의 감정별 아트워크와 함께 응답을 만든다
  */
 @Injectable()
 export class EmotionService {
@@ -90,7 +89,6 @@ export class EmotionService {
     emotion: PickResult,
     immerseRecommendations: ServedTrack[],
     sootheRecommendations: ServedTrack[],
-    dessertImage,
   ): EmotionResponse {
     const toTracks = (served: ServedTrack[]) =>
       served.map(({ track, key }) => mapItunesTrackToFrontend(track, key));
@@ -98,10 +96,7 @@ export class EmotionService {
       emotionLabel: emotion.emotionLabel,
       description: emotion.description,
       crisis: emotion.crisis,
-      artwork: {
-        url: dessertImage.imageUrl,
-        prompt: dessertImage.prompt,
-      },
+      artwork: this.dalleService.getArtwork(emotion.emotion),
       playlists: {
         immerse: {
           modeLabel: '감정 심취',
@@ -134,7 +129,6 @@ export class EmotionService {
    * - meta: 감정·공감 문구가 써지면(곡보다 먼저) 아트워크와 함께 한 번 — 화면 머리말
    * - track: 모드별로 고른 곡이 KR 표기까지 끝날 때마다, 최종 순서대로
    * - 진행률: 시작 0 → 분석 10 → meta 30 → 곡마다 올라 95 → 끝 100
-   * - 보내는 순서: 아트워크 매핑이 비동기라 이벤트를 한 줄로 이어 붙여 meta → 곡 순서를 지킨다
    * @throws {BadRequestException} 빈 글이거나 상한을 넘으면 — 아무것도 보내기 전에
    */
   async analyzeStream(
@@ -150,40 +144,27 @@ export class EmotionService {
     EmotionService.assertText(text);
     const history = EmotionService.parseHistory(seen);
     const t0 = Date.now();
-    let chain = Promise.resolve();
-    const emit = (send: () => void | Promise<void>) => {
-      chain = chain.then(send);
-    };
-    emit(() => onProgress(0, '감정 분석을 시작합니다...'));
-    emit(() => onProgress(10, '감정을 분석하고 있어요...'));
+    onProgress(0, '감정 분석을 시작합니다...');
+    onProgress(10, '감정을 분석하고 있어요...');
 
     // meta: 감정이 정해지고 공감 문구가 끝나면(또는 첫 곡이 오면) 한 번
     const fields: Partial<
       Pick<PickResult, 'emotion' | 'crisis' | 'description'>
     > = {};
-    let dessert: ReturnType<DalleService['generateDessertImage']> | null = null;
     let tMeta: number | null = null;
     const sendMeta = () => {
-      if (dessert || !fields.emotion) return;
+      if (tMeta != null || !fields.emotion) return;
       tMeta = Date.now();
-      const emotion = fields.emotion;
-      const emotionLabel = EMOTION_LABELS[emotion];
-      const image = (dessert = this.dalleService.generateDessertImage(
-        emotion,
-        emotionLabel,
-      ));
       const head = {
-        emotion,
-        emotionLabel,
+        emotion: fields.emotion,
+        emotionLabel: EMOTION_LABELS[fields.emotion],
         crisis: fields.crisis ?? false,
         description: fields.description ?? '',
         immerse: [],
         soothe: [],
       };
-      emit(async () => {
-        onMeta(this.buildResponse(head, [], [], await image));
-        onProgress(30, '어울리는 곡을 찾고 있어요...');
-      });
+      onMeta(this.buildResponse(head, [], []));
+      onProgress(30, '어울리는 곡을 찾고 있어요...');
     };
 
     // 곡: AI가 쓰는 대로 모드별 큐로 → 모드별 해석이 고른 곡을 내보낸다
@@ -203,11 +184,8 @@ export class EmotionService {
           onTrack: ({ track, key }, index) => {
             firstTrackAt ??= Date.now();
             const progress = Math.min(95, 30 + Math.round((65 * ++sent) / 20));
-            const mapped = mapItunesTrackToFrontend(track, key);
-            emit(() => {
-              onTrack(mode, index, mapped);
-              onProgress(progress, '곡을 찾았어요...');
-            });
+            onTrack(mode, index, mapItunesTrackToFrontend(track, key));
+            onProgress(progress, '곡을 찾았어요...');
           },
         },
       );
@@ -241,10 +219,9 @@ export class EmotionService {
     queues.immerse.end();
     queues.soothe.end();
     fields.emotion ??= picked.emotion;
-    sendMeta(); // 곡·공감 문구 없이 끝난 경우에도 아트워크는 정한다
+    sendMeta(); // 곡·공감 문구 없이 끝난 경우에도 머리말은 보낸다
 
     const [immerseServed, sootheServed] = await Promise.all(serving);
-    const dessertImage = await dessert!;
     const tEnd = Date.now();
     this.logger.log(
       `[timing] stream total=${tEnd - t0}ms openai=${tOpenAI - t0}ms ` +
@@ -252,14 +229,8 @@ export class EmotionService {
         `tracks=${immerseServed.length}/${sootheServed.length} ` +
         `seen=${history.immerse.length}/${history.soothe.length}`,
     );
-    emit(() => onProgress(100, '완료!'));
-    await chain;
+    onProgress(100, '완료!');
 
-    return this.buildResponse(
-      picked,
-      immerseServed,
-      sootheServed,
-      dessertImage,
-    );
+    return this.buildResponse(picked, immerseServed, sootheServed);
   }
 }

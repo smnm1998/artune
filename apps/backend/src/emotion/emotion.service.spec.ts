@@ -55,7 +55,6 @@ describe('EmotionService', () => {
   let service: EmotionService;
   let openAIService: jest.Mocked<OpenAIService>;
   let musicService: jest.Mocked<MusicService>;
-  let dalleService: jest.Mocked<DalleService>;
 
   const mockPicks: PickResult = {
     emotion: 'joy',
@@ -72,11 +71,6 @@ describe('EmotionService', () => {
       { artist: 'LANY', title: 'ILYSB', region: 'pop' },
       { artist: 'Fujii Kaze', title: 'Shinunoga E-Wa', region: 'jpop' },
     ],
-  };
-
-  const mockDessertImage = {
-    imageUrl: 'https://example.com/dessert.png',
-    prompt: 'A pixel_art style dessert...',
   };
 
   /** AI가 루트 값 → 심취 곡 → 완화 곡 순서로 쓰는 흉내 */
@@ -127,21 +121,16 @@ describe('EmotionService', () => {
         EmotionService,
         { provide: OpenAIService, useValue: { pickSongsStream: jest.fn() } },
         { provide: MusicService, useValue: { servePicksStream: jest.fn() } },
-        {
-          provide: DalleService,
-          useValue: { generateDessertImage: jest.fn() },
-        },
+        DalleService, // 외부 호출 없는 정적 매핑이라 실제 것을 쓴다
       ],
     }).compile();
 
     service = moduleRef.get(EmotionService);
     openAIService = moduleRef.get(OpenAIService);
     musicService = moduleRef.get(MusicService);
-    dalleService = moduleRef.get(DalleService);
 
     writePicks();
     serveAll();
-    dalleService.generateDessertImage.mockResolvedValue(mockDessertImage);
   });
 
   afterEach(() => {
@@ -149,7 +138,7 @@ describe('EmotionService', () => {
   });
 
   describe('analyzeAndRecommend', () => {
-    it('스트리밍 파이프라인을 이벤트 없이 돌려 감정, 곡 키가 붙은 두 모드의 곡, 아트워크를 돌려준다', async () => {
+    it('스트리밍 파이프라인을 이벤트 없이 돌려 감정, 곡 키가 붙은 두 모드의 곡, 감정별 아트워크를 돌려준다', async () => {
       const text = '오늘 정말 기분이 좋아!';
       const result = await service.analyzeAndRecommend(text);
 
@@ -157,10 +146,7 @@ describe('EmotionService', () => {
         emotionLabel: '기쁨',
         description: '매우 긍정적인 감정',
         crisis: false,
-        artwork: {
-          url: 'https://example.com/dessert.png',
-          prompt: 'A pixel_art style dessert...',
-        },
+        artwork: { url: '/artwork/joy.png' },
         playlists: {
           immerse: {
             modeLabel: '감정 심취',
@@ -181,10 +167,6 @@ describe('EmotionService', () => {
       expect(openAIService.pickSongsStream).toHaveBeenCalledWith(
         text,
         expect.anything(),
-      );
-      expect(dalleService.generateDessertImage).toHaveBeenCalledWith(
-        'joy',
-        '기쁨',
       );
     });
 
@@ -312,7 +294,7 @@ describe('EmotionService', () => {
       expect(progress.at(-1)).toBe(100);
       expect(progress).toEqual([...progress].sort((a, b) => a - b));
       expect(result.emotionLabel).toBe('기쁨');
-      expect(result.artwork.url).toBe(mockDessertImage.imageUrl);
+      expect(result.artwork.url).toBe('/artwork/joy.png');
     });
 
     it('곡을 AI가 쓴 모드로 쓴 순서대로 넘기고, 모드별 이력과 취소 신호를 넘긴다', async () => {
@@ -410,24 +392,6 @@ describe('EmotionService', () => {
       musicService.servePicksStream.mockRejectedValue(failure);
 
       await expect(service.analyzeStream('행복했어')).rejects.toBe(failure);
-    });
-
-    it('아트워크 매핑이 늦게 끝나도 meta가 곡보다 먼저 나간다', async () => {
-      dalleService.generateDessertImage.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve(mockDessertImage), 20),
-          ),
-      );
-      const { events, handlers } = record();
-
-      await service.analyzeStream('행복했어', {}, handlers);
-
-      const kinds = events
-        .filter((e) => e.type !== 'progress')
-        .map((e) => e.type);
-      expect(kinds[0]).toBe('meta');
-      expect(kinds.filter((k) => k === 'track')).toHaveLength(6);
     });
   });
 });

@@ -1,7 +1,7 @@
 import * as styles from './ArtworkDisplay.styles';
 
 interface ArtworkDisplayProps {
-  artwork: { url: string; prompt: string };
+  artwork: { url: string };
   emotionLabel: string;
   description: string;
 }

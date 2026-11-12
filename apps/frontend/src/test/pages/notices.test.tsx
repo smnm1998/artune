@@ -10,7 +10,7 @@ const result: EmotionResponse = {
   emotionLabel: '슬픔',
   description: '많이 지친 하루였네요.',
   crisis: false,
-  artwork: { url: '/artwork/sadness.png', prompt: '' },
+  artwork: { url: '/artwork/sadness.png' },
   playlists: {
     immerse: { modeLabel: '감정 심취', description: '', tracks: [] },
     soothe: { modeLabel: '감정 완화', description: '', tracks: [] },

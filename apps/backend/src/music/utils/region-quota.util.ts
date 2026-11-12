@@ -23,8 +23,8 @@ export const FRESH_BORROW_LIMIT = 1;
 
 /**
  * 지역 쿼터(기본 6:3:1)로 최종 목록 선정 — 후보를 모두 해석한 뒤 고르는 기준 구현.
- * 운영에서는 부르지 않는다(R4 이후). 운영은 selectByRegionQuotaLazily이고, 이 함수는 그 정답 기준(테스트 오라클)이다.
- * 규칙을 한 번에 읽히게 두고, 게으른 함수가 같은 결과를 내는지 무작위 입력으로 대조한다.
+ * 운영에서는 부르지 않는다. 운영은 selectByRegionQuotaStream이고, 이 함수는 규칙의 정답 기준(테스트 오라클)이다.
+ * 규칙을 한 번에 읽히게 두고, 게으른 판이 같은 결과를 내는지 무작위 입력으로 대조한다 (스트리밍 판은 게으른 판과 대조).
  * - 각 지역에서 match 내림차순으로 쿼터만큼 채움
  * - 쿼터를 못 채우면 부족분을 다른 지역 잔여분으로 보충 (곡 수 우선 = A안)
  * - 아티스트 중복 제거 (1아티스트 1곡) — 스토어마다 표기가 달라(DAY6 ↔ 데이식스) artistId로 비교
@@ -98,8 +98,6 @@ export interface LazyQuotaOptions<C> {
   isFresh?: (candidate: C) => boolean;
   /** 동시에 해석하는 최대 후보 수 */
   concurrency?: number;
-  /** 해석 묶음 사이에 기다린다(iTunes 몰아 부르기 완화). 첫 묶음 앞에서는 부르지 않는다 */
-  pause?: () => Promise<void>;
 }
 
 export interface Selected<C> {
@@ -146,6 +144,7 @@ function createSelection<C extends QuotaCandidate>(
 
 /**
  * selectByRegionQuota와 같은 규칙으로 고르되, 후보를 미리 다 해석하지 않고 규칙이 그 후보를 볼 때 해석한다.
+ * 운영에서는 부르지 않는다 — 스트리밍 판이 같은 결과·같은 후보만 해석하는지의 기준이고, 측정 재생(probe-picks)이 dist에서 쓴다.
  * - 결과는 "후보를 전부 해석한 뒤 selectByRegionQuota"와 같다(테스트로 묶음). 해석 실패(null)는 없는 후보로 본다
  * - 남은 자리 수만큼(최대 concurrency) 묶어 동시에 해석한다. 자리보다 많이 묶지 않으므로
  *   하나씩 해석할 때와 같은 후보만 해석한다(11/6 측정 기준 요청당 평균 20.2곡, 전부 해석하면 27곡)
@@ -159,7 +158,6 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
     quota = REGION_QUOTA,
     isFresh = () => true,
     concurrency = 3,
-    pause = async () => {},
   }: LazyQuotaOptions<C> = {},
 ): Promise<Selected<C>[]> {
   const sorted = [...candidates].sort((a, b) => b.match - a.match);
@@ -167,13 +165,9 @@ export async function selectByRegionQuotaLazily<C extends QuotaCandidate>(
   const stale = sorted.filter((c) => !isFresh(c));
 
   const resolutions = new Map<C, Promise<ITunesTrack | null>>();
-  let batches = 0;
-  const resolveBatch = async (batch: C[]) => {
-    const pending = batch.filter((c) => !resolutions.has(c));
-    if (pending.length > 0) {
-      if (batches++ > 0) await pause();
-      for (const c of pending) resolutions.set(c, resolve(c));
-    }
+  const resolveBatch = (batch: C[]) => {
+    for (const c of batch)
+      if (!resolutions.has(c)) resolutions.set(c, resolve(c));
     return Promise.all(batch.map((c) => resolutions.get(c)!));
   };
 

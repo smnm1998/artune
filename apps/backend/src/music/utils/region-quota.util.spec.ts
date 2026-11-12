@@ -352,10 +352,9 @@ describe('selectByRegionQuotaLazily — 규칙이 볼 때만 해석', () => {
     expect(resolve).toHaveBeenCalledTimes(10);
   });
 
-  it('한 번에 concurrency개까지만 동시에 해석하고, 묶음 사이에만 쉰다', async () => {
+  it('한 번에 concurrency개까지만 동시에 해석한다', async () => {
     let inFlight = 0;
     let most = 0;
-    const pause = jest.fn(async () => {});
     await selectByRegionQuotaLazily(
       soothe15(),
       async (p) => {
@@ -364,12 +363,10 @@ describe('selectByRegionQuotaLazily — 규칙이 볼 때만 해석', () => {
         inFlight--;
         return p.found;
       },
-      { concurrency: 3, pause },
+      { concurrency: 3 },
     );
 
     expect(most).toBe(3);
-    // 묶음: 한국 3 · 3, 팝 3, 일본 1 → 4묶음, 사이 3번
-    expect(pause).toHaveBeenCalledTimes(3);
   });
 });
 

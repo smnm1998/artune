@@ -136,8 +136,6 @@ sequenceDiagram
 ```env
 PORT=3000
 OPENAI_API_KEY=your_openai_key
-# 선택: 추가로 허용할 프론트엔드 주소 (배포 주소와 localhost·사설 IP는 기본 허용)
-# FRONTEND_URL=https://your-frontend.example.com
 ```
 
 #### Frontend (`apps/frontend/.env`)

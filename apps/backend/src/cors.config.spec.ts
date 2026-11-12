@@ -22,13 +22,6 @@ describe('isAllowedOrigin', () => {
     expect(isAllowedOrigin(origin)).toBe(false);
   });
 
-  it('FRONTEND_URL로 준 주소를 더 허용한다', () => {
-    const preview = 'https://artune-preview.vercel.app';
-
-    expect(isAllowedOrigin(preview)).toBe(false);
-    expect(isAllowedOrigin(preview, [preview])).toBe(true);
-  });
-
   it('Origin이 없는 요청(curl·서버 간 호출)은 통과한다 — CORS는 브라우저만 지킨다', () => {
     expect(isAllowedOrigin(undefined)).toBe(true);
   });

@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
-/** 배포 프론트 — 다른 배포 주소(미리보기 등)는 FRONTEND_URL로 더한다 */
+/** 배포 프론트 — 도메인을 새로 붙이면 여기에 더한다 */
 const DEPLOYED_ORIGINS = ['https://om-artune.vercel.app'];
 
 /**
@@ -15,16 +15,9 @@ const LOCAL_ORIGIN =
  * 이 주소의 페이지가 API를 불러도 되는지 — 등록된 주소와 로컬·사설 IP만, 나머지는 환경과 상관없이 거부.
  * Origin이 없는 요청(curl·측정 하네스·서버 간 호출)은 통과한다 — CORS는 브라우저만 지키고, 남용은 요청 제한이 막는다
  */
-export function isAllowedOrigin(
-  origin: string | undefined,
-  extraOrigins: readonly string[] = [],
-): boolean {
+export function isAllowedOrigin(origin: string | undefined): boolean {
   if (!origin) return true;
-  return (
-    DEPLOYED_ORIGINS.includes(origin) ||
-    extraOrigins.includes(origin) ||
-    LOCAL_ORIGIN.test(origin)
-  );
+  return DEPLOYED_ORIGINS.includes(origin) || LOCAL_ORIGIN.test(origin);
 }
 
 const logger = new Logger('CORS');
@@ -32,8 +25,7 @@ const logger = new Logger('CORS');
 /** 프론트는 POST 두 경로에 JSON 본문 + 스트림 Accept만 보낸다 (쿠키·인증 헤더 없음) */
 export const CORS_OPTIONS: CorsOptions = {
   origin: (origin, callback) => {
-    const extra = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [];
-    const allowed = isAllowedOrigin(origin, extra);
+    const allowed = isAllowedOrigin(origin);
     if (!allowed) logger.warn(`등록 안 된 주소 거부: ${origin}`);
     callback(null, allowed);
   },

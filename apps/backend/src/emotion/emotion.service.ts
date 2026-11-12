@@ -14,7 +14,7 @@ import { Emotion, EMOTION_LABELS } from './constants/emotions.constant';
 import { PickedTrack, PickResult } from '../openai/pick-prompt';
 import { AsyncQueue } from './utils/async-queue.util';
 
-/** 요청이 보낸 이력 그대로 — SSE 쿼리는 쉼표로 이은 문자열, POST 본문은 배열 */
+/** 요청 본문이 보낸 이력 그대로 — 형식은 parseSeen이 거른다 */
 export type SeenInput = Partial<Record<PlaylistMode, unknown>>;
 
 /** 스트리밍 파이프라인이 내보내는 것 — 호출 순서가 곧 보내는 순서다 */
@@ -54,15 +54,11 @@ export class EmotionService {
   }
 
   /**
-   * 곡 키 형식(16진수 8자)만 남기고 최근 HISTORY_LIMIT곡으로 자른다.
+   * 배열에서 곡 키 형식(16진수 8자)만 남기고 최근 HISTORY_LIMIT곡으로 자른다.
    * 이력은 순서만 바꾸는 힌트라 형식이 틀린 값은 오류 대신 버린다
    */
   static parseSeen(raw: unknown): string[] {
-    const values = Array.isArray(raw)
-      ? raw
-      : typeof raw === 'string'
-        ? raw.split(',')
-        : [];
+    const values: unknown[] = Array.isArray(raw) ? raw : [];
     return values
       .filter(
         (value): value is string =>
@@ -71,7 +67,7 @@ export class EmotionService {
       .slice(-HISTORY_LIMIT);
   }
 
-  /** 빈 글·상한 초과는 LLM을 부르기 전에 거절한다. 쿼리에 text가 두 번 오면 배열이다 (?text=a&text=b) */
+  /** 빈 글·상한 초과는 LLM을 부르기 전에 거절한다. 본문은 JSON이라 text가 문자열이 아닐 수도 있다 (숫자·배열) */
   private static assertText(text: unknown): asserts text is string {
     if (typeof text !== 'string' || text.trim() === '') {
       throw new BadRequestException('분석할 텍스트가 필요합니다.');
@@ -88,34 +84,6 @@ export class EmotionService {
       immerse: EmotionService.parseSeen(seen.immerse),
       soothe: EmotionService.parseSeen(seen.soothe),
     };
-  }
-
-  /**
-   * 모드 분리도 측정 — immerse/soothe 20곡의 장르 라벨 분포 겹침 (낮을수록 두 모드가 뚜렷)
-   * 인접 무드 감정(기쁨·슬픔)에서 모드가 모호해지는 문제의 정량 지표
-   */
-  private logModeSeparation(emotion, immerseTracks, sootheTracks) {
-    const countLabels = (tracks) => {
-      const counts = new Map<string, number>();
-      for (const track of tracks) {
-        const label = track.primaryGenreName ?? '(none)';
-        counts.set(label, (counts.get(label) ?? 0) + 1);
-      }
-      return counts;
-    };
-
-    const immerseLabels = countLabels(immerseTracks);
-    const sootheLabels = countLabels(sootheTracks);
-    let shared = 0;
-    for (const [label, count] of immerseLabels) {
-      shared += Math.min(count, sootheLabels.get(label) ?? 0);
-    }
-    const base = Math.min(immerseTracks.length, sootheTracks.length);
-    const overlap = base > 0 ? Math.round((shared / base) * 100) : 0;
-
-    this.logger.log(
-      `[mode-separation] emotion=${emotion.emotion} overlap=${overlap}%`,
-    );
   }
 
   private buildResponse(
@@ -150,113 +118,19 @@ export class EmotionService {
   }
 
   /**
-   * SSE 경로(analyzeAndRecommendWithProgress)와 같은 파이프라인을 진행률 콜백 없이 실행한다.
-   * 구현을 하나로 두어 두 경로의 동작이 어긋나지 않게 한다.
-   * @throws {BadRequestException} 빈 텍스트가 입력된 경우
+   * 한 번에 받는 판 (POST /analyze) — 스트리밍 파이프라인을 이벤트 없이 돌려 최종 응답만 돌려준다
+   * @throws {BadRequestException} 빈 글이거나 상한을 넘으면
    */
-  async analyzeAndRecommend(text, seen: SeenInput = {}) {
-    return this.analyzeAndRecommendWithProgress(text, () => {}, seen);
-  }
-
-  /**
-   * @throws {BadRequestException} 빈 텍스트이거나 상한을 넘는 경우
-   *
-   * 추천/이미지 생성은 병렬 처리하되, 진행률은 "완료 카운트 → 마일스톤" 매핑으로
-   * 방출해 어떤 작업이 먼저 끝나도 단조 증가를 보장 (프론트 Math.max 가드와 이중 안전망)
-   * @param seen 이 사람이 모드별로 최근 본 곡 키 — 지우지 않고 화면 순서에서 뒤로 미룬다
-   */
-  async analyzeAndRecommendWithProgress(
-    text,
-    onProgress,
+  analyzeAndRecommend(
+    text: unknown,
     seen: SeenInput = {},
-  ) {
-    EmotionService.assertText(text);
-    const history = EmotionService.parseHistory(seen);
-    const t0 = Date.now();
-
-    // 시작 (0%)
-    onProgress(0, '감정 분석을 시작합니다...');
-
-    // OpenAI로 감정 분석 + 선곡 (10%~30%)
-    onProgress(10, '감정을 분석하고 있어요...');
-    const emotion = await this.openAIService.pickSongs(text);
-    const tOpenAI = Date.now();
-    onProgress(30, '음악 추천을 준비하고 있어요...');
-
-    // 음악 추천 + 디저트 이미지 병렬 처리 (40% -> 95%)
-    onProgress(40, '당신의 감정에 맞는 음악을 찾고 있어요...');
-
-    const milestones: Array<[number, string]> = [
-      [60, '플레이리스트를 만들기 시작했어요...'],
-      [80, '플레이리스트를 만드는 중이에요...'],
-      [95, '특별한 디저트를 준비했어요...'],
-    ];
-    let completedCount = 0;
-    const reportCompletion = () => {
-      const [progress, message] =
-        milestones[Math.min(completedCount, milestones.length - 1)];
-      completedCount++;
-      onProgress(progress, message);
-    };
-    const withProgress = async <T>(promise: Promise<T>): Promise<T> => {
-      const result = await promise;
-      reportCompletion();
-      return result;
-    };
-
-    const [immerseRecommendations, sootheRecommendations, dessertImage] =
-      await Promise.all([
-        withProgress(
-          this.musicService.servePicks(
-            emotion.immerse,
-            'immerse',
-            history.immerse,
-          ),
-        ),
-        withProgress(
-          this.musicService.servePicks(
-            emotion.soothe,
-            'soothe',
-            history.soothe,
-          ),
-        ),
-        withProgress(
-          this.dalleService.generateDessertImage(
-            emotion.emotion,
-            emotion.emotionLabel,
-          ),
-        ),
-      ]);
-    const tEnd = Date.now();
-
-    this.logger.log(
-      `[timing] total=${tEnd - t0}ms ` +
-        `openai=${tOpenAI - t0}ms ` +
-        `parallel_block=${tEnd - tOpenAI}ms ` +
-        `tracks=${immerseRecommendations.length}/${sootheRecommendations.length} ` +
-        `seen=${history.immerse.length}/${history.soothe.length}`,
-    );
-    this.logModeSeparation(
-      emotion,
-      immerseRecommendations.map(({ track }) => track),
-      sootheRecommendations.map(({ track }) => track),
-    );
-
-    // 전체 완료 (100%)
-    onProgress(100, '완료!');
-
-    // 프론트엔드 형식으로 변환 및 반환
-    return this.buildResponse(
-      emotion,
-      immerseRecommendations,
-      sootheRecommendations,
-      dessertImage,
-    );
+  ): Promise<EmotionResponse> {
+    return this.analyzeStream(text, seen);
   }
 
   /**
    * 스트리밍 파이프라인 (POST analyze-stream) — AI가 곡을 쓰는 동안 해석해, 고른 곡을 하나씩 내보낸다.
-   * 최종 응답은 analyzeAndRecommendWithProgress와 같은 모양·같은 곡이다 (모드별 servePicksStream이 servePicks와 같은 결과).
+   * 최종 응답은 보낸 곡을 모드별로 모은 것과 같다 (모드별 servePicksStream이 곡이 다 모인 뒤 고르는 것과 같은 결과).
    * - meta: 감정·공감 문구가 써지면(곡보다 먼저) 아트워크와 함께 한 번 — 화면 머리말
    * - track: 모드별로 고른 곡이 KR 표기까지 끝날 때마다, 최종 순서대로
    * - 진행률: 시작 0 → 분석 10 → meta 30 → 곡마다 올라 95 → 끝 100
@@ -377,11 +251,6 @@ export class EmotionService {
         `meta=${tMeta != null ? tMeta - t0 : -1}ms first_track=${firstTrackAt != null ? firstTrackAt - t0 : -1}ms ` +
         `tracks=${immerseServed.length}/${sootheServed.length} ` +
         `seen=${history.immerse.length}/${history.soothe.length}`,
-    );
-    this.logModeSeparation(
-      picked,
-      immerseServed.map(({ track }) => track),
-      sootheServed.map(({ track }) => track),
     );
     emit(() => onProgress(100, '완료!'));
     await chain;

@@ -39,24 +39,9 @@ export class OpenAIService {
   }
 
   /**
-   * 사용자 글 → 감정·위기 신호·공감 문구 + 모드별 곡 (LLM 직접 선곡, R2)
-   *
-   * @throws {BadRequestException} 텍스트가 비어있을 때
-   * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림·모드 곡이 3곡 미만일 때
-   */
-  async pickSongs(text: string): Promise<PickResult> {
-    this.assertText(text);
-    const result = await this.complete<PickOutput>(
-      buildPickPrompt(),
-      buildPickFormat(),
-      text,
-    );
-    return this.toPickResult(result);
-  }
-
-  /**
-   * pickSongs의 스트리밍 판 — 응답을 조각으로 받으며 완성된 루트 값(감정·위기 신호·공감 문구)과 곡을 바로 넘긴다.
-   * 끝까지 받은 뒤에는 pickSongs와 같은 검증(거절·토큰 한도 잘림·JSON·모드별 3곡)을 거쳐 같은 모양을 돌려준다.
+   * 사용자 글 → 감정·위기 신호·공감 문구 + 모드별 곡 (LLM 직접 선곡, R2).
+   * 응답을 조각으로 받으며 완성된 루트 값(감정·위기 신호·공감 문구)과 곡을 바로 넘긴다.
+   * 끝까지 받은 뒤에는 거절·토큰 한도 잘림·JSON·모드별 3곡을 검증하고 화면 라벨을 붙여 돌려준다.
    * 검증은 끝에서 하므로, 실패하면 그 전에 넘긴 곡이 있을 수 있다(호출한 쪽이 error 이벤트로 알린다).
    * @param signal 취소 — 연결이 끊긴 요청의 생성을 멈춘다 (출력 토큰 비용)
    * @throws {BadRequestException} 텍스트가 비어있을 때
@@ -73,10 +58,7 @@ export class OpenAIService {
     try {
       const response = await axios.post<Readable>(
         this.apiUrl,
-        {
-          ...this.requestBody(buildPickPrompt(), buildPickFormat(), text),
-          stream: true,
-        },
+        this.requestBody(text),
         { headers: this.headers(), responseType: 'stream', signal },
       );
       for await (const data of readSseData(response.data)) {
@@ -118,19 +100,16 @@ export class OpenAIService {
     return { ...result, emotionLabel: EMOTION_LABELS[result.emotion] };
   }
 
-  private requestBody(
-    systemPrompt: string,
-    responseFormat: object,
-    text: string,
-  ) {
+  private requestBody(text: string) {
     return {
       model: OpenAIService.MODEL,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: buildPickPrompt() },
         { role: 'user', content: text },
       ],
-      response_format: responseFormat,
+      response_format: buildPickFormat(),
       reasoning_effort: 'none',
+      stream: true,
     };
   }
 
@@ -165,49 +144,5 @@ export class OpenAIService {
       (body as { error?: { message?: string } } | null)?.error?.message ||
       'OpenAI API 오류';
     return new Error(`OpenAI API 에러 (${status}): ${message}`);
-  }
-
-  /**
-   * Chat Completions 1회 — Structured Outputs(json_schema strict) 응답을 파싱해 돌려준다
-   *
-   * @throws {Error} API 호출 실패·응답 거절·토큰 한도 잘림·JSON 파싱 실패 시
-   */
-  private async complete<T>(
-    systemPrompt: string,
-    responseFormat: object,
-    text: string,
-  ): Promise<T> {
-    try {
-      const response = await axios.post(
-        this.apiUrl,
-        this.requestBody(systemPrompt, responseFormat, text),
-        { headers: this.headers() },
-      );
-
-      // strict 스키마는 형태를 보장하지만, 거절·토큰 한도 잘림은 스키마 밖 결과로 온다
-      const choice = response.data.choices[0];
-      if (choice.message.refusal) {
-        throw new Error(`OpenAI 응답 거절: ${choice.message.refusal}`);
-      }
-      if (choice.finish_reason === 'length') {
-        throw new Error('OpenAI 응답이 토큰 한도에서 잘렸습니다.');
-      }
-      return JSON.parse(choice.message.content) as T;
-    } catch (error) {
-      // JSON 파싱 에러
-      if (error instanceof SyntaxError) {
-        throw new Error('JSON 파싱 실패');
-      }
-
-      // API 호출 에러
-      if (axios.isAxiosError(error) && error.response) {
-        const status = error.response.status;
-        const message =
-          error.response.data?.error?.message || 'OpenAI API 오류';
-        throw new Error(`OpenAI API 에러 (${status}): ${message}`);
-      }
-      // 기타 에러
-      throw error;
-    }
   }
 }

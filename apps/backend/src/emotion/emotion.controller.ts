@@ -4,13 +4,10 @@ import {
   HttpException,
   Logger,
   Post,
-  Query,
   Res,
-  Sse,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import type { EmotionStreamEvent } from '@artune/shared-types';
-import { Observable } from 'rxjs';
 import { EmotionService, SeenInput } from './emotion.service';
 
 /**
@@ -27,6 +24,7 @@ export class EmotionController {
 
   constructor(private readonly emotionService: EmotionService) {}
 
+  /** 한 번에 받는 판 — 스트림과 같은 파이프라인의 최종 응답만 돌려준다 (측정 하네스 · curl용, 프론트는 아래 스트림) */
   @Post('analyze')
   async analyze(@Body('text') text: string, @Body('seen') seen?: SeenInput) {
     return await this.emotionService.analyzeAndRecommend(text, seen);
@@ -36,7 +34,7 @@ export class EmotionController {
    * 감정 분석 + 추천 (POST 스트리밍) — 프론트가 쓰는 경로.
    * 글과 이력을 본문으로 받고, AI가 곡을 쓰는 동안 고른 곡을 하나씩 흘려보낸다 (SSE 형식):
    * progress … → meta(감정·공감 문구·아트워크) → track(곡 하나씩, 모드별 최종 순서) … → complete | error.
-   * GET은 글이 주소에 실려 서버·프록시 로그에 남고 본문을 못 실어 POST로 옮겼다 (GET은 배포 전환이 끝나면 지운다).
+   * 옛 GET(SSE)은 글이 주소에 실려 서버·프록시 로그에 남고 본문을 못 실어 POST로 옮겼고, 전환이 끝나 지웠다(11/12).
    * - 스트림을 열기 전 오류(빈 글·상한 초과)는 일반 HTTP 오류로 응답한다 — 응답 헤더는 첫 이벤트를 보낼 때 연다
    * - 연 뒤의 오류는 error 이벤트로 알린다
    * - 클라이언트가 끊으면 AI 생성과 iTunes 해석을 멈춘다 (보낼 곳 없는 일에 토큰·호출 한도를 쓰지 않게)
@@ -91,70 +89,5 @@ export class EmotionController {
       });
     }
     res.end();
-  }
-
-  /**
-   * 텍스트 감정 분석 및 음악/디저트 추천 API (SSE - 진행률 포함)
-   *
-   * 이벤트 타입:
-   * - progress: { type: 'progress', progress: number, message: string }
-   * - complete: { type: 'complete', data: Object }
-   * - error: { type: 'error', message: string }
-   *
-   * 예시:
-   * GET /emotion/analyze-stream?text=오늘 정말 기분이 좋아!&seenImmerse=1a2b3c4d,5e6f7a8b&seenSoothe=9c0d1e2f
-   * - seenImmerse·seenSoothe: 이 사람이 최근 본 곡 키(쉼표로 이음, 모드별 최근 40곡) — 없어도 된다
-   *
-   * SSE Stream:
-   * data: {"type":"progress","progress":0,"message":"감정 분석을 시작합니다..."}
-   * data: {"type":"progress","progress":10,"message":"감정을 분석하고 있어요..."}
-   * ...
-   * data: {"type":"complete","data":{...}}
-   */
-  @Sse('analyze-stream')
-  analyzeStream(
-    @Query('text') text: string,
-    @Query('seenImmerse') seenImmerse?: string,
-    @Query('seenSoothe') seenSoothe?: string,
-  ) {
-    return new Observable((observer) => {
-      (async () => {
-        try {
-          const result =
-            await this.emotionService.analyzeAndRecommendWithProgress(
-              text,
-              (progress, message) => {
-                observer.next({
-                  data: {
-                    type: 'progress',
-                    progress,
-                    message,
-                  },
-                });
-              },
-              { immerse: seenImmerse, soothe: seenSoothe },
-            );
-
-          observer.next({
-            data: {
-              type: 'complete',
-              data: result,
-            },
-          });
-          observer.complete();
-        } catch (error) {
-          observer.next({
-            data: {
-              type: 'error',
-              message:
-                error instanceof Error
-                  ? error.message
-                  : '감정 분석에 실패했습니다.',
-            },
-          });
-          observer.error(error);
-        }
-      })();
-    });
   }
 }

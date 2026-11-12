@@ -33,7 +33,6 @@ export type PlaylistMode = 'immerse' | 'soothe';
 /**
  * 이 사람이 최근 본 곡 키 — 모드별 최근 40곡(브라우저 localStorage).
  * 서버는 이 곡들을 지우지 않고 화면 순서에서 뒤로 미룬다.
- * SSE 요청에서는 쿼리 seenImmerse·seenSoothe에 쉼표로 이어 보낸다.
  */
 export type SeenHistory = Record<PlaylistMode, string[]>;
 
@@ -55,7 +54,7 @@ export interface AnalyzeRequest {
   seen?: Partial<SeenHistory>;
 }
 
-/** POST /api/emotion/analyze 응답 및 SSE complete 이벤트의 페이로드 */
+/** POST /api/emotion/analyze 응답 및 스트림 complete 이벤트의 페이로드 */
 export interface EmotionResponse {
   emotionLabel: string;
   description: string;
@@ -68,7 +67,7 @@ export interface EmotionResponse {
   };
 }
 
-/* ── 스트림 이벤트 (POST /api/emotion/analyze-stream, SSE 형식 — 전환 기간의 GET도 같은 형식) ── */
+/* ── 스트림 이벤트 (POST /api/emotion/analyze-stream, SSE 형식) ── */
 
 export interface ProgressEvent {
   type: 'progress';

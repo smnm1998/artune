@@ -8,23 +8,6 @@ import { PassThrough, Readable } from 'node:stream';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const mockChatCompletion = (
-  content: string | null,
-  {
-    refusal = null,
-    finishReason = 'stop',
-  }: { refusal?: string | null; finishReason?: string } = {},
-) => ({
-  data: {
-    choices: [
-      {
-        finish_reason: finishReason,
-        message: { role: 'assistant', content, refusal },
-      },
-    ],
-  },
-});
-
 describe('OpenAIService', () => {
   let service: OpenAIService;
 
@@ -46,119 +29,6 @@ describe('OpenAIService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('pickSongs', () => {
-    const track = (region: 'korea' | 'pop' | 'jpop', i: number) => ({
-      artist: `${region} 아티스트${i}`,
-      title: `${region} 곡${i}`,
-      region,
-    });
-    const makePicks = (): PickOutput => ({
-      emotion: 'joy',
-      crisis: false,
-      description: '오늘 하루 정말 행복한 일들이 가득했네요!',
-      immerse: [track('korea', 1), track('pop', 1), track('jpop', 1)],
-      soothe: [track('korea', 2), track('pop', 2), track('jpop', 2)],
-    });
-
-    it('운영 프롬프트·스키마로 선곡하고 화면 라벨을 붙인다', async () => {
-      const picks = makePicks();
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion(JSON.stringify(picks)),
-      );
-
-      const result = await service.pickSongs('오늘 정말 행복한 하루였어요!');
-
-      // 화면 라벨은 LLM이 아니라 enum에서 붙는다
-      expect(result).toEqual({ ...picks, emotionLabel: '기쁨' });
-      // 측정(D4)으로 고른 프롬프트 — 바꾸려면 다시 측정하고 PICK_PROMPT_VERSION을 올린다
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        'https://api.openai.com/v1/chat/completions',
-        expect.objectContaining({
-          model: 'gpt-6-luna',
-          reasoning_effort: 'none',
-          response_format: buildPickFormat(),
-          messages: [
-            { role: 'system', content: buildPickPrompt() },
-            { role: 'user', content: '오늘 정말 행복한 하루였어요!' },
-          ],
-        }),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer test-api-key',
-          }),
-        }),
-      );
-    });
-
-    it.each([
-      ['빈 문자열', ''],
-      ['공백만', '  '],
-      ['없음(쿼리 누락)', undefined as unknown as string],
-    ])(
-      '텍스트가 %s이면 API를 부르지 않고 에러를 던져야 한다.',
-      async (_, text) => {
-        await expect(service.pickSongs(text)).rejects.toThrow(
-          '분석할 텍스트를 입력해주세요.',
-        );
-        expect(mockedAxios.post).not.toHaveBeenCalled();
-      },
-    );
-
-    it('한 모드의 곡이 3곡 미만이면 에러를 던져야 한다.', async () => {
-      const picks = makePicks();
-      picks.soothe = picks.soothe.slice(0, 2);
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion(JSON.stringify(picks)),
-      );
-
-      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
-        'soothe 곡이 3곡 미만입니다.',
-      );
-    });
-
-    it('OpenAI API 호출 실패 시 에러를 던져야 한다.', async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error('API Error'));
-
-      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
-        'API Error',
-      );
-    });
-
-    it('OpenAI가 유효하지 않은 JSON을 반환하면 에러를 던져야 한다.', async () => {
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion('이것은 JSON이 아닙니다.'),
-      );
-
-      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
-        'JSON 파싱 실패',
-      );
-    });
-
-    it('모델이 응답을 거절하면 에러를 던져야 한다.', async () => {
-      // strict 스키마여도 거절은 content 없이 refusal로 온다
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion(null, { refusal: 'I can’t help with that.' }),
-      );
-
-      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
-        'OpenAI 응답 거절',
-      );
-    });
-
-    it('토큰 한도에서 잘린 응답은 파싱하지 않고 에러를 던져야 한다.', async () => {
-      // 잘린 JSON은 스키마를 지키지 못한다
-      mockedAxios.post.mockResolvedValueOnce(
-        mockChatCompletion('{"emotion": "joy", "cri', {
-          finishReason: 'length',
-        }),
-      );
-
-      await expect(service.pickSongs('테스트 텍스트')).rejects.toThrow(
-        '토큰 한도',
-      );
-    });
   });
 
   describe('pickSongsStream', () => {
@@ -197,7 +67,7 @@ describe('OpenAIService', () => {
       data: Readable.from(parts.map((part) => Buffer.from(part))),
     });
 
-    it('AI가 쓰는 대로 루트 값과 곡을 넘기고, 끝나면 pickSongs와 같은 결과를 돌려준다', async () => {
+    it('운영 프롬프트·스키마로 부르고, AI가 쓰는 대로 루트 값과 곡을 넘긴 뒤 화면 라벨을 붙여 돌려준다', async () => {
       mockedAxios.post.mockResolvedValueOnce(
         streamResponse(frames(JSON.stringify(picks))),
       );
@@ -211,6 +81,7 @@ describe('OpenAIService', () => {
         signal,
       });
 
+      // 화면 라벨은 LLM이 아니라 enum에서 붙는다
       expect(result).toEqual({ ...picks, emotionLabel: '기쁨' });
       expect(onField.mock.calls).toEqual([
         ['emotion', 'joy'],
@@ -221,13 +92,26 @@ describe('OpenAIService', () => {
         ...picks.immerse.map((pick) => ['immerse', pick]),
         ...picks.soothe.map((pick) => ['soothe', pick]),
       ]);
+      // 측정(D4)으로 고른 프롬프트 — 바꾸려면 다시 측정하고 PICK_PROMPT_VERSION을 올린다
       expect(mockedAxios.post).toHaveBeenCalledWith(
         'https://api.openai.com/v1/chat/completions',
         expect.objectContaining({
+          model: 'gpt-6-luna',
+          reasoning_effort: 'none',
           stream: true,
           response_format: buildPickFormat(),
+          messages: [
+            { role: 'system', content: buildPickPrompt() },
+            { role: 'user', content: '행복했어' },
+          ],
         }),
-        expect.objectContaining({ responseType: 'stream', signal }),
+        expect.objectContaining({
+          responseType: 'stream',
+          signal,
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-api-key',
+          }),
+        }),
       );
     });
 
@@ -256,11 +140,25 @@ describe('OpenAIService', () => {
       expect(onPick).toHaveBeenCalledTimes(6);
     });
 
-    it('텍스트가 비어 있으면 API를 부르지 않고 에러를 던진다', async () => {
-      await expect(service.pickSongsStream('  ')).rejects.toThrow(
+    it.each([
+      ['빈 문자열', ''],
+      ['공백만', '  '],
+      ['없음(본문 누락)', undefined as unknown as string],
+    ])('텍스트가 %s이면 API를 부르지 않고 에러를 던진다', async (_, text) => {
+      await expect(service.pickSongsStream(text)).rejects.toThrow(
         '분석할 텍스트를 입력해주세요.',
       );
       expect(mockedAxios.post).not.toHaveBeenCalled();
+    });
+
+    it('끝까지 받은 내용이 JSON이 아니면 에러를 던진다', async () => {
+      mockedAxios.post.mockResolvedValueOnce(
+        streamResponse(frames('{"emotion":"joy","crisis":')),
+      );
+
+      await expect(service.pickSongsStream('테스트')).rejects.toThrow(
+        'JSON 파싱 실패',
+      );
     });
 
     it('모델이 거절하면 에러를 던진다', async () => {

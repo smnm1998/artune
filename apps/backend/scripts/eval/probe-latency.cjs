@@ -13,7 +13,7 @@
  *   node scripts/eval/probe-latency.cjs run --label r5 --servers current:stream --all --repeat   # R5 (eval README "R5 최종 비교")
  *   node scripts/eval/probe-latency.cjs summary --label latency-ab               # 결과 폴더에서 summary.md 다시 쓰기
  * 서버 지정: 이름:전송 — 이름은 current(apps/backend/dist) 또는 freeze로 얼린 이름,
- *   전송은 stream(POST 스트림, 지금 프론트) | sse(옛 GET SSE) | post(한 번에 받는 POST /analyze)
+ *   전송은 stream(POST 스트림, 지금 프론트) | sse(옛 GET SSE — 11/12 삭제, 그 전 커밋을 얼린 빌드에만) | post(한 번에 받는 POST /analyze)
  * 옵션: --interval <초>(앞 요청이 끝난 뒤 다음 요청까지 쉼, 기본 120 — iTunes 차단 회복) --limit <n> --ids a,b
  *       --inputs <파일>(repo 루트 기준, 기본 docs/measurements/eval/inputs.json) --mock(키·네트워크 없이 자체 검증)
  *       --all(기본 입력 파일도 12개로 줄이지 않고 전부) --repeat(본 실행 뒤 repeat: true 입력을 한 번 더 — 같은 서버에서 받은
@@ -406,7 +406,7 @@ async function readEvents(res, t0) {
   throw new Error('complete 이벤트 없이 스트림이 끝남');
 }
 
-/** 옛 운영 경로: GET SSE (글이 주소에 실린다) */
+/** 옛 운영 경로: GET SSE (글이 주소에 실린다) — 11/12 운영에서 지웠다. 그 전 커밋을 freeze한 빌드에만 쓴다 */
 async function viaSse(proc, text, t0, seen) {
   const query = { text };
   if (seen) {

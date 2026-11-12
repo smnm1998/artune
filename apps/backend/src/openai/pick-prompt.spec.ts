@@ -7,21 +7,28 @@ import {
   PICKS_PER_MODE,
 } from './pick-prompt';
 
+interface JsonSchema {
+  type?: string;
+  items?: JsonSchema;
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  additionalProperties?: boolean;
+}
+
 // strict 모드 규칙: 모든 객체는 additionalProperties: false, 모든 속성이 required — 어기면 API가 요청을 거부한다
-function strictViolations(schema, path = '$'): string[] {
-  if (schema.type === 'array')
+function strictViolations(schema: JsonSchema, path = '$'): string[] {
+  if (schema.type === 'array' && schema.items)
     return strictViolations(schema.items, `${path}[]`);
   if (schema.type !== 'object') return [];
-  const keys = Object.keys(schema.properties);
+  const properties = schema.properties ?? {};
+  const keys = Object.keys(properties);
   const own = [
     schema.additionalProperties !== false && `${path}: additionalProperties`,
-    keys.some((k) => !schema.required.includes(k)) && `${path}: required`,
+    keys.some((k) => !schema.required?.includes(k)) && `${path}: required`,
   ].filter(Boolean) as string[];
   return [
     ...own,
-    ...keys.flatMap((k) =>
-      strictViolations(schema.properties[k], `${path}.${k}`),
-    ),
+    ...keys.flatMap((k) => strictViolations(properties[k], `${path}.${k}`)),
   ];
 }
 

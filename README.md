@@ -101,7 +101,7 @@ sequenceDiagram
 ### Backend (`apps/backend`)
 
 - **Core**: NestJS 11 (Module 기반 아키텍처)
-- **Language**: TypeScript (strictNullChecks 활성화)
+- **Language**: TypeScript (strict 활성화)
 - **External APIs**:
   - **OpenAI Chat Completions API**: 감정 분석 + 모드별 선곡 (Structured Outputs)
   - **iTunes Search API**: 곡 검색 · KR 스토어 표기 조회 · 30초 미리듣기

@@ -79,7 +79,8 @@ export class ITunesService {
   }
 
   /**
-   * 최종 곡을 KR 스토어 버전(한글 곡명·아티스트명, KR 스토어 링크)으로 바꾼다. 요청당 lookup 1회.
+   * 최종 곡을 KR 스토어 버전(한글 곡명·아티스트명, KR 스토어 링크)으로 바꾼다. 부를 때마다 lookup 1회
+   * (스트리밍은 고른 곡을 모아 모드당 몇 번 부른다 — MusicService.krLookupGapMs).
    * KR 스토어에 없거나 미리듣기가 없는 곡, 조회 실패 시에는 원래 트랙을 그대로 쓴다.
    */
   async localizeTracks(tracks: ITunesTrack[]): Promise<ITunesTrack[]> {

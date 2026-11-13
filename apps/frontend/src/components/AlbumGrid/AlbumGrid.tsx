@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useHover } from '@/hooks';
+import useHover from '@/hooks/ui/useHover';
 import { AlbumCard, AlbumHoverModal } from '@/components';
 import { Track } from '@/types/track';
 import { gridContainerStyle } from './AlbumGrid.styles';

@@ -13,9 +13,7 @@ interface ActionButtonsProps {
 }
 
 /**
- * 결과 페이지 하단 액션 버튼 그룹
- * * @param {Object} props
- * @param {Function} [props.onNext] - '음악 보기' 버튼 핸들러 (없으면 렌더링 안함)
+ * 결과 페이지 하단 버튼 — 다시하기(항상) · 음악 보기(onNext를 줄 때만: 좁은 화면에서 플레이리스트 뷰로)
  */
 function ActionButtons({ onNext }: ActionButtonsProps) {
   const reset = useAppStore((state) => state.reset);

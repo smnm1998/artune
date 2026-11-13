@@ -28,7 +28,7 @@ const emptyHistory = (): SeenHistory => ({ immerse: [], soothe: [] });
  * 이미 본 곡이 다시 나오면 맨 뒤(가장 최근)로 옮긴다 — 중복으로 40자리를 낭비하지 않게.
  * 넘치면 오래된 앞쪽부터 버린다.
  */
-export function appendSeen(
+function appendSeen(
   history: readonly string[],
   keys: readonly string[],
 ): string[] {

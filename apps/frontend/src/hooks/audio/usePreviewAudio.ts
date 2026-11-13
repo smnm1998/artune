@@ -123,7 +123,7 @@ function usePreviewAudio({
     };
   }, [stopAndReset]);
 
-  // 호버 해제 감지 -> 짧은 페이드아웃(0.5초)으로 퇴장
+  // 닫힘(PC 호버 해제 · 모바일 모달 닫기) → 0.5초 페이드아웃
   useEffect(() => {
     const wasEnabled = prevEnabledRef.current;
     const isNowDisabled = !isEnabled;

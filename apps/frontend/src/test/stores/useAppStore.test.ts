@@ -109,6 +109,7 @@ describe('useAppStore', () => {
         progress: 0,
         emotionResult: null,
         error: null,
+        draft: '',
       });
     });
   });
@@ -170,6 +171,17 @@ describe('useAppStore', () => {
         currentPage: 'input',
         isLoading: false,
         progress: 0,
+      });
+    });
+
+    it('결과 전에 실패하면 보낸 글을 남겨 입력창에 되살릴 수 있게 한다', async () => {
+      mockedAnalyze.mockRejectedValueOnce(new Error('요청이 너무 많아요.'));
+
+      await state().analyzeEmotion('오늘 시험을 망쳤어');
+
+      expect(state()).toMatchObject({
+        currentPage: 'input',
+        draft: '오늘 시험을 망쳤어',
       });
     });
 
@@ -467,6 +479,7 @@ describe('useAppStore', () => {
         loadingMessage: '',
         emotionResult: null,
         error: null,
+        draft: '',
         abortController: null,
       });
     });

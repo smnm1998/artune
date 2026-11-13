@@ -35,6 +35,8 @@ interface AppState {
   emotionResult: EmotionResponse | null;
   loadingMessage: string;
   error: string | null;
+  /** 보낸 글 — 결과 전에 실패해 입력 화면으로 돌아오면 입력창에 되살린다. 메모리에만 두고 저장하지 않는다 */
+  draft: string;
   abortController: AbortController | null;
   setPage: (page: Page) => void;
   analyzeEmotion: (text: string) => Promise<void>;
@@ -50,6 +52,7 @@ const useAppStore = create<AppState>((set, get) => ({
   emotionResult: null,
   loadingMessage: '',
   error: null,
+  draft: '',
   abortController: null,
 
   setPage: (page) => set({ currentPage: page }),
@@ -76,6 +79,7 @@ const useAppStore = create<AppState>((set, get) => ({
       loadingMessage: '감정 분석을 준비하고 있어요...',
       error: null,
       emotionResult: null,
+      draft: text,
     });
 
     try {
@@ -157,6 +161,7 @@ const useAppStore = create<AppState>((set, get) => ({
       loadingMessage: '',
       emotionResult: null,
       error: null,
+      draft: '',
       abortController: null,
     });
   },

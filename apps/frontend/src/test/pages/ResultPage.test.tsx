@@ -99,3 +99,33 @@ describe('결과 화면 — 스트림이 열린 뒤 받는 대로 채운다', ()
     screen.getByRole('complementary', { name: '상담 안내' });
   });
 });
+
+describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => {
+  // 좁은 화면: 아트워크 뷰가 먼저, '음악 보기'로 플레이리스트 뷰
+  beforeEach(() =>
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: true,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })),
+  );
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    useAppStore.getState().reset();
+  });
+
+  it('뷰를 바꾸면 스크롤을 맨 위로 올린다 — 앞 뷰에서 내린 위치로 다음 뷰가 뜨지 않게', () => {
+    useAppStore.setState({ emotionResult: partial, isLoading: false });
+    const { container } = render(<ResultPage />);
+    const scrollArea = container.firstElementChild as HTMLElement;
+
+    scrollArea.scrollTop = 400;
+    fireEvent.click(screen.getByRole('button', { name: '음악 보기' }));
+    expect(scrollArea.scrollTop).toBe(0);
+
+    scrollArea.scrollTop = 400;
+    fireEvent.click(screen.getByRole('button', { name: '아트워크로 돌아가기' }));
+    expect(scrollArea.scrollTop).toBe(0);
+  });
+});

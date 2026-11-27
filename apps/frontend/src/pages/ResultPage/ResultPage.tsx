@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IoArrowBack } from 'react-icons/io5';
 import type { PlaylistMode } from '@artune/shared-types';
@@ -18,6 +18,7 @@ import useAppStore from '@/stores/useAppStore';
 import useMediaQuery from '@/hooks/ui/useMediaQuery';
 import { NOTICES } from '@/constants/notices';
 import {
+  scrollAreaStyle,
   containerStyle,
   leftSectionStyle,
   rightSectionStyle,
@@ -45,6 +46,12 @@ function ResultPage() {
   const isLoading = useAppStore((state) => state.isLoading);
   const [selectedMode, setSelectedMode] = useState<PlaylistMode>('immerse');
   const [viewMode, setViewMode] = useState<ViewMode>('artwork');
+  // 두 뷰가 같은 스크롤 상자를 쓴다 — 바꿀 때 맨 위로 올리지 않으면 앞 뷰에서 내린 위치 그대로 다음 뷰가 뜬다
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const switchView = (next: ViewMode) => {
+    setViewMode(next);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  };
   // 좁은 화면에서 누른 곡 — 플레이어 모달로 연다. 닫을 때는 곡을 남겨 둬 닫히는 동안 그 곡으로 페이드아웃
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -62,7 +69,7 @@ function ResultPage() {
     : 0;
 
   return (
-    <>
+    <div ref={scrollRef} css={scrollAreaStyle}>
       <motion.div
         css={containerStyle}
         initial={{ opacity: 0 }}
@@ -96,7 +103,7 @@ function ResultPage() {
             >
               <ActionButtons
                 // 좁은 화면에서만 '음악 보기' (PC는 플레이리스트가 옆에 있다)
-                onNext={isCompactView ? () => setViewMode('music') : undefined}
+                onNext={isCompactView ? () => switchView('music') : undefined}
               />
             </motion.div>
           </div>
@@ -108,7 +115,7 @@ function ResultPage() {
               {isCompactView && (
                 <button
                   css={backButtonStyle}
-                  onClick={() => setViewMode('artwork')}
+                  onClick={() => switchView('artwork')}
                   aria-label="아트워크로 돌아가기"
                 >
                   <IoArrowBack size={24} />
@@ -178,7 +185,7 @@ function ResultPage() {
         <p>{NOTICES.AI_RESULT}</p>
         <p>{NOTICES.TRADEMARK}</p>
       </footer>
-    </>
+    </div>
   );
 }
 

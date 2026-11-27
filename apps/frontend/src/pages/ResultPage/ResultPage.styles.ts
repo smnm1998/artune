@@ -2,6 +2,12 @@ import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
 import { LAPTOP_BP, TABLET_BP, MOBILE_BP } from '@/constants/size';
 
+// 결과 화면의 스크롤 상자 — 아트워크 뷰 ↔ 플레이리스트 뷰를 바꿀 때 이 상자를 맨 위로 올린다
+export const scrollAreaStyle = css`
+  height: 100%;
+  overflow: auto;
+`;
+
 // 전체 컨테이너
 export const containerStyle = css`
   display: flex;

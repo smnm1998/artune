@@ -9,13 +9,9 @@ export const appStyle = css`
   background: ${colors.background.gradient};
 `;
 
-// 입력·결과 화면이 같은 자리에서 페이드로 바뀐다
+// 입력·결과 화면이 같은 자리에서 페이드로 바뀐다 — 스크롤은 각 화면이 맡는다 (결과 화면: ResultPage의 scrollAreaStyle)
 export const pageStyle = css`
   position: absolute;
   width: 100%;
   height: 100%;
-`;
-
-export const scrollPageStyle = css`
-  overflow: auto;
 `;

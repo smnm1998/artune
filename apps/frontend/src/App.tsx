@@ -5,7 +5,7 @@ import EmotionInputPage from '@/pages/EmotionInputPage';
 import ResultPage from '@/pages/ResultPage';
 import useAppStore from '@/stores/useAppStore';
 import { showErrorToast } from '@/components/ErrorToast/ErrorToast';
-import { appStyle, pageStyle, scrollPageStyle } from './App.styles';
+import { appStyle, pageStyle } from './App.styles';
 
 /** 입력 화면 ↔ 결과 화면 — 스트림이 열리면(HTTP 200) 결과 화면으로 넘어간다 (스토어 currentPage) */
 function App() {
@@ -41,7 +41,7 @@ function App() {
         {currentPage === 'result' && (
           <motion.div
             key="result"
-            css={[pageStyle, scrollPageStyle]}
+            css={pageStyle}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

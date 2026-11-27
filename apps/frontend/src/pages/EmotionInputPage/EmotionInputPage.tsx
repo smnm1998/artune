@@ -10,12 +10,21 @@ import {
   footerStyle,
 } from './EmotionInputPage.styles';
 import useAppStore from '@/stores/useAppStore';
+import useMediaQuery from '@/hooks/ui/useMediaQuery';
+import { QUERIES } from '@/constants/breakpoints';
 import { NOTICES } from '@/constants/notices';
 import {
   validateEmotionInput,
   isMaxLengthExceeded,
   VALIDATION_RULES,
 } from '@/utils/emotionInputValidator';
+
+/** 보조 문구 — 모바일은 한 줄에 들어가는 짧은 문장 (15px 244px, 390 폭에서 쓸 수 있는 폭 342px · 긴 문장은 435px라 두 줄) */
+const SUBTITLE = {
+  desktop:
+    '있었던 일을 편하게 적어 주시면, 지금 마음에 어울리는 노래를 골라 드려요.',
+  mobile: '지금 마음에 어울리는 노래를 골라 드려요.',
+};
 
 /**
  * 감정 입력 페이지 — 검증을 통과한 글로 스토어의 analyzeEmotion을 부른다.
@@ -25,6 +34,7 @@ function EmotionInputPage() {
   const analyzeEmotion = useAppStore((state) => state.analyzeEmotion);
   const isLoading = useAppStore((state) => state.isLoading);
   const draft = useAppStore((state) => state.draft);
+  const isMobile = useMediaQuery(QUERIES.mobile);
   const [text, setText] = useState(draft);
   const [error, setError] = useState('');
 
@@ -67,8 +77,7 @@ function EmotionInputPage() {
       <main css={heroStyle}>
         <h1 css={titleStyle}>오늘의 감정을 들려주세요</h1>
         <p css={subTitleStyle}>
-          있었던 일을 편하게 적어 주시면, 지금 마음에 어울리는 노래를 골라
-          드려요.
+          {isMobile ? SUBTITLE.mobile : SUBTITLE.desktop}
         </p>
       </main>
 

@@ -50,10 +50,11 @@ export const fieldStyle = css`
   }
 `;
 
+// 처음엔 한 줄, 줄이 바뀌면 그만큼 자란다(useAutoResizeTextarea) — 최대 높이를 넘으면 안쪽 스크롤
 export const textareaStyle = css`
   display: block;
   width: 100%;
-  min-height: 56px;
+  min-height: 28px;
   max-height: 200px;
   margin: 0;
   padding: 0 8px 0 0;

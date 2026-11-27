@@ -35,7 +35,7 @@ export default tseslint.config(
   {
     files: ['apps/frontend/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
-    rules: reactHooks.configs.recommended.rules,
+    rules: reactHooks.configs.flat.recommended.rules,
   },
   prettier,
 );

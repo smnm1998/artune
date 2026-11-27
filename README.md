@@ -95,7 +95,8 @@ sequenceDiagram
 - **Core**: React 19, Vite 7, TypeScript
 - **State Management**: Zustand 5 (요청·취소·결과 상태와 비동기 액션)
 - **Styling**: Emotion (CSS-in-JS), Framer Motion (애니메이션)
-- **Testing**: Vitest, React Testing Library (컴포넌트·스토어·API)
+- **Testing**: Vitest, React Testing Library (컴포넌트·페이지·스토어·API)
+- **Lint**: ESLint 9 (flat config) + typescript-eslint + react-hooks, Prettier
 - **Deploy**: Vercel
 
 ### Backend (`apps/backend`)
@@ -108,6 +109,7 @@ sequenceDiagram
 - **Caching**: NestJS CacheModule (곡 해석 결과 6시간, 차단·네트워크 오류는 캐시하지 않고 다음 요청에서 재시도)
 - **Rate Limit**: `@nestjs/throttler` (IP당 분당 5회, Railway가 넣는 `X-Real-IP` 기준)
 - **Testing**: Jest (서비스·유틸 단위 테스트, 요청 제한은 실제 HTTP 요청으로 검증)
+- **Lint**: ESLint 9 (flat config) + typescript-eslint, Prettier
 - **Protocol**: HTTP, POST 스트리밍 (SSE 형식 — 프론트는 `fetch` + `ReadableStream`으로 읽음)
 - **Deploy**: Railway (Railpack)
 
@@ -160,11 +162,12 @@ npm run dev
 # Backend:  http://localhost:3000
 ```
 
-### 4. 테스트
+### 4. 테스트 · 린트
 
 ```bash
 npm run test --workspace=backend          # Jest
 npm run test --workspace=frontend -- --run # Vitest (한 번 실행)
+npm run lint                               # ESLint — 백·프론트 (설정은 루트 eslint.config.mjs)
 ```
 
 ## 📂 프로젝트 구조

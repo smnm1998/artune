@@ -39,7 +39,8 @@ describe('ITunesService', () => {
 
     // jest.mock('axios')는 isAxiosError까지 대체하므로 실제 판별 로직 복원
     mockedAxios.isAxiosError.mockImplementation(
-      (payload: any): payload is AxiosError => payload?.isAxiosError === true,
+      (payload: unknown): payload is AxiosError =>
+        (payload as { isAxiosError?: unknown } | null)?.isAxiosError === true,
     );
   });
 

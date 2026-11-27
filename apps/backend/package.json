@@ -13,6 +13,7 @@
     "start:prod": "node dist/main",
     "dev": "nest start --watch",
     "test": "jest",
+    "lint": "eslint src",
     "test:cov": "jest --coverage",
     "check-types": "tsc --noEmit"
   },

@@ -1,8 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
-
-const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
+import { MEDIA } from '@/constants/breakpoints';
 
 export const containerStyle = css`
   display: flex;
@@ -11,7 +9,7 @@ export const containerStyle = css`
   align-items: center;
   width: 100%;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     gap: 8px;
   }
 `;
@@ -51,7 +49,7 @@ export const buttonStyle = css`
   }
 
   /* 좁은 화면: 엄지로 누르는 큰 버튼 — 다시하기는 바탕 위 유리 */
-  ${COMPACT} {
+  ${MEDIA.compact} {
     min-height: 56px;
     border-radius: 16px;
     font-size: 16px;
@@ -76,7 +74,7 @@ export const primaryButtonStyle = css`
     background: ${colors.accent.hover};
   }
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     flex: 2;
     font-size: 17px;
     font-weight: 700;

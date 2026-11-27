@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
+import { MEDIA } from '@/constants/breakpoints';
 
 // 커버 칸 — 정사각형. 호버 정보 카드(AlbumHoverModal)가 이 칸 위에 겹치고, 열리면 둘이 함께 살짝 커진다
 export const coverSlotStyle = css`
@@ -31,7 +31,7 @@ export const albumCoverStyle = css`
   box-shadow: ${colors.shadow.cover};
   -webkit-tap-highlight-color: transparent;
 
-  @media (max-width: ${BREAKPOINTS.compact}px) {
+  ${MEDIA.compact} {
     border-radius: 12px;
   }
 

@@ -3,7 +3,7 @@ import { motion, useIsPresent } from 'framer-motion';
 import { IoArrowBack } from 'react-icons/io5';
 import type { PlaylistMode } from '@artune/shared-types';
 import { Track } from '@/types/track';
-import { BREAKPOINTS } from '@/constants/breakpoints';
+import { QUERIES } from '@/constants/breakpoints';
 import { SCREEN_TRACK_COUNT } from '@/constants/playlist';
 import {
   ArtworkDisplay,
@@ -81,7 +81,7 @@ function ResultPage() {
   };
   // ARTUNE(홈)도 다시하기와 같다 — 결과를 버리기 전에 묻는다
   const handleHome = useConfirmRestart();
-  const isCompactView = useMediaQuery(`(max-width: ${BREAKPOINTS.compact}px)`);
+  const isCompactView = useMediaQuery(QUERIES.compact);
 
   if (!emotionResult && !isLoading) return null;
   const playlists = emotionResult?.playlists;

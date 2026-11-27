@@ -169,6 +169,12 @@ export const statusStyle = css`
     animation: ${pulse} 2s ease-in-out infinite;
   }
 
+  /* 끝까지 들은 뒤 — 한 단계 흐린 흰 글자 */
+  &[data-ended='true'] {
+    color: ${colors.text.inverseSecondary};
+    font-weight: 500;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     &[data-waiting='true'] {
       animation: none;

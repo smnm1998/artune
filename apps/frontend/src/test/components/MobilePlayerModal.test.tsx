@@ -21,11 +21,12 @@ const track: Track = {
   key: '0000000a',
 };
 
-const audioState = (isPlaying: boolean) =>
+const audioState = (isPlaying: boolean, isEnded = false) =>
   vi.mocked(usePreviewAudio).mockReturnValue({
     audioRef: { current: null },
     isPlaying,
     error: null,
+    isEnded,
   } as unknown as ReturnType<typeof usePreviewAudio>);
 
 describe('MobilePlayerModal', () => {
@@ -89,5 +90,14 @@ describe('MobilePlayerModal', () => {
       ?.parentElement as HTMLElement;
     fireEvent.click(overlay);
     expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('끝까지 들은 뒤에는 "미리듣기가 끝났어요"를 보이고 막대 · 준비 중은 없다', () => {
+    audioState(false, true);
+    render(<MobilePlayerModal isOpen onClose={() => {}} track={track} />);
+
+    screen.getByText('미리듣기가 끝났어요');
+    expect(screen.queryByText('재생 준비 중...')).toBeNull();
+    expect(screen.queryByTestId('equalizer')).toBeNull();
   });
 });

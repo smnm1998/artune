@@ -1,8 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
-
-const MOBILE = `@media (max-width: ${BREAKPOINTS.mobile}px)`;
+import { MEDIA } from '@/constants/breakpoints';
 
 // 맨 위 로고 · 가운데 문구 · 맨 아래 입력창 — LLM 채팅 화면처럼 입력은 아래, 문구는 화면 정중앙
 export const containerStyle = css`
@@ -17,7 +15,7 @@ export const headerStyle = css`
   align-items: center;
   padding: 20px 24px 12px;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     justify-content: center;
     padding: 6px 16px 0;
   }
@@ -33,7 +31,7 @@ export const heroStyle = css`
   padding: 0 24px 40px;
   text-align: center;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     gap: 10px;
     padding: 0 24px 24px;
   }
@@ -48,7 +46,7 @@ export const titleStyle = css`
   color: ${colors.text.primary};
   word-break: keep-all;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     font-size: 26px;
   }
 `;
@@ -60,7 +58,7 @@ export const subTitleStyle = css`
   color: ${colors.text.secondary};
   word-break: keep-all;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     font-size: 15px;
   }
 `;
@@ -75,7 +73,7 @@ export const composerAreaStyle = css`
   margin: 0 auto;
   padding: 0 24px 24px;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     gap: 10px;
     padding: 0 16px 16px;
   }

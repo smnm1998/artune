@@ -1,8 +1,6 @@
 import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
-
-const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
+import { MEDIA } from '@/constants/breakpoints';
 
 const sweep = keyframes`
   from {
@@ -43,7 +41,7 @@ export const cover = css`
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     border-radius: 12px;
   }
 `;
@@ -55,7 +53,7 @@ export const trackSlot = css`
   gap: 12px;
   min-width: 0;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     gap: 10px;
   }
 `;
@@ -83,7 +81,7 @@ export const artworkSquare = css`
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     border-radius: 24px;
   }
 `;

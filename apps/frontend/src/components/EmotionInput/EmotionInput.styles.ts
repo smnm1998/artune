@@ -1,9 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
-
-/** 입력창 placeholder 길이를 바꾸는 기준(useMediaQuery)과 같은 폭 — 이 아래는 모바일 입력창 */
-const MOBILE = `@media (max-width: ${BREAKPOINTS.mobile}px)`;
+import { MEDIA } from '@/constants/breakpoints';
 
 /** 화면에서는 숨기고 화면 읽기 프로그램에는 읽힌다 */
 const visuallyHidden = css`
@@ -46,7 +43,7 @@ export const fieldStyle = css`
     stroke: ${colors.border.focus};
   }
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     padding: 0;
     border: none;
     border-radius: 26px;
@@ -97,7 +94,7 @@ export const textareaStyle = css`
     background: ${colors.scrollbar.thumbHover};
   }
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     min-height: 52px;
     max-height: 160px;
     padding: 13px 60px 13px 18px;
@@ -115,7 +112,7 @@ export const fieldFooterStyle = css`
   justify-content: space-between;
   gap: 12px;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     position: absolute;
     right: 7px;
     bottom: 7px;
@@ -129,7 +126,7 @@ export const counterStyle = css`
   color: ${colors.text.tertiary};
   font-variant-numeric: tabular-nums;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     ${visuallyHidden};
   }
 `;
@@ -138,7 +135,7 @@ export const counterStyle = css`
 export const ringStyle = css`
   display: none;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     display: block;
     position: absolute;
     inset: 0;

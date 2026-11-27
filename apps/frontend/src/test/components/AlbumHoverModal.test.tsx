@@ -20,10 +20,15 @@ const track: Track = {
   key: '0000000a',
 };
 
-const audioState = (state: { isPlaying: boolean; error?: string | null }) =>
+const audioState = (state: {
+  isPlaying: boolean;
+  error?: string | null;
+  isEnded?: boolean;
+}) =>
   vi.mocked(usePreviewAudio).mockReturnValue({
     audioRef: { current: null },
     error: null,
+    isEnded: false,
     ...state,
   } as unknown as ReturnType<typeof usePreviewAudio>);
 
@@ -55,6 +60,21 @@ describe('AlbumHoverModal — 미리듣기 상태 줄 (PC 호버 카드)', () =>
       const label = screen.getByText('재생 준비 중...');
       expect(screen.queryByTestId('equalizer')).toBeNull();
       expect(label.parentElement?.getAttribute('data-waiting')).toBe('true');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('끝까지 들은 뒤에는 "미리듣기가 끝났어요" — 다시 "재생 준비 중"으로 돌아가지 않는다', () => {
+    vi.useFakeTimers();
+    try {
+      audioState({ isPlaying: false, isEnded: true });
+      render(<AlbumHoverModal isOpen album={track} />);
+      act(() => vi.advanceTimersByTime(1000));
+
+      const label = screen.getByText('미리듣기가 끝났어요');
+      expect(screen.queryByText('재생 준비 중...')).toBeNull();
+      expect(label.parentElement?.getAttribute('data-waiting')).toBe('false');
     } finally {
       vi.useRealTimers();
     }

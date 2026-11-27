@@ -1,11 +1,7 @@
 import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
+import { MEDIA } from '@/constants/breakpoints';
 
-/** 좁은 화면 = 아트워크 뷰 ↔ 플레이리스트 뷰 (ResultPage의 isCompactView와 같은 기준) */
-const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
-/** 모바일 — 입력 화면과 같은 기준(로고 가운데) */
-const MOBILE = `@media (max-width: ${BREAKPOINTS.mobile}px)`;
 /** 머리 높이 — 태블릿 72(20 + 40 + 12) · 모바일 50(6 + 44). 감정 결과 뷰가 남은 화면 높이를 채우는 데 쓴다 */
 const HEADER_HEIGHT = { compact: 72, mobile: 50 };
 
@@ -21,7 +17,7 @@ export const headerStyle = css`
   align-items: center;
   padding: 20px 24px 12px;
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     justify-content: center;
     padding: 6px 16px 0;
   }
@@ -40,7 +36,7 @@ export const containerStyle = css`
      왼쪽 패널이 고정되지 않고 같이 올라갔다 (11/27 측정: 800px 내리면 패널도 -800) */
   overflow-x: clip;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -59,6 +55,7 @@ export const sidePanelStyle = css`
   min-width: 0;
   /* 머리(72) · 위아래 여백을 뺀 화면 높이. 내용이 더 길면(위기 안내 · 긴 공감 문구) 잘리지 않고 늘어난다 */
   height: calc(100vh - 104px);
+  height: calc(100dvh - 104px);
   max-height: 800px;
   min-height: min-content;
   padding: 24px;
@@ -70,7 +67,7 @@ export const sidePanelStyle = css`
   box-shadow: ${colors.shadow.panel};
 
   /* 좁은 화면: 패널 없이 바탕 위에 — 머리 아래 남은 화면 높이를 채우고, 버튼은 맨 아래 */
-  ${COMPACT} {
+  ${MEDIA.compact} {
     position: static;
     width: 100%;
     max-width: 480px;
@@ -88,7 +85,7 @@ export const sidePanelStyle = css`
     box-shadow: none;
   }
 
-  ${MOBILE} {
+  ${MEDIA.mobile} {
     min-height: calc(100vh - ${HEADER_HEIGHT.mobile}px);
     min-height: calc(100dvh - ${HEADER_HEIGHT.mobile}px);
   }
@@ -100,7 +97,7 @@ export const sideMainStyle = css`
   flex-direction: column;
   gap: 20px;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     flex: 1;
     justify-content: center;
     gap: 22px;
@@ -115,7 +112,7 @@ export const sideFooterStyle = css`
   flex-direction: column;
   gap: 10px;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     margin-top: 0;
     padding: 16px 0 24px;
   }
@@ -137,7 +134,7 @@ export const trackSectionStyle = css`
   gap: 24px;
   min-width: 0;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     width: 100%;
     max-width: 720px;
     gap: 16px;
@@ -165,7 +162,7 @@ export const headingStyle = css`
   gap: 6px;
   min-width: 0;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     gap: 4px;
     margin-top: 8px; /* 머리(뒤로 · 토글)와 24 */
   }
@@ -177,7 +174,7 @@ export const titleRowStyle = css`
   align-items: center;
   gap: 8px 14px;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     justify-content: space-between;
     gap: 12px;
   }
@@ -191,7 +188,7 @@ export const sectionTitleStyle = css`
   letter-spacing: -0.02em;
   color: ${colors.text.primary};
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     font-size: 18px;
     line-height: 26px;
   }
@@ -207,7 +204,7 @@ export const statusStyle = css`
   line-height: 20px;
   color: ${colors.text.secondary};
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     gap: 6px;
     font-size: 13px;
     line-height: 18px;
@@ -246,7 +243,7 @@ export const modeDescriptionStyle = css`
   color: ${colors.text.secondary};
   word-break: keep-all;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     min-height: 22px;
     font-size: 14px;
     line-height: 22px;
@@ -351,7 +348,7 @@ export const footerStyle = css`
     margin: 0;
   }
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     padding: 8px 20px 40px;
   }
 `;

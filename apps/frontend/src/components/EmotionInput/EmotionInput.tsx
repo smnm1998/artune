@@ -1,5 +1,5 @@
 import useMediaQuery from '@/hooks/ui/useMediaQuery';
-import { BREAKPOINTS } from '@/constants/breakpoints';
+import { QUERIES } from '@/constants/breakpoints';
 import useAutoResizeTextarea from '@/hooks/ui/useAutoResizeTextarea';
 import { IoReturnDownBack } from 'react-icons/io5';
 import {
@@ -41,7 +41,7 @@ function EmotionInput({
   minLength,
   maxLength,
 }: EmotionInputProps) {
-  const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.mobile}px)`);
+  const isMobile = useMediaQuery(QUERIES.mobile);
 
   // 반응형 placeholder
   const getPlaceholder = () => {

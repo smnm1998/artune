@@ -1,6 +1,5 @@
 import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { MOBILE_BP } from '@/constants/size';
 
 const pulse = keyframes`
   0%,
@@ -12,6 +11,7 @@ const pulse = keyframes`
   }
 `;
 
+// PC(>1024) 호버에서만 열린다 — 좁은 화면은 플레이어 모달(MobilePlayerModal)이라 모바일 글자 크기 규칙이 없다
 export const modalOverlayStyle = css`
   position: absolute;
   top: 0;
@@ -58,10 +58,6 @@ export const albumTitleStyle = css`
   @container (max-height: 240px) {
     -webkit-line-clamp: 1;
   }
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 14px;
-  }
 `;
 
 // 앨범 정보 (앨범명 · 가수 · 추천곡) — 줄 사이를 살짝 띄운다. 줄임 처리는 각 줄 스타일이 맡는다
@@ -78,10 +74,6 @@ export const artistNameStyle = css`
   font-weight: 500;
   color: ${colors.text.secondary};
   line-height: 1.3;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 13px;
-  }
 `;
 
 // 대표곡
@@ -95,10 +87,6 @@ export const trackNameStyle = css`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 12px;
-  }
 `;
 
 // 미리듣기 상태 줄 — 격자 칸 13px, 작은 칸(소개 카드 240 이하)은 12px (목업)
@@ -113,6 +101,11 @@ export const playingIndicatorStyle = css`
   font-weight: 600;
   /* 상태가 바뀌어도(빈 줄 · 아이콘 24 · 막대 14) 아래 배지가 움직이지 않게 */
   min-height: 24px;
+
+  /* 끝까지 들은 뒤 — 누를 것도 재생 중도 아니라 회색 */
+  &[data-ended='true'] {
+    color: ${colors.text.tertiary};
+  }
 
   /* 재생 준비 중에만 깜빡인다 */
   &[data-waiting='true'] {

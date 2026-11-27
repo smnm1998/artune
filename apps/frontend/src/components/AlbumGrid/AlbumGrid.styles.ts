@@ -1,8 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { BREAKPOINTS } from '@/constants/breakpoints';
-
-const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
+import { MEDIA } from '@/constants/breakpoints';
 
 // 소개 카드 → 격자
 export const listStyle = css`
@@ -20,7 +18,7 @@ export const gridContainerStyle = (featureFirst: boolean) => css`
   row-gap: 28px;
   width: 100%;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     column-gap: 14px;
     row-gap: 22px;
   }
@@ -37,7 +35,7 @@ export const gridItemStyle = css`
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 
-  ${COMPACT} {
+  ${MEDIA.compact} {
     gap: 10px;
   }
 `;

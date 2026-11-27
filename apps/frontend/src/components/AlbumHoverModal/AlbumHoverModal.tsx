@@ -26,14 +26,14 @@ interface AlbumHoverModalProps {
 function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
   const hasPreviewUrl = !!album.preview_url?.trim();
 
-  const { audioRef, isPlaying, error } = usePreviewAudio({
+  const { audioRef, isPlaying, error, isEnded } = usePreviewAudio({
     src: album.preview_url ?? undefined,
     isEnabled: isOpen && hasPreviewUrl,
     fadeOutSeconds: 2,
   });
   // 받는 중이 0.4초를 넘길 때만 '재생 준비 중' — 금방 재생되면 빈 줄에서 바로 '재생 중'으로
   const showWaiting = useDelayedFlag(
-    isOpen && hasPreviewUrl && !isPlaying && !error,
+    isOpen && hasPreviewUrl && !isPlaying && !error && !isEnded,
     PREVIEW_WAITING_DELAY_MS,
   );
 
@@ -66,7 +66,11 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
               </div>
 
               {/* 깜빡임은 '재생 준비 중'에만 — 재생 중은 막대가 움직이고, 불가는 멈춰 있다. 비어 있어도 줄 높이는 지킨다 */}
-              <div css={playingIndicatorStyle} data-waiting={showWaiting}>
+              <div
+                css={playingIndicatorStyle}
+                data-waiting={showWaiting}
+                data-ended={isEnded}
+              >
                 {!hasPreviewUrl ? (
                   <>
                     <IoWarning size={24} />
@@ -82,6 +86,8 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                     <IoWarning size={24} />
                     <span>재생 불가: {error}</span>
                   </>
+                ) : isEnded ? (
+                  <span>미리듣기가 끝났어요</span>
                 ) : showWaiting ? (
                   <>
                     <IoPlayCircle size={24} />

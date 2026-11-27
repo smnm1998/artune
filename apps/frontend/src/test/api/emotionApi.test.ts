@@ -143,14 +143,16 @@ describe('analyzeEmotionStream', () => {
     );
   });
 
-  it('네트워크 오류는 브라우저 영어 메시지 대신 연결 끊김 문구로 바꾼다', async () => {
+  it('네트워크 오류는 브라우저 영어 메시지 대신 연결 끊김 문구로 바꾸고, 원래 오류는 cause로 남긴다', async () => {
+    const networkError = new TypeError('Failed to fetch');
     stubFetch(async () => {
-      throw new TypeError('Failed to fetch');
+      throw networkError;
     });
 
-    await expect(analyzeEmotionStream('기분 좋아')).rejects.toThrow(
-      CONNECTION_LOST,
-    );
+    await expect(analyzeEmotionStream('기분 좋아')).rejects.toMatchObject({
+      message: CONNECTION_LOST,
+      cause: networkError,
+    });
   });
 
   it('취소·시간 초과는 바꾸지 않고 그대로 넘긴다', async () => {

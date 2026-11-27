@@ -45,8 +45,13 @@ function ResultPage() {
   const isLoading = useAppStore((state) => state.isLoading);
   const [selectedMode, setSelectedMode] = useState<PlaylistMode>('immerse');
   const [viewMode, setViewMode] = useState<ViewMode>('artwork');
-  // 좁은 화면에서 누른 곡 — 플레이어 모달로 연다
+  // 좁은 화면에서 누른 곡 — 플레이어 모달로 연다. 닫을 때는 곡을 남겨 둬 닫히는 동안 그 곡으로 페이드아웃
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const openPlayer = (track: Track) => {
+    setSelectedTrack(track);
+    setIsPlayerOpen(true);
+  };
   const isCompactView = useMediaQuery(`(max-width: ${BREAKPOINTS.compact}px)`);
 
   if (!emotionResult && !isLoading) return null;
@@ -154,7 +159,7 @@ function ResultPage() {
                   tracks={tracks}
                   pending={pending}
                   interaction={isCompactView ? 'tap' : 'hover'}
-                  onTrackClick={setSelectedTrack}
+                  onTrackClick={openPlayer}
                 />
               )}
             </motion.div>
@@ -162,8 +167,8 @@ function ResultPage() {
         )}
 
         <MobilePlayerModal
-          isOpen={!!selectedTrack}
-          onClose={() => setSelectedTrack(null)}
+          isOpen={isPlayerOpen}
+          onClose={() => setIsPlayerOpen(false)}
           track={selectedTrack}
         />
       </motion.div>

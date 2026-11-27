@@ -69,7 +69,7 @@ export async function analyzeEmotionStream(
     );
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new Error(CONNECTION_LOST);
+    throw new Error(CONNECTION_LOST, { cause: error });
   }
   if (!response.ok) throw new Error(await httpErrorMessage(response));
   if (!response.body) throw new Error(CONNECTION_LOST);
@@ -91,7 +91,7 @@ export async function analyzeEmotionStream(
     }
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new Error(CONNECTION_LOST);
+    throw new Error(CONNECTION_LOST, { cause: error });
   }
   // error 이벤트면 서버 문구로, complete 없이 끝났으면 연결 끊김으로
   throw new Error(failure ?? CONNECTION_LOST);

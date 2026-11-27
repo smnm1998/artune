@@ -531,4 +531,24 @@ describe('selectByRegionQuotaStream — 후보가 하나씩 도착해도 같은 
     await expect(stream.result).rejects.toMatchObject({ name: 'AbortError' });
     expect(resolve).toHaveBeenCalledTimes(1);
   });
+
+  it('후보를 기다리는 중에 취소되면 결과를 아직 기다리지 않아도 처리 안 된 거부로 남지 않는다 (연결이 끊겨도 서버가 죽지 않게)', async () => {
+    const unhandled = jest.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      const controller = new AbortController();
+      const stream = selectByRegionQuotaStream<Pick>(async (p) => p.found, {
+        signal: controller.signal,
+      });
+
+      // 쓰는 쪽(servePicksStream)은 입력이 끝난 뒤에야 result를 기다린다 — 그 전에 끊긴 경우
+      controller.abort();
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(unhandled).not.toHaveBeenCalled();
+      await expect(stream.result).rejects.toMatchObject({ name: 'AbortError' });
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+  });
 });

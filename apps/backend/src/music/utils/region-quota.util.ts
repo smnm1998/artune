@@ -235,6 +235,7 @@ export interface QuotaStream<C> {
  * - 빌리기·뒤로 민 곡(머리 곡·본 곡)·남은 자리 채우기는 전체 순위가 필요하다 — 1단계가 자리를 다 못 채웠다면 입력이 끝난 뒤라 그때 한다
  * - 해석은 지금 단계의 남은 자리만큼(최대 concurrency) 앞서 시작한다. 기다리는 동안 도착한 후보도 그 안이면 바로 시작
  * - 묶음 사이 쉼은 없다 — 후보가 AI 생성 속도로 도착해 호출 간격이 저절로 벌어진다 (차단은 측정으로 확인)
+ * - 취소되면 result가 그 이유로 거부된다. 아직 기다리는 쪽이 없어도 처리 안 된 거부로 남지 않는다
  */
 export function selectByRegionQuotaStream<C extends QuotaCandidate>(
   resolve: (candidate: C) => Promise<ITunesTrack | null>,
@@ -332,6 +333,11 @@ export function selectByRegionQuotaStream<C extends QuotaCandidate>(
     return selected;
   };
 
+  const result = run();
+  // 쓰는 쪽은 입력이 끝난 뒤에야 result를 기다린다 — 그 전에 취소(연결 끊김)되면 거부가 처리 안 된 채 남아
+  // Node가 프로세스를 내린다(11/27 재현: 머리말 전에 요청을 끊으면 서버 종료). 나중에 기다리면 거부는 그대로 받는다
+  result.catch(() => {});
+
   return {
     push(candidate) {
       if (ended) return;
@@ -342,6 +348,6 @@ export function selectByRegionQuotaStream<C extends QuotaCandidate>(
       ended = true;
       notify();
     },
-    result: run(),
+    result,
   };
 }

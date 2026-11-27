@@ -130,7 +130,6 @@ export class MusicService {
       }
     } catch (error) {
       stop.abort(error);
-      quota.result.catch(() => {});
       hurry = true;
       early.wake?.();
       throw error;

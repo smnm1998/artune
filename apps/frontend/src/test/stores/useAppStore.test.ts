@@ -33,7 +33,6 @@ const trackOf = (key: string): Track => ({
   name: '',
   artists: [],
   album: { name: '', images: [] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key,

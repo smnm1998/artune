@@ -43,7 +43,6 @@ const expectMappedTrack = ({ track, key }: ServedTrack) => ({
     name: track.collectionName,
     images: [{ url: track.artworkUrl100.replace('100x100bb', '600x600bb') }],
   },
-  duration_ms: track.trackTimeMillis,
   preview_url: track.previewUrl,
   appleMusicUrl: track.trackViewUrl,
   key,

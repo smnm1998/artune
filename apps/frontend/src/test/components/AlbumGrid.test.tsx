@@ -10,7 +10,6 @@ const track = (n: number): Track => ({
   name: `곡 ${n}`,
   artists: [{ name: `가수 ${n}` }],
   album: { name: `앨범 ${n}`, images: [{ url: `https://img/${n}.jpg` }] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: `https://music.apple.com/kr/song/${n}`,
   key: n.toString(16).padStart(8, '0'),

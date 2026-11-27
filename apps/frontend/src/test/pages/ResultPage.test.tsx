@@ -9,7 +9,6 @@ const track: Track = {
   name: '밤편지',
   artists: [{ name: '아이유' }],
   album: { name: 'Palette', images: [{ url: '/cover.png' }] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key: '0000000a',

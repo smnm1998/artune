@@ -14,7 +14,6 @@ const track = (songKey: string): Track => ({
   name: '',
   artists: [],
   album: { name: '', images: [] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key: songKey,

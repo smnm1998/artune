@@ -20,7 +20,6 @@ export interface Track {
   name: string;
   artists: Artist[];
   album: AlbumInfo;
-  duration_ms: number;
   preview_url: string | null;
   /** 이 곡의 Apple Music 주소(KR 스토어) — 화면의 "Apple Music에서 듣기" 배지가 여기로 연결된다 */
   appleMusicUrl: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { EmotionResponse, Track } from '@artune/shared-types';
-import { analyzeEmotionWithProgress, CONNECTION_LOST } from '@/api/emotionApi';
+import { analyzeEmotionStream, CONNECTION_LOST } from '@/api/emotionApi';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 
 const encoder = new TextEncoder();
@@ -28,7 +28,7 @@ function stubFetch(impl: (...args: unknown[]) => Promise<Response>) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('analyzeEmotionWithProgress', () => {
+describe('analyzeEmotionStream', () => {
   const result = { emotionLabel: '기쁨' } as EmotionResponse;
 
   it('글과 이력을 본문에 실어 POST로 보내고, complete 이벤트의 응답을 돌려준다', async () => {
@@ -39,7 +39,7 @@ describe('analyzeEmotionWithProgress', () => {
     const controller = new AbortController();
 
     await expect(
-      analyzeEmotionWithProgress('기분 좋아', {
+      analyzeEmotionStream('기분 좋아', {
         signal: controller.signal,
         seen,
       }),
@@ -55,22 +55,22 @@ describe('analyzeEmotionWithProgress', () => {
     expect(init.signal).toBe(controller.signal);
   });
 
-  it('progress 이벤트마다 진행률을 알린다', async () => {
+  it('스트림이 열리면(HTTP 200) 첫 이벤트보다 먼저 한 번 알리고, progress 이벤트는 쓰지 않는다', async () => {
     stubFetch(async () =>
       streamResponse(
         frame({ type: 'progress', progress: 10, message: '분석 중' }),
-        frame({ type: 'progress', progress: 60, message: '찾는 중' }),
+        frame({ type: 'meta', data: result }),
         frame({ type: 'complete', data: result }),
       ),
     );
-    const onProgress = vi.fn();
+    const received: string[] = [];
 
-    await analyzeEmotionWithProgress('기분 좋아', { onProgress });
+    await analyzeEmotionStream('기분 좋아', {
+      onOpen: () => received.push('open'),
+      onMeta: () => received.push('meta'),
+    });
 
-    expect(onProgress.mock.calls).toEqual([
-      [10, '분석 중'],
-      [60, '찾는 중'],
-    ]);
+    expect(received).toEqual(['open', 'meta']);
   });
 
   it('meta·track 이벤트를 받은 순서대로 알린다', async () => {
@@ -88,7 +88,7 @@ describe('analyzeEmotionWithProgress', () => {
     const received: unknown[] = [];
 
     await expect(
-      analyzeEmotionWithProgress('기분 좋아', {
+      analyzeEmotionStream('기분 좋아', {
         onMeta: (data) => received.push(['meta', data]),
         onTrack: (mode, index, track) =>
           received.push(['track', mode, index, track]),
@@ -109,7 +109,7 @@ describe('analyzeEmotionWithProgress', () => {
       ),
     );
 
-    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+    await expect(analyzeEmotionStream('기분 좋아')).rejects.toThrow(
       '감정 분석에 실패했습니다.',
     );
   });
@@ -123,9 +123,12 @@ describe('analyzeEmotionWithProgress', () => {
         ),
     );
 
-    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+    const onOpen = vi.fn();
+
+    await expect(analyzeEmotionStream('기분 좋아', { onOpen })).rejects.toThrow(
       '요청이 너무 많아요.',
     );
+    expect(onOpen).not.toHaveBeenCalled(); // 열리지 않았다 — 입력 화면에 머문다
   });
 
   it('complete 없이 스트림이 끝나면 연결 끊김으로 실패한다', async () => {
@@ -135,19 +138,21 @@ describe('analyzeEmotionWithProgress', () => {
       ),
     );
 
-    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
+    await expect(analyzeEmotionStream('기분 좋아')).rejects.toThrow(
       CONNECTION_LOST,
     );
   });
 
-  it('네트워크 오류는 브라우저 영어 메시지 대신 연결 끊김 문구로 바꾼다', async () => {
+  it('네트워크 오류는 브라우저 영어 메시지 대신 연결 끊김 문구로 바꾸고, 원래 오류는 cause로 남긴다', async () => {
+    const networkError = new TypeError('Failed to fetch');
     stubFetch(async () => {
-      throw new TypeError('Failed to fetch');
+      throw networkError;
     });
 
-    await expect(analyzeEmotionWithProgress('기분 좋아')).rejects.toThrow(
-      CONNECTION_LOST,
-    );
+    await expect(analyzeEmotionStream('기분 좋아')).rejects.toMatchObject({
+      message: CONNECTION_LOST,
+      cause: networkError,
+    });
   });
 
   it('취소·시간 초과는 바꾸지 않고 그대로 넘긴다', async () => {
@@ -159,7 +164,7 @@ describe('analyzeEmotionWithProgress', () => {
     });
 
     await expect(
-      analyzeEmotionWithProgress('기분 좋아', { signal: controller.signal }),
+      analyzeEmotionStream('기분 좋아', { signal: controller.signal }),
     ).rejects.toBe(timeout);
   });
 });

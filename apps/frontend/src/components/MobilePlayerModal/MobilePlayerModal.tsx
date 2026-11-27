@@ -1,38 +1,28 @@
-import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoClose, IoWarning } from 'react-icons/io5';
 import { Track } from '@/types/track';
-import useAudioScratch from '@/hooks/audio/useAudioScratch';
+import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
 import PreviewSource from '@/components/PreviewSource/PreviewSource';
 import * as styles from './MobilePlayerModal.styles';
 
 interface MobilePlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 마지막으로 연 곡 — 닫혀도(isOpen=false) 남겨 둬야 닫히는 동안 그 곡으로 페이드아웃한다 */
   track: Track | null;
 }
 
 function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
-  // 모달이 닫힐 때(track=null)에도 정보를 유지하기 위해 로컬 상태 사용
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(track);
+  const activeTrack = track;
 
-  useEffect(() => {
-    if (track) {
-      setCurrentTrack(track);
-    }
-  }, [track]);
-
-  // currentTrack이 없으면 아예 렌더링 안 함 (초기 상태)
-  // 닫힐 때는 track은 null이지만 currentTrack은 남아있어서 애니메이션/페이드아웃 가능
-  const activeTrack = track || currentTrack;
-
-  const { audioRef, isPlaying, error } = useAudioScratch({
+  const { audioRef, isPlaying, error } = usePreviewAudio({
     src: activeTrack?.preview_url ?? undefined,
-    // isOpen이 true이고 실제 track prop이 있을 때만 재생 (닫히면 isEnabled=false -> 페이드아웃)
-    isEnabled: isOpen && !!track?.preview_url,
-    scratchDuration: 1.5,
+    // 열려 있을 때만 재생 (닫히면 isEnabled=false → 페이드아웃)
+    isEnabled: isOpen && !!activeTrack?.preview_url,
+    fadeOutSeconds: 1.5,
   });
 
+  // 아직 한 번도 열지 않았다
   if (!activeTrack) return null;
 
   return (

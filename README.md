@@ -40,7 +40,7 @@
   - 곡마다 **30초 미리듣기**를 제공합니다. PC는 커버에 마우스를 올리면, 모바일은 곡을 탭하면 재생됩니다.
   - **CD 인터랙션**: PC에서는 재생할 때 CD가 커버 안으로 들어가고, 멈출 때는 볼륨이 서서히 줄어들며(fade-out) 멈춥니다.
 - **감정 맞춤 아트워크**: 감정마다 디저트 픽셀 아트를 보여 줍니다. Gemini로 미리 만든 이미지이며, DALL·E 실시간 생성은 비용 때문에 멈췄습니다.
-- **첫 곡부터 바로**: AI가 곡을 쓰는 동안 한 곡씩 iTunes에서 찾아 바로 보냅니다(POST 스트림, SSE 형식). 첫 곡이 도착하면 결과 화면으로 넘어가고, 나머지 곡은 오는 대로 붙습니다. 첫 곡까지 p50 12.2초 → 3.2초. 첫 곡 전까지는 진행률을 프로그레스 바로 보여 줍니다.
+- **첫 곡부터 바로**: AI가 곡을 쓰는 동안 한 곡씩 iTunes에서 찾아 바로 보냅니다(POST 스트림, SSE 형식). 스트림이 열리면 바로 결과 화면으로 넘어가 모드마다 10칸을 스켈레톤으로 두고, 곡이 오는 대로 칸을 채웁니다. 첫 곡까지 p50 12.2초 → 3.2초.
 - **안전과 표기**:
   - 글에서 위기 신호(자해·자살 의도)가 보이면 추천 위에 상담 전화(109) 안내를 띄웁니다.
   - 입력·결과 화면 맨 아래에 생성형 AI를 쓴다는 사실을 알립니다.
@@ -61,11 +61,12 @@ sequenceDiagram
 
     User->>Server: 글 + 모드별 최근 본 곡 키 (POST /api/emotion/analyze-stream)
     Note over Server: IP당 분당 5회 제한 · 입력 500자 검증 (걸리면 HTTP 429·400)
-    Server-->>User: 📡 스트림 시작 · 진행률 0% → 10%
+    Server-->>User: 📡 스트림 시작 (HTTP 200)
+    Note over User: 바로 결과 화면으로 — 머리말과 모드별 곡 10칸은 스켈레톤
 
     Server->>OpenAI: 감정 분석 + 모드별 선곡 요청 (Structured Outputs, 스트림)
     OpenAI-->>Server: 감정 · 위기 신호 · 공감 문구 (조각으로 흘러옴)
-    Server-->>User: 💬 meta — 감정 · 공감 문구 · 아트워크 · 진행률 30%
+    Server-->>User: 💬 meta — 감정 · 공감 문구 · 아트워크 (머리말 스켈레톤을 채움)
 
     loop AI가 곡 하나를 다 쓸 때마다 (심취 12곡 → 완화 15곡)
         OpenAI-->>Server: 곡 하나 (아티스트 · 곡명 · 지역)
@@ -73,9 +74,8 @@ sequenceDiagram
         iTunes-->>Server: 트랙 + 30초 미리듣기
         Server->>Server: 처음 보는 곡 → 머리 곡 → 이미 본 곡 순으로 한국 6 · 팝 3 · 일본 1 자리에 배정
         Server->>iTunes: KR 스토어 표기 조회 (첫 곡은 바로, 이후 1.5초마다 모아서)
-        Server-->>User: 🎵 track — 모드 · 순서 · 곡 (진행률 → 95%)
+        Server-->>User: 🎵 track — 모드 · 순서 · 곡 (스켈레톤 칸을 카드로 채움)
     end
-    Note over User: 첫 곡이 오면 결과 화면으로, 나머지 곡은 오는 대로 카드 추가
     Server-->>User: ✅ complete — 플레이리스트 2종 전체 (track을 모은 것과 같음)
     User->>User: 받은 곡 키를 브라우저 이력에 저장 (모드별 최근 40곡)
     Note over User,Server: 연결이 끊기면(창 닫기·다시하기) OpenAI 생성 · iTunes 해석 중단
@@ -89,31 +89,34 @@ sequenceDiagram
 - **Package Manager**: npm Workspaces
 - **Shared Types**: `packages/shared-types` (프론트·백 응답 타입 공유)
 - **Runtime**: Node.js 24
+- **CI**: GitHub Actions — 푸시·PR마다 lint · 타입 검사 · 테스트 · 빌드 (`.github/workflows/ci.yml`)
 
 ### Frontend (`apps/frontend`)
 
 - **Core**: React 19, Vite 7, TypeScript
 - **State Management**: Zustand 5 (요청·취소·결과 상태와 비동기 액션)
 - **Styling**: Emotion (CSS-in-JS), Framer Motion (애니메이션)
-- **Testing**: Vitest, React Testing Library (컴포넌트·스토어·API)
+- **Testing**: Vitest, React Testing Library (컴포넌트·페이지·스토어·API)
+- **Lint**: ESLint 10 (flat config) + typescript-eslint + react-hooks, Prettier
 - **Deploy**: Vercel
 
 ### Backend (`apps/backend`)
 
 - **Core**: NestJS 11 (Module 기반 아키텍처)
-- **Language**: TypeScript (strictNullChecks 활성화)
+- **Language**: TypeScript (strict 활성화)
 - **External APIs**:
   - **OpenAI Chat Completions API**: 감정 분석 + 모드별 선곡 (Structured Outputs)
   - **iTunes Search API**: 곡 검색 · KR 스토어 표기 조회 · 30초 미리듣기
 - **Caching**: NestJS CacheModule (곡 해석 결과 6시간, 차단·네트워크 오류는 캐시하지 않고 다음 요청에서 재시도)
 - **Rate Limit**: `@nestjs/throttler` (IP당 분당 5회, Railway가 넣는 `X-Real-IP` 기준)
 - **Testing**: Jest (서비스·유틸 단위 테스트, 요청 제한은 실제 HTTP 요청으로 검증)
+- **Lint**: ESLint 10 (flat config) + typescript-eslint, Prettier
 - **Protocol**: HTTP, POST 스트리밍 (SSE 형식 — 프론트는 `fetch` + `ReadableStream`으로 읽음)
 - **Deploy**: Railway (Railpack)
 
 ## 📱 UI/UX 미리보기
 
-> 아래 화면은 곡 스트리밍, Apple Music 배지, 하단 고지를 넣기 전 버전입니다.
+> 아래 화면은 곡 스트리밍 · 스켈레톤 로딩, Apple Music 배지, 하단 고지를 넣기 전 버전입니다(왼쪽 로딩 화면은 지금은 없습니다).
 
 |                        감정 입력 및 로딩                         |                         결과 페이지 (PC View)                          |                                    모바일/태블릿 반응형                                     |
 | :--------------------------------------------------------------: | :--------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
@@ -136,8 +139,6 @@ sequenceDiagram
 ```env
 PORT=3000
 OPENAI_API_KEY=your_openai_key
-# 배포 환경(NODE_ENV=production)에서만 쓰는 값: 추가로 허용할 프론트엔드 주소
-# FRONTEND_URL=https://your-frontend.example.com
 ```
 
 #### Frontend (`apps/frontend/.env`)
@@ -162,11 +163,12 @@ npm run dev
 # Backend:  http://localhost:3000
 ```
 
-### 4. 테스트
+### 4. 테스트 · 린트
 
 ```bash
 npm run test --workspace=backend          # Jest
 npm run test --workspace=frontend -- --run # Vitest (한 번 실행)
+npm run lint                               # ESLint — 백·프론트 (설정은 루트 eslint.config.mjs)
 ```
 
 ## 📂 프로젝트 구조
@@ -186,7 +188,7 @@ artune/
 │   └── frontend/                   # React Client
 │       └── src/
 │           ├── components/         # AlbumCard · AlbumGrid · AlbumHoverModal · MobilePlayerModal · PreviewSource 등
-│           ├── hooks/              # useAudioScratch · useMediaQuery · useHover 등
+│           ├── hooks/              # usePreviewAudio · useMediaQuery · useHover 등
 │           ├── stores/             # Zustand Store (요청 · 취소 · 결과)
 │           ├── api/                # POST 스트림 읽기 (SSE 형식)
 │           ├── utils/              # 본 곡 이력(localStorage) · 입력 검증
@@ -228,13 +230,13 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 - 12개 입력 모두 첫 곡이 빨라졌습니다(같은 입력끼리 차이의 중앙값 8.61초). 곡 채움 100%, iTunes 차단 0건.
 - **목표는 아직 못 맞췄습니다.** 첫 곡 3.18초는 대략 OpenAI 첫 응답 1.6초 + 공감 문구 0.8초 + 첫 곡 생성·iTunes 검색·KR 표기 조회 0.8초입니다. 전체 8.88초는 OpenAI가 27곡을 다 쓰는 데만 7.8초가 걸리고, 그 뒤 남은 해석이 1.1초입니다. 다음 후보는 곡을 공감 문구보다 먼저 쓰게 하기(선곡 품질 재확인 필요)와 완화 곡을 15 → 12곡으로 줄이기입니다.
 - 대가: KR 표기 조회를 곡이 오는 대로 나눠 하느라 요청당 iTunes 호출이 27 → 29.5회(p50)로 늘었습니다.
-- 첫 곡 시점은 브라우저가 첫 곡을 받은 때이고, 결과 화면으로 넘어가는 애니메이션(1.6초)은 포함하지 않았습니다.
+- 첫 곡 시점은 브라우저가 첫 곡을 받은 때입니다. 이때는 결과 화면으로 넘어가는 애니메이션(1.6초)이 더 붙어 있었는데, 이후 스트림이 열리면 바로 스켈레톤 결과 화면으로 넘어가게 바꿔 받은 곡이 곧바로 카드로 보입니다(같은 모의 서버 조건에서 첫 카드가 보이는 시점 3.92초 → 2.28초).
 
 ### 3. 측정 기반 응답시간 최적화 (17.9초 → 11.6초, -35%)
 
 > 초기 아티스트 기반 버전(7월)의 작업입니다. 지금 구조(AI 직접 선곡)의 측정은 위 2번입니다.
 
-단계별 타이밍 계측을 심어 병목을 실측으로 식별한 뒤 최적화했습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing.log))
+단계별 타이밍 계측을 심어 병목을 실측으로 식별한 뒤 최적화했습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing/response-timing.log))
 
 | 단계 | 응답시간 | 조치 |
 | :-- | :-- | :-- |
@@ -244,7 +246,7 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 
 ### 4. 오디오 UX 디테일 (HTMLAudioElement & Interaction)
 
-- 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`useAudioScratch`)을 구현했습니다.
+- 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`usePreviewAudio`)을 구현했습니다.
 - `requestAnimationFrame`으로 프레임마다 볼륨을 줄여 페이드아웃한 뒤 멈춥니다. 호버를 풀면 0.5초로 짧게 줄입니다.
 - 탭이 가려지면 바로 멈추고, 이벤트 리스너와 타이머를 정리합니다.
 
@@ -252,6 +254,27 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 
 - Emotion을 활용해 세련된 Dark Glassmorphism 테마를 구축했습니다.
 - PC에서는 한 화면에 아트워크와 리스트를, 모바일에서는 토글 방식을 적용하여 디바이스별 최적화된 레이아웃을 제공합니다.
+
+## ⚠️ 한계와 알고 있는 문제
+
+**약관 · 표기**
+
+- **미리듣기 사용 범위**: iTunes Search API 약관은 미리듣기를 스토어로 이어지는 홍보 목적에 허용합니다. 열린 곡(PC 호버 카드 · 모바일 모달)에 Apple Music 배지와 "provided courtesy of iTunes"를 붙이고 연속 · 자동 재생 없이 한 번만 틀지만, 감정 추천 서비스의 미리듣기가 '홍보 목적'에 맞는지는 약관 해석의 영역으로 남아 있습니다.
+- **배지와의 거리**: Apple Music 가이드라인의 '한 화면에 배지 하나'를 따라 배지는 열린 곡에만 둡니다. 그래서 모바일 그리드의 커버는 누르기 전엔 배지와 떨어져 있고(약관은 미리듣기 · 커버를 배지 가까이 두라고 합니다), 모바일 모달이 열릴 때의 확대 효과에 배지도 함께 움직입니다(가이드라인은 배지 애니메이션을 금지합니다).
+
+**설계**
+
+- **iTunes 호출 한도(약 20회/분)**: 요청 하나가 iTunes를 p50 29.5회 부릅니다. 6시간 캐시와 '필요한 곡만 해석'으로 줄였지만 동시 사용자가 늘면 차단(403)될 수 있습니다. 다음 단계는 서버 전체의 호출 큐입니다.
+- **메모리에만 있는 상태**: iTunes 캐시와 노출 기록(여러 화면에 반복되는 곡 판별)이 프로세스 메모리에 있어 재시작하면 비고, 서버 한 대를 전제로 합니다.
+- **인증 없음**: 공개 API라 IP당 분당 5회 제한이 남용 방지의 전부이고, IP를 여러 개 쓰는 남용의 마지막 방어선은 OpenAI 프로젝트 예산 한도입니다.
+- **위기 신호 판정**: 자해 · 자살 의도는 LLM이 판단해 상담 안내를 띄웁니다. 정확도를 재는 입력 세트(명시적 · 완곡한 표현, '죽겠다' 같은 관용 표현)는 아직 없어 놓치는 경우가 있을 수 있습니다.
+- **해석 오매칭**: 채택 곡 정밀도는 96%(사람 검수 100건)로, 동명곡이나 다른 버전이 드물게 섞입니다.
+- **고정 규칙**: 지역 비율(한국 6 · 팝 3 · 일본 1)은 알고리즘이 아니라 제품 결정이고, 사용자가 바꿀 수 없습니다.
+- **정적 아트워크**: DALL·E 실시간 생성은 비용 때문에 멈추고 감정별 이미지 12장을 씁니다. 생성 코드는 다시 켤 수 있게 남겨 두었습니다.
+
+**측정**
+
+- 응답 시간은 12개 입력을 이전 · 이후 서버에 번갈아 보낸 A/B 측정이고, 실사용 지표(운영 로그 기반)는 없습니다. 스켈레톤 화면의 효과(첫 카드 3.92초 → 2.28초)는 모의 서버 기준입니다.
 
 ## 기여자
 

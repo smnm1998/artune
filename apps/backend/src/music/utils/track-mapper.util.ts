@@ -1,5 +1,5 @@
-import { Track } from '@artune/shared-types';
-import { ITunesTrack } from 'src/itunes/itunes-track.type';
+import type { Track } from '@artune/shared-types';
+import type { ITunesTrack } from '../../itunes/itunes-track.type';
 
 /** @param key 곡 키(songKey) — 브라우저 이력에 저장된다 */
 export function mapItunesTrackToFrontend(
@@ -16,7 +16,6 @@ export function mapItunesTrackToFrontend(
         { url: track.artworkUrl100?.replace('100x100bb', '600x600bb') ?? '' },
       ],
     },
-    duration_ms: track.trackTimeMillis,
     preview_url: track.previewUrl ?? null,
     appleMusicUrl: track.trackViewUrl,
     key,

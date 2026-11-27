@@ -21,7 +21,7 @@ import { THROTTLE_OPTIONS } from './throttle.config';
     ThrottlerModule.forRoot(THROTTLE_OPTIONS),
     EmotionModule,
   ],
-  // 모든 경로에 IP당 요청 제한 (SSE 경로 포함)
+  // 모든 경로에 IP당 요청 제한 (스트림 경로 포함)
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

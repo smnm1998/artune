@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DalleService } from './dalle.service';
 
-/**
- * DALLE 감정 분석 모듈
- * - DalleService 제공하고 다른 모듈에서 사용할 수 있도록 export
- */
+/** 감정별 아트워크 — DalleService(지금은 정적 이미지)를 Emotion 모듈에 제공한다 */
 @Module({
   providers: [DalleService],
   exports: [DalleService],

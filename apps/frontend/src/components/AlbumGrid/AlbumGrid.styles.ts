@@ -33,3 +33,11 @@ export const gridContainerStyle = css`
     padding: 0 4px;
   }
 `;
+
+// 받은 곡 칸 — 길게 누르기 메뉴(모바일)와 글자 선택을 막는다
+export const gridItemStyle = css`
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+`;

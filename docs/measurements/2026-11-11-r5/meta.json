@@ -1,0 +1,64 @@
+{
+  "harness": "probe-latency",
+  "startedAt": "2026-11-11T04:11:50.138Z",
+  "commit": "ed3ebaf",
+  "dirty": false,
+  "node": "v22.23.4",
+  "mock": false,
+  "intervalSec": 120,
+  "inputs": {
+    "file": "docs/measurements/eval/inputs.json",
+    "sha1": "e10a06bf1544",
+    "seed": 20261110,
+    "ids": [
+      "romance-clear",
+      "neutral-ambig",
+      "sentimental-ambig",
+      "context-resigned",
+      "romance-ambig",
+      "lonely-ambig",
+      "dreamy-ambig",
+      "context-sarcasm",
+      "confident-clear",
+      "excited-ambig",
+      "anger-clear",
+      "surprise-ambig",
+      "excited-clear",
+      "anger-ambig",
+      "surprise-clear",
+      "sadness-clear",
+      "confident-ambig",
+      "lonely-clear",
+      "joy-clear",
+      "sadness-ambig",
+      "joy-ambig",
+      "fear-ambig",
+      "fear-clear",
+      "dreamy-clear",
+      "neutral-clear",
+      "sentimental-clear"
+    ],
+    "repeatIds": [
+      "romance-clear",
+      "anger-clear",
+      "sadness-clear",
+      "lonely-clear",
+      "joy-clear",
+      "neutral-clear"
+    ]
+  },
+  "servers": [
+    {
+      "name": "current",
+      "transport": "stream",
+      "dist": "apps/backend/dist",
+      "frozen": null
+    }
+  ],
+  "order": null,
+  "pass": {
+    "firstSongMs": 2500,
+    "completeMs": 8000
+  },
+  "finishedAt": "2026-11-11T05:18:03.032Z"
+}

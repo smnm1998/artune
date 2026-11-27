@@ -11,7 +11,7 @@ import { ExposureWindow } from '../music/exposure-window';
 import { PickResult } from '../openai/pick-prompt';
 import { ITunesTrack } from '../itunes/itunes-track.type';
 
-// 실제 모듈 연결(EmotionModule → MusicModule의 노출 창 provider)로 SSE 요청을 보낸다.
+// 실제 모듈 연결(EmotionModule → MusicModule의 노출 창 provider)로 프론트와 같은 POST 스트림 요청을 보낸다.
 // 바깥 서비스(OpenAI·iTunes)만 바꾸고, .env는 읽지 않는다 (AppModule은 .env를 불러와서 쓰지 않는다)
 const picks: PickResult = {
   emotion: 'joy',
@@ -39,7 +39,7 @@ const picks: PickResult = {
   ],
 };
 
-describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
+describe('EmotionModule (POST 스트림 경로, 모듈 연결)', () => {
   let app: INestApplication;
   let ids: Map<string, number>;
 
@@ -58,7 +58,14 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
       ],
     })
       .overrideProvider(OpenAIService)
-      .useValue({ pickSongs: jest.fn().mockResolvedValue(picks) })
+      .useValue({
+        // AI가 곡을 쓰는 대로 넘기는 흉내
+        pickSongsStream: jest.fn(async (_text, { onPick } = {}) => {
+          for (const pick of picks.immerse) onPick?.('immerse', pick);
+          for (const pick of picks.soothe) onPick?.('soothe', pick);
+          return picks;
+        }),
+      })
       .overrideProvider(ITunesService)
       .useValue({
         // 곡마다 고정 trackId — 같은 곡은 요청이 달라도 같은 트랙
@@ -87,10 +94,10 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
 
   afterEach(() => app.close());
 
-  const analyze = async (query: Record<string, string>) => {
+  const analyze = async (body: object) => {
     const res = await request(app.getHttpServer())
-      .get('/emotion/analyze-stream')
-      .query(query)
+      .post('/emotion/analyze-stream')
+      .send(body)
       .expect(200);
     const events: EmotionStreamEvent[] = res.text
       .split('\n')
@@ -99,7 +106,7 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
     return (events.find((e) => e.type === 'complete') as CompleteEvent).data;
   };
 
-  it('곡마다 곡 키가 실리고, 쿼리로 보낸 이력의 곡은 남는 후보가 있으면 빠진다', async () => {
+  it('곡마다 곡 키가 실리고, 본문으로 보낸 이력의 곡은 남는 후보가 있으면 빠진다', async () => {
     const first = await analyze({ text: '오늘 좋았어' });
     const tracks = first.playlists.immerse.tracks;
     expect(tracks).toHaveLength(10);
@@ -111,7 +118,7 @@ describe('EmotionModule (SSE 경로, 모듈 연결)', () => {
       .slice(0, 2);
     const second = await analyze({
       text: '오늘 좋았어',
-      seenImmerse: seenSongs.map((t) => t.key).join(','),
+      seen: { immerse: seenSongs.map((t) => t.key) },
     });
 
     const names = second.playlists.immerse.tracks.map((t) => t.name);

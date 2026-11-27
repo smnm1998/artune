@@ -17,19 +17,20 @@ import {
 } from '@/utils/emotionInputValidator';
 
 /**
- * 감정 입력 페이지
- * 사용자로부터 감정 텍스트를 입력받아 Zustand store의 analyzeEmotion을 호출
+ * 감정 입력 페이지 — 검증을 통과한 글로 스토어의 analyzeEmotion을 부른다.
+ * 결과 전에 실패해 돌아오면 보낸 글(스토어 draft)로 다시 시작한다
  */
 function EmotionInputPage() {
   const analyzeEmotion = useAppStore((state) => state.analyzeEmotion);
-  const [text, setText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const draft = useAppStore((state) => state.draft);
+  const [text, setText] = useState(draft);
   const [error, setError] = useState('');
 
   const handleTextChange: React.ChangeEventHandler<HTMLTextAreaElement> = (
     e,
   ) => {
-    if (isSubmitting) return;
+    if (isLoading) return;
     const newValue = e.target.value;
 
     // 최대 길이 초과 방지
@@ -41,33 +42,18 @@ function EmotionInputPage() {
     setError(''); // 입력 시 에러 초기화
   };
 
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
+  const handleSubmit = () => {
+    if (isLoading) return; // 보내는 중 (화면이 넘어가는 동안 다시 누름)
 
-    // 검증
     const validationError = validateEmotionInput(text);
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    setIsSubmitting(true);
     setError('');
-    const textToSubmit = text.trim();
-    setText('');
-
-    try {
-      // Store에서 직접 호출
-      await analyzeEmotion(textToSubmit);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : '감정 분석 중 오류가 발생했습니다. 다시 시도해주세요.',
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    // 실패는 스토어가 상태(error)로 바꿔 토스트로 띄운다 — 여기로 던지지 않는다
+    void analyzeEmotion(text.trim());
   };
 
   return (

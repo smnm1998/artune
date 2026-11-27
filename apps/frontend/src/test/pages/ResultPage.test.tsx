@@ -9,7 +9,6 @@ const track: Track = {
   name: '밤편지',
   artists: [{ name: '아이유' }],
   album: { name: 'Palette', images: [{ url: '/cover.png' }] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key: '0000000a',
@@ -20,7 +19,7 @@ const partial: EmotionResponse = {
   emotionLabel: '슬픔',
   description: '많이 지친 하루였네요.',
   crisis: false,
-  artwork: { url: '/artwork/sadness.png', prompt: '' },
+  artwork: { url: '/artwork/sadness.png' },
   playlists: {
     immerse: { modeLabel: '감정 심취', description: '', tracks: [track] },
     soothe: { modeLabel: '감정 완화', description: '', tracks: [] },
@@ -32,8 +31,11 @@ const NOT_FOUND = '플레이리스트를 찾을 수 없어요';
 
 const showSoothe = () =>
   fireEvent.click(screen.getByRole('button', { name: '감정 완화' }));
+const trackSlots = () =>
+  document.querySelectorAll('[data-skeleton="track"]').length;
+const artworkSlot = () => document.querySelector('[data-skeleton="artwork"]');
 
-describe('결과 화면 — 곡을 받는 중', () => {
+describe('결과 화면 — 스트림이 열린 뒤 받는 대로 채운다', () => {
   // jsdom에는 matchMedia가 없다 — PC 화면(아트워크·플레이리스트 나란히)
   beforeEach(() =>
     vi.stubGlobal('matchMedia', (query: string) => ({
@@ -48,24 +50,52 @@ describe('결과 화면 — 곡을 받는 중', () => {
     useAppStore.getState().reset();
   });
 
-  it('남은 곡을 받는 중이면 아직 빈 탭에 고르는 중 문구를 보여 준다', () => {
+  it('머리말 전에는 아트워크 자리와 곡 10칸을 스켈레톤으로 두고, 고르는 중이라고 알린다', () => {
+    useAppStore.setState({ emotionResult: null, isLoading: true });
+    render(<ResultPage />);
+
+    expect(artworkSlot()).not.toBeNull();
+    expect(trackSlots()).toBe(10);
+    expect(screen.queryByText(WAITING)).not.toBeNull();
+    // 토글은 머리말 전에도 기본 이름으로 바로 쓸 수 있다
+    screen.getByRole('button', { name: '감정 완화' });
+  });
+
+  it('받은 곡은 앞에서부터 칸을 채우고, 남은 칸만 스켈레톤으로 남는다', () => {
     useAppStore.setState({ emotionResult: partial, isLoading: true });
     render(<ResultPage />);
 
-    expect(screen.queryByAltText(track.name)).not.toBeNull(); // 받은 심취 곡 커버
+    expect(artworkSlot()).toBeNull(); // 머리말이 왔다
+    expect(screen.queryByAltText(track.name)).not.toBeNull();
+    expect(trackSlots()).toBe(9);
+
     showSoothe();
 
+    expect(trackSlots()).toBe(10);
     expect(screen.queryByText(WAITING)).not.toBeNull();
     expect(screen.queryByText(NOT_FOUND)).toBeNull();
   });
 
-  it('요청이 끝났는데 빈 탭은 찾을 수 없다고 알린다 (도중에 실패한 경우 포함)', () => {
+  it('끝났는데 10곡이 안 되면 남은 칸과 안내를 지우고, 빈 탭은 찾을 수 없다고 알린다 (도중 실패 포함)', () => {
     useAppStore.setState({ emotionResult: partial, isLoading: false });
     render(<ResultPage />);
+
+    expect(screen.queryByAltText(track.name)).not.toBeNull();
+    expect(trackSlots()).toBe(0);
+    expect(screen.queryByText(WAITING)).toBeNull();
 
     showSoothe();
 
     expect(screen.queryByText(NOT_FOUND)).not.toBeNull();
-    expect(screen.queryByText(WAITING)).toBeNull();
+  });
+
+  it('위기 신호가 있으면 머리말과 함께 상담 안내를 띄운다', () => {
+    useAppStore.setState({
+      emotionResult: { ...partial, crisis: true },
+      isLoading: true,
+    });
+    render(<ResultPage />);
+
+    screen.getByRole('complementary', { name: '상담 안내' });
   });
 });

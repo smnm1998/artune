@@ -1,4 +1,4 @@
-import { useHover } from '@/hooks';
+import useHover from '@/hooks/ui/useHover';
 import {
   toggleContainerStyle,
   toggleWrapperStyle,

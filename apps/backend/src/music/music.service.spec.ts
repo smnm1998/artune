@@ -23,10 +23,43 @@ const makeTrack = (
   ...overrides,
 });
 
+// 지역별 n곡을 LLM이 고른 순서대로 (아티스트·곡명은 모두 다르다)
+const picks = (counts: Partial<Record<Region, number>>): PickedTrack[] =>
+  (Object.entries(counts) as [Region, number][]).flatMap(([region, n]) =>
+    Array.from({ length: n }, (_, i) => ({
+      artist: `${region}-artist-${i}`,
+      title: `${region} song ${i}`,
+      region,
+    })),
+  );
+const pick = (title: string, region: Region = 'korea'): PickedTrack => ({
+  artist: `${title}-artist`,
+  title,
+  region,
+});
+const names = (served: { track: ITunesTrack }[]) =>
+  served.map(({ track }) => track.artistName);
+const ticks = async (n: number) => {
+  for (let i = 0; i < n; i++) await new Promise((r) => setImmediate(r));
+};
+/** AI가 곡을 하나씩 쓰는 것처럼 흘려보낸다 */
+async function* written(items: PickedTrack[]) {
+  for (const item of items) {
+    await ticks(1);
+    yield item;
+  }
+}
+
 describe('MusicService', () => {
   let service: MusicService;
   let itunesService: jest.Mocked<ITunesService>;
   let exposure: ExposureWindow;
+  /** AI가 다 쓴 목록을 흘려보내 고른다 */
+  const serve = (
+    items: PickedTrack[],
+    mode: 'immerse' | 'soothe',
+    seen: string[] = [],
+  ) => service.servePicksStream(written(items), mode, seen);
 
   beforeEach(async () => {
     // 목록 1개부터 머리 곡을 정한다 — 기록이 다음 요청에 쓰이는지 보려고
@@ -50,32 +83,19 @@ describe('MusicService', () => {
 
     service = moduleRef.get(MusicService);
     itunesService = moduleRef.get(ITunesService);
+    // 해석 순서와 상관없이 같은 가수에 같은 트랙
+    const ids = new Map<string, number>();
+    itunesService.resolveTrack.mockImplementation(({ artist }) => {
+      if (!ids.has(artist)) ids.set(artist, ids.size + 1);
+      return Promise.resolve(makeTrack(ids.get(artist)!, artist));
+    });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('servePicks', () => {
-    // 지역별 n곡을 LLM이 고른 순서대로 (아티스트·곡명은 모두 다르다)
-    const picks = (counts: Partial<Record<Region, number>>): PickedTrack[] =>
-      (Object.entries(counts) as [Region, number][]).flatMap(([region, n]) =>
-        Array.from({ length: n }, (_, i) => ({
-          artist: `${region}-artist-${i}`,
-          title: `${region} song ${i}`,
-          region,
-        })),
-      );
-    const names = (served: { track: ITunesTrack }[]) =>
-      served.map(({ track }) => track.artistName);
-
-    beforeEach(() => {
-      let id = 0;
-      itunesService.resolveTrack.mockImplementation(({ artist }) =>
-        Promise.resolve(makeTrack(++id, artist)),
-      );
-    });
-
+  describe('servePicksStream — 고르는 규칙', () => {
     it('곡마다 곡 키(곡명 기준)를 붙여 KR 표기로 돌려준다', async () => {
       const picked = picks({ korea: 7, pop: 4, jpop: 1 });
       itunesService.localizeTracks.mockImplementation((tracks) =>
@@ -84,10 +104,9 @@ describe('MusicService', () => {
         ),
       );
 
-      const served = await service.servePicks(picked, 'immerse');
+      const served = await serve(picked, 'immerse');
 
       expect(served).toHaveLength(10);
-      expect(itunesService.localizeTracks).toHaveBeenCalledTimes(1);
       for (const { track, key } of served) {
         const pick = picked.find((p) => p.artist === track.artistName)!;
         expect(key).toBe(songKey(pick));
@@ -96,7 +115,7 @@ describe('MusicService', () => {
     });
 
     it('필요한 곡만 해석한다 — 완화 15곡이 모두 찾아지면 iTunes 해석은 10번', async () => {
-      await service.servePicks(picks({ korea: 8, pop: 5, jpop: 2 }), 'soothe');
+      await serve(picks({ korea: 8, pop: 5, jpop: 2 }), 'soothe');
 
       expect(itunesService.resolveTrack).toHaveBeenCalledTimes(10);
     });
@@ -109,7 +128,7 @@ describe('MusicService', () => {
         ),
       );
 
-      const served = await service.servePicks(
+      const served = await serve(
         picks({ korea: 7, pop: 4, jpop: 1 }),
         'immerse',
       );
@@ -122,7 +141,7 @@ describe('MusicService', () => {
       const picked = picks({ korea: 7, pop: 4, jpop: 1 });
       picked[1] = { ...picked[1], artist: picked[0].artist };
 
-      const served = await service.servePicks(picked, 'immerse');
+      const served = await serve(picked, 'immerse');
 
       expect(served).toHaveLength(10);
       expect(names(served).filter((n) => n === 'korea-artist-0')).toHaveLength(
@@ -131,7 +150,7 @@ describe('MusicService', () => {
     });
 
     it('LLM이 앞에 고른 곡부터 채운다 — 한국 8곡이면 앞의 6곡', async () => {
-      const served = await service.servePicks(
+      const served = await serve(
         picks({ korea: 8, pop: 3, jpop: 1 }),
         'immerse',
       );
@@ -144,13 +163,8 @@ describe('MusicService', () => {
 
     it('자리가 모자라면 머리 곡이 이 사람이 본 곡보다 먼저 남는다', async () => {
       // 첫 요청 화면에 나온 'korea song 0'은 머리 곡이 된다 (창의 목록 1개부터 판정)
-      await service.servePicks(picks({ korea: 7, pop: 4, jpop: 1 }), 'immerse');
+      await serve(picks({ korea: 7, pop: 4, jpop: 1 }), 'immerse');
       const head = picks({ korea: 1 })[0];
-      const pick = (title: string, region: Region = 'korea'): PickedTrack => ({
-        artist: `${title}-artist`,
-        title,
-        region,
-      });
       // 한국: 본 곡 2 · 머리 곡 1 · 처음 보는 곡 4 → 6자리 중 2자리를 머리·본 곡이 채운다 (팝·일본은 남는 곡 없음)
       const second = [
         pick('본 곡 1'),
@@ -161,7 +175,7 @@ describe('MusicService', () => {
         pick('新しい歌', 'jpop'),
       ];
 
-      const served = await service.servePicks(second, 'immerse', [
+      const served = await serve(second, 'immerse', [
         songKey(second[0]),
         songKey(second[1]),
       ]);
@@ -175,9 +189,7 @@ describe('MusicService', () => {
     it('이 사람이 본 곡은 남는 후보가 있으면 화면에서 빠진다', async () => {
       const picked = picks({ korea: 7, pop: 4, jpop: 1 });
 
-      const served = await service.servePicks(picked, 'immerse', [
-        songKey(picked[0]),
-      ]);
+      const served = await serve(picked, 'immerse', [songKey(picked[0])]);
 
       expect(names(served)).not.toContain('korea-artist-0');
       expect(names(served)).toContain('korea-artist-6');
@@ -187,9 +199,7 @@ describe('MusicService', () => {
       // 한국 6곡 중 1곡을 이미 봤다 → 팝 4번째 곡이 그 자리를 가져간다
       const picked = picks({ korea: 6, pop: 4, jpop: 1 });
 
-      const served = await service.servePicks(picked, 'immerse', [
-        songKey(picked[0]),
-      ]);
+      const served = await serve(picked, 'immerse', [songKey(picked[0])]);
 
       expect(served).toHaveLength(10);
       expect(names(served)).not.toContain('korea-artist-0');
@@ -197,7 +207,7 @@ describe('MusicService', () => {
     });
 
     it('화면에 낸 곡을 모드별 노출 기록에 남긴다 — 다음 요청에서는 머리 곡이다', async () => {
-      const served = await service.servePicks(
+      const served = await serve(
         picks({ korea: 7, pop: 4, jpop: 1 }),
         'immerse',
       );
@@ -209,48 +219,12 @@ describe('MusicService', () => {
     });
   });
 
-  describe('servePicksStream', () => {
-    const picks = (counts: Partial<Record<Region, number>>): PickedTrack[] =>
-      (Object.entries(counts) as [Region, number][]).flatMap(([region, n]) =>
-        Array.from({ length: n }, (_, i) => ({
-          artist: `${region}-artist-${i}`,
-          title: `${region} song ${i}`,
-          region,
-        })),
-      );
-    const ticks = async (n: number) => {
-      for (let i = 0; i < n; i++) await new Promise((r) => setImmediate(r));
-    };
-    /** AI가 곡을 하나씩 쓰는 것처럼 흘려보낸다 */
-    async function* written(items: PickedTrack[]) {
-      for (const item of items) {
-        await ticks(1);
-        yield item;
-      }
-    }
-    /** 순서와 상관없이 같은 가수에 같은 트랙 — 스트리밍은 해석 순서가 servePicks와 다를 수 있다 */
-    const ids = new Map<string, number>();
-    beforeEach(() => {
-      itunesService.resolveTrack.mockImplementation(({ artist }) => {
-        if (!ids.has(artist)) ids.set(artist, ids.size + 1);
-        return Promise.resolve(makeTrack(ids.get(artist)!, artist));
-      });
-    });
-
-    it('곡이 다 모인 뒤 servePicks와 같은 목록·순서이고, 고른 곡을 그 순서대로 하나씩 내보낸다 (머리 곡·본 곡 포함)', async () => {
-      // 두 서비스가 같은 노출 기록에서 시작하게 첫 요청을 각각 한 번씩 → 'korea song 0'이 머리 곡
-      const batchService = new MusicService(
-        itunesService,
-        new ExposureWindow({ warmup: 1 }),
-      );
+  describe('servePicksStream — 내보내기', () => {
+    it('고른 곡을 최종 순서대로 하나씩 내보낸다 — 처음 보는 곡(지역 순)이 앞, 모자란 한국 자리는 머리 곡 → 본 곡', async () => {
+      // 첫 요청 화면에 나온 'korea song 0'은 머리 곡이 된다
       const first = picks({ korea: 7, pop: 4, jpop: 1 });
-      await service.servePicks(first, 'immerse');
-      await batchService.servePicks(first, 'immerse');
-      const pick = (title: string, region: Region = 'korea'): PickedTrack => ({
-        artist: `${title}-artist`,
-        title,
-        region,
-      });
+      await serve(first, 'immerse');
+      // AI가 처음 보는 곡과 머리·본 곡을 섞어 쓴다
       const second = [
         pick('본 곡 1'),
         first[0],
@@ -264,18 +238,24 @@ describe('MusicService', () => {
         pick('新しい歌', 'jpop'),
         pick('new pop 3', 'pop'),
       ];
-      const seen = [songKey(second[0]), songKey(second[3])];
-      const expected = await batchService.servePicks(second, 'immerse', seen);
       const onTrack = jest.fn();
 
       const served = await service.servePicksStream(
         written(second),
         'immerse',
-        seen,
+        [songKey(second[0]), songKey(second[3])],
         { onTrack },
       );
 
-      expect(served).toEqual(expected);
+      expect(names(served)).toEqual([
+        ...['새 곡 1', '새 곡 2', '새 곡 3', '새 곡 4'].map(
+          (t) => `${t}-artist`,
+        ),
+        ...['new pop 1', 'new pop 2', 'new pop 3'].map((t) => `${t}-artist`),
+        '新しい歌-artist',
+        first[0].artist, // 머리 곡
+        '본 곡 1-artist', // 본 곡 중 AI가 앞에 쓴 곡
+      ]);
       expect(onTrack.mock.calls).toEqual(served.map((item, i) => [item, i]));
     });
 

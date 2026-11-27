@@ -9,7 +9,6 @@ const track: Track = {
   name: '밤편지',
   artists: [{ name: '아이유' }],
   album: { name: 'Palette', images: [{ url: 'https://img/1.jpg' }] },
-  duration_ms: 0,
   preview_url: null, // jsdom은 오디오를 재생하지 못한다
   appleMusicUrl: 'https://music.apple.com/kr/song/1',
   key: '0000000a',

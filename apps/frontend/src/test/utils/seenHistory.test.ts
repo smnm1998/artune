@@ -14,7 +14,6 @@ const track = (songKey: string): Track => ({
   name: '',
   artists: [],
   album: { name: '', images: [] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key: songKey,
@@ -24,7 +23,7 @@ const response = (immerse: string[], soothe: string[]): EmotionResponse => ({
   emotionLabel: '',
   description: '',
   crisis: false,
-  artwork: { url: '', prompt: '' },
+  artwork: { url: '' },
   playlists: {
     immerse: { modeLabel: '', description: '', tracks: immerse.map(track) },
     soothe: { modeLabel: '', description: '', tracks: soothe.map(track) },

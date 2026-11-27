@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import useAppStore from '@/stores/useAppStore';
-import { analyzeEmotionWithProgress } from '@/api/emotionApi';
+import { analyzeEmotionStream } from '@/api/emotionApi';
 import type { AnalyzeOptions, EmotionResponse } from '@/api/emotionApi';
 import type { PlaylistMode } from '@artune/shared-types';
 import type { Track } from '@/types/track';
@@ -8,10 +8,10 @@ import { ERROR_MESSAGES } from '@/constants/errorMessages';
 import { loadSeen } from '@/utils/seenHistory';
 
 vi.mock('@/api/emotionApi', () => ({
-  analyzeEmotionWithProgress: vi.fn(),
+  analyzeEmotionStream: vi.fn(),
 }));
 
-const mockedAnalyze = vi.mocked(analyzeEmotionWithProgress);
+const mockedAnalyze = vi.mocked(analyzeEmotionStream);
 
 /** n번째 요청에 넘긴 옵션 (이력·signal·콜백) */
 const optionsOf = (call: number) => mockedAnalyze.mock.calls[call][1] ?? {};
@@ -20,7 +20,7 @@ const mockResult: EmotionResponse = {
   emotionLabel: '기쁨',
   description: '즐거운 하루였군요.',
   crisis: false,
-  artwork: { url: '/artwork/joy.png', prompt: '' },
+  artwork: { url: '/artwork/joy.png' },
   playlists: {
     immerse: { modeLabel: '감정 심취', description: '', tracks: [] },
     soothe: { modeLabel: '감정 완화', description: '', tracks: [] },
@@ -33,7 +33,6 @@ const trackOf = (key: string): Track => ({
   name: '',
   artists: [],
   album: { name: '', images: [] },
-  duration_ms: 0,
   preview_url: null,
   appleMusicUrl: '',
   key,
@@ -77,6 +76,7 @@ function streamControl() {
     });
   });
   return {
+    open: () => options.onOpen?.(),
     meta: () => options.onMeta?.(mockResult),
     track: (mode: PlaylistMode, index: number, key: string) =>
       options.onTrack?.(mode, index, trackOf(key)),
@@ -106,47 +106,42 @@ describe('useAppStore', () => {
       expect(state()).toMatchObject({
         currentPage: 'input',
         isLoading: false,
-        progress: 0,
         emotionResult: null,
         error: null,
+        draft: '',
       });
     });
   });
 
-  describe('setPage', () => {
-    it('페이지를 변경할 수 있어야 함', () => {
-      state().setPage('result');
-      expect(state().currentPage).toBe('result');
-    });
-  });
-
   describe('analyzeEmotion', () => {
-    it('요청이 시작되면 로딩 페이지로 전환하고 상태를 초기화한다', () => {
+    it('요청을 보내면 입력 화면에 머문 채 상태를 초기화한다 (결과 화면은 스트림이 열린 뒤)', () => {
       mockedAnalyze.mockImplementationOnce(pending);
 
       void state().analyzeEmotion('테스트 텍스트');
 
       expect(state()).toMatchObject({
-        currentPage: 'loading',
+        currentPage: 'input',
         isLoading: true,
-        progress: 0,
         emotionResult: null,
         error: null,
+        draft: '테스트 텍스트',
       });
     });
 
-    it('진행률은 역행하지 않고 메시지는 갱신된다', () => {
-      mockedAnalyze.mockImplementationOnce(pending);
+    it('스트림이 열리면(HTTP 200) 머리말·곡이 오기 전에 결과 화면으로 넘어간다', () => {
+      const stream = streamControl();
 
       void state().analyzeEmotion('테스트 텍스트');
-      optionsOf(0).onProgress?.(30, '분석 중');
-      optionsOf(0).onProgress?.(20, '늦게 온 낮은 값');
+      stream.open();
 
-      expect(state().progress).toBe(30);
-      expect(state().loadingMessage).toBe('늦게 온 낮은 값');
+      expect(state()).toMatchObject({
+        currentPage: 'result',
+        isLoading: true,
+        emotionResult: null,
+      });
     });
 
-    it('성공하면 결과를 저장한다 (페이지 전환은 Loading 애니메이션 몫)', async () => {
+    it('성공하면 최종 응답을 저장하고 곡 받기를 끝낸다', async () => {
       mockedAnalyze.mockResolvedValueOnce(mockResult);
 
       await state().analyzeEmotion('행복한 텍스트');
@@ -154,9 +149,6 @@ describe('useAppStore', () => {
       expect(state()).toMatchObject({
         emotionResult: mockResult,
         isLoading: false,
-        progress: 100,
-        loadingMessage: '완료!',
-        currentPage: 'loading',
       });
     });
 
@@ -169,7 +161,17 @@ describe('useAppStore', () => {
         error: '분석 실패',
         currentPage: 'input',
         isLoading: false,
-        progress: 0,
+      });
+    });
+
+    it('결과 전에 실패하면 보낸 글을 남겨 입력창에 되살릴 수 있게 한다', async () => {
+      mockedAnalyze.mockRejectedValueOnce(new Error('요청이 너무 많아요.'));
+
+      await state().analyzeEmotion('오늘 시험을 망쳤어');
+
+      expect(state()).toMatchObject({
+        currentPage: 'input',
+        draft: '오늘 시험을 망쳤어',
       });
     });
 
@@ -306,36 +308,35 @@ describe('useAppStore', () => {
   describe('곡 단위 스트림 (첫 곡부터 화면에)', () => {
     beforeEach(() => localStorage.clear());
 
-    it('머리말은 곡 없는 결과 뼈대로 저장하고, 화면은 로딩에 머문다', () => {
+    it('머리말은 곡 없는 결과 뼈대로 저장한다 — 결과 화면의 머리말 스켈레톤이 채워진다', () => {
       const stream = streamControl();
 
       void state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
 
       expect(state()).toMatchObject({
         emotionResult: mockResult,
-        currentPage: 'loading',
+        currentPage: 'result',
         isLoading: true,
-        progress: 0,
       });
     });
 
-    it('곡은 모드·자리대로 붙고, 첫 곡이 오면 진행률을 채워 로딩 화면을 끝낸다', () => {
+    it('곡은 모드·자리대로 붙는다 — 끝날 때까지 곡을 받는 중', () => {
       const stream = streamControl();
 
       void state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.track('immerse', 0, '0000000a');
-      expect(state().progress).toBe(100);
       stream.track('immerse', 1, '0000000b');
       stream.track('soothe', 0, '0000000c');
 
       expect(keysOf('immerse')).toEqual(['0000000a', '0000000b']);
       expect(keysOf('soothe')).toEqual(['0000000c']);
-      // 남은 곡을 받는 중 — 결과 화면 전환은 Loading 애니메이션 몫
       expect(state()).toMatchObject({
         isLoading: true,
-        currentPage: 'loading',
+        currentPage: 'result',
       });
     });
 
@@ -343,6 +344,7 @@ describe('useAppStore', () => {
       const stream = streamControl();
 
       const request = state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.track('immerse', 0, '0000000a');
       expect(loadSeen()).toEqual({ immerse: [], soothe: [] });
@@ -362,9 +364,9 @@ describe('useAppStore', () => {
       const stream = streamControl();
 
       const request = state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.track('immerse', 0, '0000000a');
-      state().setPage('result'); // Loading 애니메이션이 넘긴 뒤
       stream.fail(new Error('감정 분석에 실패했습니다.'));
       await request;
 
@@ -382,6 +384,7 @@ describe('useAppStore', () => {
       const stream = streamControl();
 
       const request = state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.track('immerse', 0, '0000000a');
       await vi.advanceTimersByTimeAsync(60_000);
@@ -394,10 +397,11 @@ describe('useAppStore', () => {
       expect(keysOf('immerse')).toEqual(['0000000a']);
     });
 
-    it('곡을 받기 전에 실패하면 입력 화면으로 돌아가고, 받아 둔 뼈대도 지운다', async () => {
+    it('열린 뒤라도 곡을 받기 전에 실패하면 입력 화면으로 돌아가고, 받아 둔 뼈대도 지운다', async () => {
       const stream = streamControl();
 
       const request = state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.fail(new Error('감정 분석에 실패했습니다.'));
       await request;
@@ -406,7 +410,7 @@ describe('useAppStore', () => {
         error: '감정 분석에 실패했습니다.',
         currentPage: 'input',
         emotionResult: null,
-        progress: 0,
+        draft: '테스트 텍스트',
       });
     });
 
@@ -414,6 +418,7 @@ describe('useAppStore', () => {
       const stream = streamControl();
 
       const request = state().analyzeEmotion('테스트 텍스트');
+      stream.open();
       stream.meta();
       stream.track('immerse', 0, '0000000a');
       state().reset();
@@ -433,10 +438,14 @@ describe('useAppStore', () => {
 
       void state().analyzeEmotion('첫 번째 요청');
       void state().analyzeEmotion('두 번째 요청');
+      first.open();
       first.meta();
       first.track('immerse', 0, '0000000a');
 
-      expect(state()).toMatchObject({ emotionResult: null, progress: 0 });
+      expect(state()).toMatchObject({
+        emotionResult: null,
+        currentPage: 'input',
+      });
     });
   });
 
@@ -463,10 +472,9 @@ describe('useAppStore', () => {
       expect(state()).toMatchObject({
         currentPage: 'input',
         isLoading: false,
-        progress: 0,
-        loadingMessage: '',
         emotionResult: null,
         error: null,
+        draft: '',
         abortController: null,
       });
     });

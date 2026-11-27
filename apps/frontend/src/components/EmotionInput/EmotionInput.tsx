@@ -44,9 +44,8 @@ function EmotionInput({
   const textareaRef = useAutoResizeTextarea(value, currentPlaceholder);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && e.shiftKey) {
-      return;
-    }
+    // 한글 조합 중 Enter는 마지막 글자를 확정하는 키 — 여기서 보내면 그 글자가 전송 뒤 빈 입력창에 남는다 (Safari는 keyCode 229로 온다)
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSubmit();

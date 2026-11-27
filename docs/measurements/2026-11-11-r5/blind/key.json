@@ -1,0 +1,2284 @@
+{
+  "note": "어느 쪽 곡인지 — 점수를 다 매긴 뒤에 연다",
+  "createdAt": "2026-11-11T05:21:58.160Z",
+  "baseline": "2026-11-02-baseline",
+  "target": "2026-11-11-r5",
+  "server": "current",
+  "seed": 20261111,
+  "items": 201,
+  "shared": 1,
+  "groups": [
+    {
+      "group": 1,
+      "id": "dreamy-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 1,
+          "id": "1721843000",
+          "artist": "Nujabes",
+          "name": "The Space Between Two World",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 2,
+          "id": "797351955",
+          "artist": "Ichiko Aoba",
+          "name": "Ikinokori Bokura (20131125)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 3,
+          "id": "1648236465",
+          "artist": "JUKJAE",
+          "name": "별 보러 가자 (베를린 몽비주 파크 버스킹 Version)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 4,
+          "id": "1770513615",
+          "artist": "브로콜리너마저",
+          "name": "유자차",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 2,
+      "id": "context-resigned",
+      "kind": "context",
+      "mode": "immerse",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 5,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 6,
+          "id": "1843728051",
+          "artist": "Cornelius",
+          "name": "If You're Here",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 7,
+          "id": "1605915071",
+          "artist": "윤하",
+          "name": "기다리다",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 8,
+          "id": "1440814843",
+          "artist": "Sam Smith",
+          "name": "Lay Me Down",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 9,
+          "id": "184335728",
+          "artist": "John Mayer",
+          "name": "The Heart of Life",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 10,
+          "id": "1450695872",
+          "artist": "Billie Eilish",
+          "name": "when the party's over",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 3,
+      "id": "context-sarcasm",
+      "kind": "context",
+      "mode": "immerse",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 11,
+          "id": "854917495",
+          "artist": "f(x)",
+          "name": "Electric Shock",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 12,
+          "id": "1337452979",
+          "artist": "BIGBANG",
+          "name": "Fantastic Baby",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 13,
+          "id": "1429663167",
+          "artist": "Lorde",
+          "name": "Liability",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 14,
+          "id": "1445151352",
+          "artist": "PSY",
+          "name": "Gentleman",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 15,
+          "id": "1590036021",
+          "artist": "Adele",
+          "name": "Easy On Me",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 16,
+          "id": "1445168940",
+          "artist": "2NE1",
+          "name": "I Am the Best",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 17,
+          "id": "1550545937",
+          "artist": "볼빨간사춘기",
+          "name": "나만, 봄",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 18,
+          "id": "1524801960",
+          "artist": "Taylor Swift",
+          "name": "this is me trying",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 4,
+      "id": "dreamy-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 19,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 20,
+          "id": "1170409098",
+          "artist": "태연",
+          "name": "11:11",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 5,
+      "id": "neutral-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 21,
+          "id": "1624173768",
+          "artist": "Norah Jones",
+          "name": "Seven Years",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 22,
+          "id": "1770925429",
+          "artist": "브로콜리너마저",
+          "name": "졸업",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 23,
+          "id": "1843728051",
+          "artist": "Cornelius",
+          "name": "If You're Here",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 24,
+          "id": "1316836865",
+          "artist": "악뮤",
+          "name": "시간과 낙엽",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 6,
+      "id": "confident-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 25,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 26,
+          "id": "1617909669",
+          "artist": "Gen Hoshino",
+          "name": "Comedy",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 7,
+      "id": "neutral-ambig",
+      "kind": "ambiguous",
+      "mode": "immerse",
+      "k": 5,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 27,
+          "id": "1440792118",
+          "artist": "요네즈 켄시",
+          "name": "Eine Kleine",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 28,
+          "id": "1619441084",
+          "artist": "검정치마",
+          "name": "기다린 만큼, 더",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 29,
+          "id": "1256607811",
+          "artist": "Phoebe Bridgers",
+          "name": "Funeral",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 30,
+          "id": "1546433632",
+          "artist": "Younha",
+          "name": "혜성",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 31,
+          "id": "955572623",
+          "artist": "Sufjan Stevens",
+          "name": "Fourth of July",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 32,
+          "id": "1605915071",
+          "artist": "ユンナ",
+          "name": "기다리다",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 33,
+          "id": "1755483891",
+          "artist": "Ray LaMontagne",
+          "name": "Hold You in My Arms",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 34,
+          "id": "1754929701",
+          "artist": "윤종신, 곽진언 & 김필",
+          "name": "지친 하루",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 35,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 36,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 8,
+      "id": "sadness-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 37,
+          "id": "1623109078",
+          "artist": "루시드폴",
+          "name": "보이나요? (Remastered)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 38,
+          "id": "1440918405",
+          "artist": "Kacey Musgraves",
+          "name": "Rainbow",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 39,
+          "id": "1747652085",
+          "artist": "옥상달빛",
+          "name": "수고했어, 오늘도",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 40,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 41,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 42,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 9,
+      "id": "fear-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 43,
+          "id": "1843728051",
+          "artist": "Cornelius",
+          "name": "If You're Here",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 44,
+          "id": "1209885620",
+          "artist": "태연",
+          "name": "Fine",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 10,
+      "id": "excited-ambig",
+      "kind": "ambiguous",
+      "mode": "immerse",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 45,
+          "id": "1337452979",
+          "artist": "BIGBANG",
+          "name": "Fantastic Baby",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 46,
+          "id": "1445151352",
+          "artist": "PSY",
+          "name": "Gentleman",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 47,
+          "id": "1130828898",
+          "artist": "세븐틴",
+          "name": "아주 NICE",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 48,
+          "id": "1445168940",
+          "artist": "2NE1",
+          "name": "I Am the Best",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 49,
+          "id": "854917495",
+          "artist": "f(x)",
+          "name": "Electric Shock",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 50,
+          "id": "1555390083",
+          "artist": "TWICE",
+          "name": "What is Love?",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 51,
+          "id": "1440935562",
+          "artist": "Taylor Swift",
+          "name": "22",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 52,
+          "id": "716192625",
+          "artist": "Katy Perry",
+          "name": "Firework",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 11,
+      "id": "joy-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 53,
+          "id": "1154239184",
+          "artist": "Justin Timberlake",
+          "name": "CAN'T STOP THE FEELING!",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 54,
+          "id": "1471938396",
+          "artist": "데이식스",
+          "name": "한 페이지가 될 수 있게",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 55,
+          "id": "1445168940",
+          "artist": "2NE1",
+          "name": "I Am the Best",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 56,
+          "id": "1445151352",
+          "artist": "PSY",
+          "name": "Gentleman",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 57,
+          "id": "1337452979",
+          "artist": "BIGBANG",
+          "name": "Fantastic Baby",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 58,
+          "id": "1440851075",
+          "artist": "American Authors",
+          "name": "Best Day of My Life",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 59,
+          "id": "1461280616",
+          "artist": "OneRepublic",
+          "name": "Good Life",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 60,
+          "id": "854917495",
+          "artist": "f(x)",
+          "name": "Electric Shock",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 12,
+      "id": "sentimental-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 61,
+          "id": "1616649362",
+          "artist": "윤하",
+          "name": "사건의 지평선",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 62,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 63,
+          "id": "1219218446",
+          "artist": "아이유",
+          "name": "밤편지",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 64,
+          "id": "1595206699",
+          "artist": "Chet Baker",
+          "name": "Almost Blue",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 13,
+      "id": "sadness-ambig",
+      "kind": "ambiguous",
+      "mode": "immerse",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 65,
+          "id": "1544491998",
+          "artist": "Adele",
+          "name": "Someone Like You",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 66,
+          "id": "1546433632",
+          "artist": "Younha",
+          "name": "혜성",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 67,
+          "id": "1605915071",
+          "artist": "ユンナ",
+          "name": "기다리다",
+          "systems": [
+            "baseline",
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 14,
+      "id": "romance-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 68,
+          "id": "1490544823",
+          "artist": "Yerin Baek",
+          "name": "Square (2017)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 69,
+          "id": "576655095",
+          "artist": "Bruno Mars",
+          "name": "Just the Way You Are",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 15,
+      "id": "dreamy-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 70,
+          "id": "997914096",
+          "artist": "Beach House",
+          "name": "Space Song",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 71,
+          "id": "1785686649",
+          "artist": "Imogen Heap",
+          "name": "Hide and Seek",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 16,
+      "id": "neutral-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 72,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 73,
+          "id": "1490544823",
+          "artist": "Yerin Baek",
+          "name": "Square (2017)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 74,
+          "id": "1641252975",
+          "artist": "최유리",
+          "name": "숲",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 75,
+          "id": "828118037",
+          "artist": "José González",
+          "name": "Heartbeats",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 76,
+          "id": "1440814425",
+          "artist": "Sam Smith",
+          "name": "Stay With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 77,
+          "id": "1592973949",
+          "artist": "정밀아",
+          "name": "꽃",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 17,
+      "id": "confident-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 78,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 79,
+          "id": "1490544823",
+          "artist": "Yerin Baek",
+          "name": "Square (2017)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 80,
+          "id": "1574308371",
+          "artist": "태연",
+          "name": "Weekend",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 81,
+          "id": "362979494",
+          "artist": "이적",
+          "name": "하늘을 달리다",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 18,
+      "id": "romance-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 82,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 83,
+          "id": "724884368",
+          "artist": "Corinne Bailey Rae",
+          "name": "Like a Star",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 84,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 85,
+          "id": "1444575404",
+          "artist": "우타다 히카루",
+          "name": "Flavor Of Life (Remastered 2018)",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 19,
+      "id": "sadness-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 86,
+          "id": "1606417551",
+          "artist": "Laufey & 필하모니아 관현악단",
+          "name": "Let You Break My Heart Again",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 87,
+          "id": "1316836865",
+          "artist": "악뮤",
+          "name": "시간과 낙엽",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 88,
+          "id": "1648876333",
+          "artist": "요루시카",
+          "name": "ただ君に晴れ",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 89,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 90,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 91,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 20,
+      "id": "fear-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 92,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 93,
+          "id": "896503389",
+          "artist": "테시마 아오이",
+          "name": "Asu e no Tegami",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 21,
+      "id": "sentimental-ambig",
+      "kind": "ambiguous",
+      "mode": "immerse",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 94,
+          "id": "1546593996",
+          "artist": "성시경",
+          "name": "희재",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 95,
+          "id": "1546433632",
+          "artist": "Younha",
+          "name": "혜성",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 96,
+          "id": "1605915071",
+          "artist": "ユンナ",
+          "name": "기다리다",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 97,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 98,
+          "id": "1440812085",
+          "artist": "Lana Del Rey",
+          "name": "Summertime Sadness",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 99,
+          "id": "1550029645",
+          "artist": "볼빨간사춘기",
+          "name": "나의 사춘기에게",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 22,
+      "id": "sentimental-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 100,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 101,
+          "id": "1720118394",
+          "artist": "자우림",
+          "name": "스물다섯, 스물하나",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 23,
+      "id": "context-resigned",
+      "kind": "context",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 102,
+          "id": "1623124374",
+          "artist": "김필",
+          "name": "청춘 (feat. 김창완)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 103,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 104,
+          "id": "1698507285",
+          "artist": "박효신",
+          "name": "숨",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 105,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 106,
+          "id": "1440814433",
+          "artist": "Sam Smith",
+          "name": "I'm Not the Only One",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 107,
+          "id": "1450149270",
+          "artist": "이소라",
+          "name": "신청곡 (feat. SUGA)",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 24,
+      "id": "neutral-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 5,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 108,
+          "id": "1128269430",
+          "artist": "島谷ひとみ",
+          "name": "愛歌",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 109,
+          "id": "1754929701",
+          "artist": "윤종신, 곽진언 & 김필",
+          "name": "지친 하루",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 110,
+          "id": "1641252975",
+          "artist": "최유리",
+          "name": "숲",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 111,
+          "id": "1537515408",
+          "artist": "YUI",
+          "name": "Good-bye days (YUI Acoustic Version)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 112,
+          "id": "1440814425",
+          "artist": "Sam Smith",
+          "name": "Stay With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 113,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 114,
+          "id": "1122782281",
+          "artist": "Coldplay",
+          "name": "Sparks",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 115,
+          "id": "576655095",
+          "artist": "Bruno Mars",
+          "name": "Just the Way You Are",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 116,
+          "id": "1219218446",
+          "artist": "아이유",
+          "name": "밤편지",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 117,
+          "id": "1445016747",
+          "artist": "하타 모토히로",
+          "name": "Himawari No Yakusoku",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 25,
+      "id": "lonely-ambig",
+      "kind": "ambiguous",
+      "mode": "immerse",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 118,
+          "id": "1445008625",
+          "artist": "우타다 히카루",
+          "name": "Manatsu No Tooriame",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 119,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 26,
+      "id": "joy-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 120,
+          "id": "1440745635",
+          "artist": "Colbie Caillat",
+          "name": "Bubbly",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 121,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 122,
+          "id": "1440863470",
+          "artist": "Spitz",
+          "name": "Soramo Toberuhazu",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 123,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 124,
+          "id": "1560113134",
+          "artist": "아이유",
+          "name": "라일락",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 125,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 27,
+      "id": "fear-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 126,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 127,
+          "id": "1440918405",
+          "artist": "Kacey Musgraves",
+          "name": "Rainbow",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 128,
+          "id": "1595206699",
+          "artist": "Chet Baker",
+          "name": "Almost Blue",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 129,
+          "id": "1229073408",
+          "artist": "아이유",
+          "name": "이름에게",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 130,
+          "id": "1550539052",
+          "artist": "볼빨간사춘기",
+          "name": "여행",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 131,
+          "id": "1719744002",
+          "artist": "Kim Yuna",
+          "name": "야상곡 (노래가 슬퍼도 인생은 아름답기를) [Live Version]",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 28,
+      "id": "anger-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 132,
+          "id": "1610107481",
+          "artist": "에픽하이",
+          "name": "피해망상, Pt. 1 (feat. Junggigo)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 133,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 29,
+      "id": "surprise-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 134,
+          "id": "1587651680",
+          "artist": "김동률",
+          "name": "출발 (2021 Remastered)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 135,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 136,
+          "id": "1648236465",
+          "artist": "JUKJAE",
+          "name": "별 보러 가자 (베를린 몽비주 파크 버스킹 Version)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 137,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 138,
+          "id": "203304062",
+          "artist": "Simon & Garfunkel",
+          "name": "Old Friends",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 139,
+          "id": "1242155576",
+          "artist": "검정치마",
+          "name": "EVERYTHING",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 30,
+      "id": "context-sarcasm",
+      "kind": "context",
+      "mode": "soothe",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 140,
+          "id": "1123076826",
+          "artist": "Coldplay",
+          "name": "Fix You",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 141,
+          "id": "1648236465",
+          "artist": "JUKJAE",
+          "name": "별 보러 가자 (베를린 몽비주 파크 버스킹 Version)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 142,
+          "id": "1440918405",
+          "artist": "Kacey Musgraves",
+          "name": "Rainbow",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 143,
+          "id": "1414205966",
+          "artist": "데이브레이크",
+          "name": "꽃길만 걷게 해줄게",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 144,
+          "id": "1490544823",
+          "artist": "Yerin Baek",
+          "name": "Square (2017)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 145,
+          "id": "1440504730",
+          "artist": "Sara Bareilles",
+          "name": "Brave",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 146,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 147,
+          "id": "184335660",
+          "artist": "John Mayer",
+          "name": "Gravity",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 31,
+      "id": "lonely-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 148,
+          "id": "184335728",
+          "artist": "John Mayer",
+          "name": "The Heart of Life",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 149,
+          "id": "1743964766",
+          "artist": "윤지영",
+          "name": "우우우린",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 150,
+          "id": "1615341467",
+          "artist": "Hitsujibungaku",
+          "name": "光るとき",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 151,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 32,
+      "id": "excited-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 152,
+          "id": "1737366585",
+          "artist": "QWER",
+          "name": "고민중독",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 153,
+          "id": "1256504651",
+          "artist": "레드벨벳",
+          "name": "빨간 맛",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 154,
+          "id": "1445151352",
+          "artist": "PSY",
+          "name": "Gentleman",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 155,
+          "id": "1337452979",
+          "artist": "BIGBANG",
+          "name": "Fantastic Baby",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 156,
+          "id": "1445168940",
+          "artist": "2NE1",
+          "name": "I Am the Best",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 157,
+          "id": "1154239184",
+          "artist": "Justin Timberlake",
+          "name": "CAN'T STOP THE FEELING!",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 158,
+          "id": "1571739589",
+          "artist": "YOASOBI",
+          "name": "三原色",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 159,
+          "id": "854917495",
+          "artist": "f(x)",
+          "name": "Electric Shock",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 33,
+      "id": "sentimental-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 160,
+          "id": "1543850904",
+          "artist": "성시경",
+          "name": "거리에서",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 161,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 162,
+          "id": "1501124554",
+          "artist": "김광석",
+          "name": "바람이 불어오는 곳",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 163,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 34,
+      "id": "anger-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 1,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 164,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 165,
+          "id": "1440504730",
+          "artist": "Sara Bareilles",
+          "name": "Brave",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 35,
+      "id": "surprise-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 166,
+          "id": "1550539052",
+          "artist": "볼빨간사춘기",
+          "name": "여행",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 167,
+          "id": "1440814433",
+          "artist": "Sam Smith",
+          "name": "I'm Not the Only One",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 168,
+          "id": "1598710381",
+          "artist": "멜로망스",
+          "name": "선물",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 169,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 170,
+          "id": "1537515569",
+          "artist": "유이",
+          "name": "CHE.R.RY",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 171,
+          "id": "1625058484",
+          "artist": "Norah Jones",
+          "name": "Come Away With Me",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 36,
+      "id": "joy-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 172,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 173,
+          "id": "1191276302",
+          "artist": "악뮤",
+          "name": "오랜 날 오랜 밤",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 174,
+          "id": "1543850531",
+          "artist": "성시경",
+          "name": "두 사람",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 175,
+          "id": "1652239678",
+          "artist": "김동률",
+          "name": "감사",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 176,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 177,
+          "id": "294461792",
+          "artist": "Alicia Keys",
+          "name": "No One",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 37,
+      "id": "excited-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 178,
+          "id": "1219218446",
+          "artist": "아이유",
+          "name": "밤편지",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 179,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 180,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 181,
+          "id": "1490544823",
+          "artist": "Yerin Baek",
+          "name": "Square (2017)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 182,
+          "id": "1122782283",
+          "artist": "Coldplay",
+          "name": "Yellow",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 183,
+          "id": "1545382976",
+          "artist": "Adele",
+          "name": "Make You Feel My Love",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 38,
+      "id": "lonely-clear",
+      "kind": "clear",
+      "mode": "immerse",
+      "k": 4,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 184,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 185,
+          "id": "1771706941",
+          "artist": "Daughter",
+          "name": "Youth",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 186,
+          "id": "1504700016",
+          "artist": "Phoebe Bridgers",
+          "name": "Moon Song",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 187,
+          "id": "1605915071",
+          "artist": "ユンナ",
+          "name": "기다리다",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 188,
+          "id": "1546433632",
+          "artist": "Younha",
+          "name": "혜성",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 189,
+          "id": "1648236465",
+          "artist": "JUKJAE",
+          "name": "별 보러 가자 (베를린 몽비주 파크 버스킹 Version)",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 190,
+          "id": "1641252975",
+          "artist": "최유리",
+          "name": "숲",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 191,
+          "id": "1450778317",
+          "artist": "혁오",
+          "name": "TOMBOY",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 39,
+      "id": "romance-ambig",
+      "kind": "ambiguous",
+      "mode": "soothe",
+      "k": 2,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 192,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 193,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 194,
+          "id": "1480667629",
+          "artist": "권진아",
+          "name": "운이 좋았지",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 195,
+          "id": "724884368",
+          "artist": "Corinne Bailey Rae",
+          "name": "Like a Star",
+          "systems": [
+            "r5"
+          ]
+        }
+      ]
+    },
+    {
+      "group": 40,
+      "id": "excited-clear",
+      "kind": "clear",
+      "mode": "soothe",
+      "k": 3,
+      "r5Count": 10,
+      "items": [
+        {
+          "item": 196,
+          "id": "1581727305",
+          "artist": "ZARD",
+          "name": "心を開いて",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 197,
+          "id": "1003282460",
+          "artist": "Gen Hoshino",
+          "name": "Kudaranai no Nakani",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 198,
+          "id": "1625058461",
+          "artist": "Norah Jones",
+          "name": "Don't Know Why",
+          "systems": [
+            "baseline"
+          ]
+        },
+        {
+          "item": 199,
+          "id": "1410646516",
+          "artist": "소란",
+          "name": "살빼지 마요",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 200,
+          "id": "1573381626",
+          "artist": "이승윤",
+          "name": "들려주고 싶었던 (2021)",
+          "systems": [
+            "r5"
+          ]
+        },
+        {
+          "item": 201,
+          "id": "1440814425",
+          "artist": "Sam Smith",
+          "name": "Stay With Me",
+          "systems": [
+            "baseline"
+          ]
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "id": "joy-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "sadness-clear",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "anger-clear",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "anger-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "fear-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "surprise-clear",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "surprise-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "lonely-ambig",
+      "mode": "soothe",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "dreamy-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "confident-clear",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "confident-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    },
+    {
+      "id": "romance-ambig",
+      "mode": "immerse",
+      "reason": "기준선 0곡"
+    }
+  ]
+}

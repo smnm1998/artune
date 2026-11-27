@@ -1,163 +1,284 @@
-import { css } from '@emotion/react';
+import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { LAPTOP_BP, TABLET_BP, MOBILE_BP } from '@/constants/size';
+import { MEDIA } from '@/constants/breakpoints';
 
-// 전체 컨테이너
-export const containerStyle = css`
+/** 머리 높이 — 태블릿 72(20 + 40 + 12) · 모바일 50(6 + 44). 감정 결과 뷰가 남은 화면 높이를 채우는 데 쓴다 */
+const HEADER_HEIGHT = { compact: 72, mobile: 50 };
+
+// 결과 화면의 스크롤 상자 — 아트워크 뷰 ↔ 플레이리스트 뷰를 바꿀 때 이 상자를 맨 위로 올린다. 왼쪽 패널 sticky의 기준도 이 상자
+export const scrollAreaStyle = css`
+  height: 100%;
+  overflow: auto;
+`;
+
+// ARTUNE — 입력 화면 머리(EmotionInputPage headerStyle)와 같은 여백 · 모바일은 가운데
+export const headerStyle = css`
   display: flex;
-  min-height: 100vh;
-  min-height: 100dvh;
-  max-width: 1600px;
-  margin: 0 auto;
-  background: transparent;
-  padding: 40px;
-  gap: 80px;
-  align-items: flex-start;
+  align-items: center;
+  padding: 20px 24px 12px;
 
-  /* 가로 스크롤 방지 */
-  overflow-x: hidden;
-  box-sizing: border-box;
-
-  @media (max-width: ${LAPTOP_BP}) {
-    padding: 32px;
-    gap: 40px;
+  ${MEDIA.mobile} {
+    justify-content: center;
+    padding: 6px 16px 0;
   }
+`;
 
-  /* [Tablet & Mobile] Single View 모드 + 중앙 정렬 */
-  @media (max-width: ${TABLET_BP}) {
+// PC: 3:7 (왼쪽 감정 결과 · 오른쪽 추천곡) / 좁은 화면: 한 뷰씩 가운데
+export const containerStyle = css`
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  gap: 32px;
+  align-items: start;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 8px 24px 32px;
+  /* 가로 넘침은 잘라 내되 스크롤 상자는 만들지 않는다 — hidden이면 이 상자가 sticky 기준이 돼
+     왼쪽 패널이 고정되지 않고 같이 올라갔다 (11/27 측정: 800px 내리면 패널도 -800) */
+  overflow-x: clip;
+
+  ${MEDIA.compact} {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    padding: 0 20px;
     gap: 0;
   }
 `;
 
-// 왼쪽 섹션 (아트워크 + 액션버튼)
-export const leftSectionStyle = css`
-  flex: 0 0 480px; /* PC 고정 너비 */
+// 왼쪽 패널 — 화면 높이를 채우고 스크롤해도 제자리 (안쪽 스크롤 상자 없음)
+export const sidePanelStyle = css`
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  /* 머리(72) · 위아래 여백을 뺀 화면 높이. 내용이 더 길면(위기 안내 · 긴 공감 문구) 잘리지 않고 늘어난다 */
+  height: calc(100vh - 104px);
+  height: calc(100dvh - 104px);
+  max-height: 800px;
+  min-height: min-content;
+  padding: 24px;
+  border-radius: 28px;
+  background: ${colors.glass.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.subtle};
+  box-shadow: ${colors.shadow.panel};
+
+  /* 좁은 화면: 패널 없이 바탕 위에 — 머리 아래 남은 화면 높이를 채우고, 버튼은 맨 아래 */
+  ${MEDIA.compact} {
+    position: static;
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    max-height: none;
+    min-height: calc(100vh - ${HEADER_HEIGHT.compact}px);
+    min-height: calc(100dvh - ${HEADER_HEIGHT.compact}px);
+    gap: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  ${MEDIA.mobile} {
+    min-height: calc(100vh - ${HEADER_HEIGHT.mobile}px);
+    min-height: calc(100dvh - ${HEADER_HEIGHT.mobile}px);
+  }
+`;
+
+// 위기 안내 · 아트워크 · 감정 — 좁은 화면은 남은 높이의 위아래 가운데
+export const sideMainStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  ${MEDIA.compact} {
+    flex: 1;
+    justify-content: center;
+    gap: 22px;
+    padding: 16px 0 8px;
+  }
+`;
+
+// 패널 맨 아래 — [감상 안내 · 다시하기] (좁은 화면은 [다시하기 | 추천곡 보기])
+export const sideFooterStyle = css`
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  ${MEDIA.compact} {
+    margin-top: 0;
+    padding: 16px 0 24px;
+  }
+`;
+
+export const sideGuideStyle = css`
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  color: ${colors.text.tertiary};
+  word-break: keep-all;
+`;
+
+// 오른쪽 — 머리 · 소개 카드 · 격자
+export const trackSectionStyle = css`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
 
-  background: ${colors.background.glass.subtle};
-  backdrop-filter: blur(20px);
-  border: 1px solid ${colors.border.light};
-  border-radius: 24px;
-  padding: 32px;
-
-  box-shadow:
-    0 8px 32px ${colors.shadow.light},
-    inset 0 1px 0 ${colors.shadow.inset};
-
-  /* PC: 스크롤 시 상단 고정 */
-  position: sticky;
-  top: 40px;
-  height: fit-content;
-  overflow-y: auto;
-
-  /* [Laptop] 너비 축소 */
-  @media (max-width: ${LAPTOP_BP}) and (max-height: 800px) {
-    position: relative;
-    top: 0;
-    gap: 16px;
-  }
-
-  /* [Tablet] 고정 해제 및 중앙 배치 */
-  @media (max-width: ${TABLET_BP}) {
-    flex: none;
-    position: relative;
-    top: 0;
+  ${MEDIA.compact} {
     width: 100%;
-    align-items: center;
-    max-width: 700px; /* 태블릿 적정 너비 제한 */
-    height: auto;
-  }
-
-  /* [Mobile] 꽉 찬 너비 */
-  @media (max-width: ${MOBILE_BP}) {
-    max-width: 100%;
-    border-radius: 20px;
-    padding: 24px 20px;
-    gap: 80px;
+    max-width: 720px;
+    gap: 16px;
+    padding: 12px 0 24px;
   }
 `;
 
-// 버튼 래퍼 (아트워크 하단 버튼 그룹)
-export const actionButtonWrapperStyle = css`
-  margin-top: 24px; /* 기본 간격 */
+// PC 머리 — 왼쪽 제목 묶음, 오른쪽 끝 토글 (좁아지면 토글이 아래 줄 오른쪽으로)
+export const trackHeaderStyle = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
 
-  /* [Tablet & Mobile] 하단 고정 해제, 자연스러운 간격 유지 */
-  @media (max-width: ${TABLET_BP}) {
-    margin-top: 32px;
+  & > :last-child {
+    flex: none;
+    margin-left: auto;
   }
 `;
 
-// 오른쪽 섹션 (플레이리스트)
-export const rightSectionStyle = css`
-  flex: 1;
+export const headingStyle = css`
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  align-items: center;
-  width: 100%;
-  max-width: 900px;
+  gap: 6px;
+  min-width: 0;
 
-  /* PC: 전체 높이 확보 */
-  min-height: calc(100vh - 80px);
-  padding-bottom: 60px;
-
-  /* [Laptop] */
-  @media (max-width: ${LAPTOP_BP}) {
-    gap: 32px;
-  }
-
-  /* [Tablet & Mobile] */
-  @media (max-width: ${TABLET_BP}) {
-    width: 100%;
-    min-height: auto; /* 뷰포트 중앙 정렬을 위해 해제 */
-    gap: 20px;
-    padding-bottom: 20px;
-    flex: 1; /* 내용이 많으면 늘어나도록 */
+  ${MEDIA.compact} {
+    gap: 4px;
+    margin-top: 8px; /* 머리(뒤로 · 토글)와 24 */
   }
 `;
 
-/* --- 헤더 UI (토글 + 뒤로가기) --- */
+export const titleRowStyle = css`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+
+  ${MEDIA.compact} {
+    justify-content: space-between;
+    gap: 12px;
+  }
+`;
+
+export const sectionTitleStyle = css`
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: ${colors.text.primary};
+
+  ${MEDIA.compact} {
+    font-size: 18px;
+    line-height: 26px;
+  }
+`;
+
+// 곡을 다 받기 전 — 제목 옆 한 줄이라 끝나서 사라져도 아래가 움직이지 않는다
+export const statusStyle = css`
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: ${colors.text.secondary};
+
+  ${MEDIA.compact} {
+    gap: 6px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+`;
+
+export const liveDotStyle = css`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${colors.accent.base};
+  animation: ${pulse} 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+export const countStyle = css`
+  color: ${colors.text.primary};
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+`;
+
+// 모드 설명 — 머리말 전에는 비어 있어도 한 줄 높이를 지켜 아래가 밀리지 않게
+export const modeDescriptionStyle = css`
+  margin: 0;
+  min-height: 24px;
+  font-size: 15px;
+  line-height: 24px;
+  color: ${colors.text.secondary};
+  word-break: keep-all;
+
+  ${MEDIA.compact} {
+    min-height: 22px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+`;
+
+/* --- 좁은 화면 머리 (뒤로 + 토글) --- */
 
 export const mobileMusicHeaderStyle = css`
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 12px;
-  height: 56px; /* 버튼 높이 고정 */
-  margin-bottom: 12px;
+  gap: 10px;
   flex-shrink: 0;
 `;
 
+// 토글이 뒤로 버튼 옆 남은 폭을 다 쓴다
 export const toggleWrapperStyle = css`
   flex: 1;
-  height: 100%;
-  display: flex;
-  justify-content: center;
+  min-width: 0;
 
-  /* 내부 컴포넌트 크기 강제 */
   & > div {
-    height: 100%;
-    margin: 0;
-    width: 100%;
-    max-width: 400px;
-  }
-  & > div > div {
-    height: 100%;
+    max-width: none;
   }
 `;
 
 export const backButtonStyle = css`
-  width: 54px;
-  height: 54px;
-  border-radius: 50px;
-  background: ${colors.background.glass.light};
-  border: 1px solid ${colors.border.light};
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: ${colors.glass.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.subtle};
+  box-shadow: 0 1px 2px rgba(25, 31, 40, 0.04);
   color: ${colors.text.primary};
   display: flex;
   align-items: center;
@@ -167,33 +288,14 @@ export const backButtonStyle = css`
   flex-shrink: 0;
 
   &:active {
-    background: ${colors.background.glass.medium};
+    background: ${colors.background.surface};
     transform: scale(0.96);
   }
 `;
 
-// 플레이리스트 영역 — 안내 문구를 그리드 위 여백에 띄우는 기준
 export const playlistStyle = css`
-  position: relative;
   width: 100%;
   flex: 1;
-`;
-
-// 곡을 다 받기 전 그리드 위 안내 — 위 여백에 띄워 끝날 때 그리드가 움직이지 않게
-export const statusStyle = css`
-  position: absolute;
-  top: -28px;
-  left: 0;
-  right: 0;
-  margin: 0;
-  font-size: 14px;
-  text-align: center;
-  color: ${colors.text.tertiary};
-
-  @media (max-width: ${TABLET_BP}) {
-    top: -24px;
-    font-size: 13px;
-  }
 `;
 
 export const emptyStateStyle = css`
@@ -227,25 +329,26 @@ export const emptyStateStyle = css`
   }
 `;
 
-// 맨 아래 고지 — 결과 영역(최소 화면 높이) 다음, 스크롤 끝에 온다
+// 맨 아래 고지 — 결과 영역 다음, 스크롤 끝에 온다
 export const footerStyle = css`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 1600px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 40px 32px;
-  box-sizing: border-box;
+  /* 스크롤 끝에 글자가 붙어 보이지 않게 아래를 넉넉히 (11/27 👤 24 → 48) */
+  padding: 16px 24px 48px;
   text-align: center;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 18px;
   color: ${colors.text.tertiary};
+  word-break: keep-all;
 
   p {
     margin: 0;
   }
 
-  @media (max-width: ${TABLET_BP}) {
-    padding: 0 20px 24px;
+  ${MEDIA.compact} {
+    padding: 8px 20px 40px;
   }
 `;

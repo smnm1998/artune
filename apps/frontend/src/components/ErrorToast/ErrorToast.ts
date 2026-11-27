@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import { colors } from '@/styles/theme';
 
 /**
  * 에러 토스트를 표시하는 헬퍼 함수
@@ -11,11 +12,11 @@ export const showErrorToast = (message: string) => {
     duration: 4000,
     position: 'top-center',
     style: {
-      background: 'linear-gradient(135deg, #ff4444 0%, #cc0000 100%)',
-      color: '#ffffff',
+      background: colors.error,
+      color: colors.text.onAccent,
       padding: '16px 20px',
-      borderRadius: '12px',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+      borderRadius: '14px',
+      boxShadow: colors.shadow.toast,
       fontSize: '14px',
       fontWeight: '500',
       minWidth: '320px',

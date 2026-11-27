@@ -1,25 +1,31 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
+import { MEDIA } from '@/constants/breakpoints';
 
-// 전체 컨테이너
+// 아트워크 → 감정 정보 — 폭은 담는 쪽(왼쪽 패널 · 좁은 화면 카드)이 정한다
 export const artworkContainer = css`
   display: flex;
   flex-direction: column;
-  max-width: 500px;
+  width: 100%;
   gap: 20px;
-  padding: 20px;
 `;
 
-// 아트워크
+// 아트워크 — 이미지가 오기 전에는 칠 위로 빛이 지나간다
 export const artworkWrapper = css`
   width: 100%;
   aspect-ratio: 1/1;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  background: ${colors.background.glass.subtle};
-  border: 1px solid ${colors.border.light};
-  box-shadow: 0 8px 32px ${colors.shadow.light};
+  background: ${colors.fill.skeleton};
+  box-shadow: 0 0 0 1px ${colors.border.subtle};
+
+  /* 좁은 화면: 패널 없이 바탕 위에 놓여 그림자로 띄운다 */
+  ${MEDIA.compact} {
+    border-radius: 24px;
+    box-shadow:
+      0 0 0 1px ${colors.border.subtle},
+      0 12px 32px rgba(25, 31, 40, 0.1);
+  }
 
   /* 이미지 로딩 */
   position: relative;
@@ -60,37 +66,47 @@ export const artworkImage = css`
   z-index: 1;
 `;
 
-// 감정 정보 영역
+// 감정 정보 영역 — 왼쪽 정렬(작은 제목 → 감정 이름 → 공감 문구)
 export const artworkInfo = css`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: center;
+  gap: 4px;
+  word-break: keep-all;
 `;
 
-// 감정 설명
-export const emotionalLabel = css`
-  font-size: 32px;
-  font-weight: 700;
+// "오늘의 감정"
+export const eyebrow = css`
   margin: 0;
-  color: ${colors.text.primary};
-  text-shadow: 0 2px 8px ${colors.shadow.light};
-`;
-
-export const description = css`
-  font-size: 16px;
-  font-weight: 400;
-  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
   color: ${colors.text.tertiary};
-  line-height: 1.5;
 `;
 
-// 안내 문구
+// 감정 이름
+export const emotionalLabel = css`
+  margin: 0;
+  font-size: 28px;
+  line-height: 38px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: ${colors.text.primary};
+`;
+
+// 공감 문구
+export const description = css`
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 25px;
+  font-weight: 400;
+  color: ${colors.text.secondary};
+`;
+
+// 감상 안내 (좁은 화면)
 export const guideText = css`
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(249, 249, 249, 0.8);
-  line-height: 1.6;
-  margin-top: 8px;
-  font-style: italic;
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: ${colors.text.tertiary};
 `;

@@ -29,3 +29,7 @@ export const attributionStyle = css`
   font-size: 10px;
   color: ${colors.text.tertiary};
 `;
+
+export const attributionOnDarkStyle = css`
+  color: ${colors.text.inverseSecondary};
+`;

@@ -1,7 +1,17 @@
-import { css } from '@emotion/react';
+import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { MOBILE_BP } from '@/constants/size';
 
+const pulse = keyframes`
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+`;
+
+// PC(>1024) 호버에서만 열린다 — 좁은 화면은 플레이어 모달(MobilePlayerModal)이라 모바일 글자 크기 규칙이 없다
 export const modalOverlayStyle = css`
   position: absolute;
   top: 0;
@@ -9,13 +19,14 @@ export const modalOverlayStyle = css`
   width: 100%;
   height: 100%;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
+  background: ${colors.glass.overlay};
+  backdrop-filter: ${colors.glass.overlayBlur};
+  -webkit-backdrop-filter: ${colors.glass.overlayBlur};
+  border-radius: 14px; /* 커버(AlbumCard)와 같은 모서리 */
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 카드 폭이 200~380px로 달라서, 안쪽 여백·간격을 카드 크기에 비례시키려고 크기 컨테이너로 둔다 */
+  /* 카드 폭이 200~300px(소개 카드 240)로 달라서, 안쪽 여백·간격을 카드 크기에 비례시키려고 크기 컨테이너로 둔다 */
   container-type: size;
 `;
 
@@ -47,10 +58,6 @@ export const albumTitleStyle = css`
   @container (max-height: 240px) {
     -webkit-line-clamp: 1;
   }
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 14px;
-  }
 `;
 
 // 앨범 정보 (앨범명 · 가수 · 추천곡) — 줄 사이를 살짝 띄운다. 줄임 처리는 각 줄 스타일이 맡는다
@@ -67,10 +74,6 @@ export const artistNameStyle = css`
   font-weight: 500;
   color: ${colors.text.secondary};
   line-height: 1.3;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 13px;
-  }
 `;
 
 // 대표곡
@@ -84,36 +87,48 @@ export const trackNameStyle = css`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 12px;
-  }
 `;
 
-// 재생 중 표시
+// 미리듣기 상태 줄 — 격자 칸 13px, 작은 칸(소개 카드 240 이하)은 12px (목업)
 export const playingIndicatorStyle = css`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: ${colors.accent.green};
-  font-size: 12px;
+  color: ${colors.accent.base};
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 600;
+  /* 상태가 바뀌어도(빈 줄 · 아이콘 24 · 막대 14) 아래 배지가 움직이지 않게 */
+  min-height: 24px;
 
-  // 애니메이션 처리
-  animation: pulse 2s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
-    }
+  /* 끝까지 들은 뒤 — 누를 것도 재생 중도 아니라 회색 */
+  &[data-ended='true'] {
+    color: ${colors.text.tertiary};
   }
 
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 10px;
+  /* 재생 준비 중에만 깜빡인다 */
+  &[data-waiting='true'] {
+    animation: ${pulse} 2s ease-in-out infinite;
+  }
+
+  @container (max-height: 240px) {
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-waiting='true'] {
+      animation: none;
+    }
+  }
+`;
+
+// 재생 중 이퀄라이저(Equalizer) 높이 — 격자 칸 14, 작은 칸(소개 카드) 12
+export const equalizerStyle = css`
+  height: 14px;
+
+  @container (max-height: 240px) {
+    height: 12px;
   }
 `;

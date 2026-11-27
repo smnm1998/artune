@@ -1,103 +1,55 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { TABLET_BP, MOBILE_BP } from '@/constants/size';
+import { MEDIA } from '@/constants/breakpoints';
 
-export const cardContainerStyle = css`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  cursor: pointer;
-  position: relative;
-  width: 100%;
-  height: 100%;
-
-  /* 모바일 탭 하이라이트 제거 */
-  -webkit-tap-highlight-color: transparent;
-`;
-
-// 앨범 + CD 래퍼
-export const albumWrapperStyle = css`
+// 커버 칸 — 정사각형. 호버 정보 카드(AlbumHoverModal)가 이 칸 위에 겹치고, 열리면 둘이 함께 살짝 커진다
+export const coverSlotStyle = css`
   position: relative;
   width: 100%;
   aspect-ratio: 1;
   /* aspect-ratio 상자는 min-height: auto면 내용물보다 작아지지 않는다 → 세로형 커버(예: 414x600)가 틀을 늘림.
      0으로 두면 정사각형이 유지되고 넘친 부분은 커버의 object-fit: cover가 잘라 준다 */
   min-height: 0;
-  overflow: visible; /* CD 장식이 틀 밖으로 나와야 해서 hidden으로 막지 않는다 */
-`;
+  transition: transform 0.3s ease;
 
-// CD (모바일에서는 숨김 처리)
-export const vinylDiscStyle = css`
-  position: absolute;
-  top: 0;
-  left: 15%;
-  width: 100%;
-  height: 100%;
+  &[data-open='true'] {
+    transform: scale(1.03);
+  }
 
-  background: ${colors.gradients.hologram}, ${colors.gradients.vinylReflection};
-  background-blend-mode: overlay;
-  border-radius: 50%;
-  border: 1px solid ${colors.border.vinyl};
-  box-shadow:
-    0 6px 20px ${colors.shadow.medium},
-    inset 0 0 50px ${colors.shadow.inset};
-
-  transform: rotate(-20deg);
-  z-index: 0;
-  transition: filter 0.3s ease;
-  pointer-events: none;
-
-  /* [Mobile] 공간 효율을 위해 CD 장식 숨김 */
-  @media (max-width: ${TABLET_BP}) {
-    display: none;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `;
 
-// CD 중앙 홀
-export const vinylCenterStyle = css`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20%;
-  height: 20%;
-  background: ${colors.gradients.vinylCenter};
-  border-radius: 50%;
-  border: 2px solid ${colors.border.vinylCenter};
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
-`;
-
-// 앨범 커버 이미지
+// 앨범 커버
 export const albumCoverStyle = css`
-  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow:
-    0 8px 16px ${colors.shadow.medium},
-    0 4px 8px ${colors.shadow.light};
-  z-index: 1;
+  background: ${colors.fill.skeleton};
+  box-shadow: ${colors.shadow.cover};
+  -webkit-tap-highlight-color: transparent;
+
+  ${MEDIA.compact} {
+    border-radius: 12px;
+  }
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    background: ${colors.background.glass.subtle};
   }
 `;
 
-export const artistNameStyle = css`
+// 커버 주소가 없는 곡
+export const noImageStyle = css`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${colors.text.tertiary};
   font-size: 12px;
-  font-weight: 400;
-  color: ${colors.text.secondary};
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 10px;
-  }
 `;

@@ -1,5 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
+/**
+ * '재생 준비 중' 표시를 띄우기까지 기다리는 시간 — 열고 0.1초 뒤 받기 시작해 보통 이 안에 재생된다.
+ * 그보다 빨리 띄우면 '준비 중 → 재생 중'이 찰나에 바뀌어 깜빡임처럼 보였다 (11/27 👤)
+ */
+export const PREVIEW_WAITING_DELAY_MS = 400;
+
 interface UsePreviewAudioOptions {
   src?: string;
   isEnabled: boolean;
@@ -9,7 +15,8 @@ interface UsePreviewAudioOptions {
 
 /**
  * 미리듣기 재생 — 열리면(isEnabled) 0.1초 뒤 틀고, 끝나기 fadeOutSeconds초 전부터 볼륨을 줄여 멈춘다.
- * 닫히면 0.5초 페이드아웃, 탭이 가려지면 바로 멈춘다
+ * 닫히면 0.5초 페이드아웃, 탭이 가려지면 바로 멈춘다.
+ * isEnded: 이번에 연 동안 끝까지 들었다 — 멈춘 뒤 '재생 준비 중'으로 되돌아가 보이지 않게 (닫거나 곡이 바뀌면 처음으로)
  */
 function usePreviewAudio({
   src,
@@ -25,6 +32,14 @@ function usePreviewAudio({
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEnded, setIsEnded] = useState(false);
+  // 열고 닫거나 곡이 바뀌면 '끝까지 들음'을 지운다 (렌더 중 조정 — 다시 열자마자 '끝났어요'가 남아 보이지 않게)
+  const openKey = `${isEnabled}|${src ?? ''}`;
+  const [prevOpenKey, setPrevOpenKey] = useState(openKey);
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+    setIsEnded(false);
+  }
 
   /**
    * 오디오를 즉시 정지하고 상태를 초기화하는 함수
@@ -49,10 +64,10 @@ function usePreviewAudio({
   }, []);
 
   /**
-   * 볼륨을 duration초 동안 0으로 줄인 뒤 멈춘다
+   * 볼륨을 duration초 동안 0으로 줄인 뒤 멈춘다 — 다 멈춘 뒤 onDone (끝까지 들은 경우 표시용)
    */
   const applyFadeOutEffect = useCallback(
-    (duration = fadeOutSeconds) => {
+    (duration = fadeOutSeconds, onDone?: () => void) => {
       const audio = audioRef.current;
       if (!audio) return;
 
@@ -77,6 +92,7 @@ function usePreviewAudio({
         } else {
           // 효과 완료 후 완전 정지
           stopAndReset();
+          onDone?.();
         }
       };
 
@@ -95,10 +111,10 @@ function usePreviewAudio({
 
     const timeRemaining = audio.duration - audio.currentTime;
 
-    // 종료 N초 전 페이드아웃 시작
+    // 종료 N초 전 페이드아웃 시작 — 다 줄어 멈추면 '끝까지 들음'
     if (timeRemaining <= fadeOutSeconds && timeRemaining > 0) {
       isFadingRef.current = true;
-      applyFadeOutEffect(fadeOutSeconds);
+      applyFadeOutEffect(fadeOutSeconds, () => setIsEnded(true));
     }
   }, [fadeOutSeconds, applyFadeOutEffect]);
 
@@ -219,6 +235,7 @@ function usePreviewAudio({
     audioRef,
     isPlaying,
     error,
+    isEnded,
   };
 }
 

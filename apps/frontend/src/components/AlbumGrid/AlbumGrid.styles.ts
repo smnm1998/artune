@@ -1,43 +1,69 @@
 import { css } from '@emotion/react';
-import { LAPTOP_BP, TABLET_BP, MOBILE_BP } from '@/constants/size';
+import { colors } from '@/styles/theme';
+import { MEDIA } from '@/constants/breakpoints';
 
-export const gridContainerStyle = css`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: auto;
-  gap: 70px;
+// 소개 카드 → 격자
+export const listStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   width: 100%;
-  max-width: 800px;
-  box-sizing: border-box; /* 패딩 포함 계산 */
+`;
 
-  > * {
-    position: relative;
-    aspect-ratio: 1;
-    width: 100%;
-  }
+/** PC(소개 카드 아래): 3열 — 1440 폭에서 칸 약 300px / 좁은 화면: 2열 (목업 간격 14 · 22) */
+export const gridContainerStyle = (featureFirst: boolean) => css`
+  display: grid;
+  grid-template-columns: repeat(${featureFirst ? 3 : 2}, minmax(0, 1fr));
+  column-gap: 20px;
+  row-gap: 28px;
+  width: 100%;
 
-  /* [Laptop] 간격 축소 */
-  @media (max-width: ${LAPTOP_BP}) {
-    gap: 40px;
-  }
-
-  /* [Tablet] 꽉 찬 너비 */
-  @media (max-width: ${TABLET_BP}) {
-    gap: 30px;
-    max-width: 100%;
-  }
-
-  /* [Mobile] 2열 유지하되 간격 최소화 */
-  @media (max-width: ${MOBILE_BP}) {
-    gap: 16px;
-    padding: 0 4px;
+  ${MEDIA.compact} {
+    column-gap: 14px;
+    row-gap: 22px;
   }
 `;
 
-// 받은 곡 칸 — 길게 누르기 메뉴(모바일)와 글자 선택을 막는다
+// 받은 곡 칸 (커버 + 곡명 · 가수) — 길게 누르기 메뉴(모바일)와 글자 선택을 막는다
 export const gridItemStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+
+  ${MEDIA.compact} {
+    gap: 10px;
+  }
+`;
+
+export const trackMetaStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 2px;
+
+  p {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`;
+
+export const trackTitleStyle = css`
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: ${colors.text.primary};
+`;
+
+export const trackArtistStyle = css`
+  font-size: 13px;
+  line-height: 20px;
+  color: ${colors.text.secondary};
 `;

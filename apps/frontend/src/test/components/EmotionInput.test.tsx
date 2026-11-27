@@ -58,3 +58,52 @@ describe('EmotionInput — Enter로 보내기', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe('EmotionInput — 글자 수', () => {
+  beforeEach(() =>
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })),
+  );
+  afterEach(() => vi.unstubAllGlobals());
+
+  const renderWith = (value: string) =>
+    render(
+      <EmotionInput
+        value={value}
+        onChange={() => {}}
+        onSubmit={() => {}}
+        maxLength={500}
+      />,
+    );
+  // 모바일 테두리의 채워지는 선 — 둘레 한 바퀴를 100으로 잰다
+  const ringFill = (container: HTMLElement) =>
+    container
+      .querySelector('rect[pathLength]')
+      ?.getAttribute('stroke-dasharray');
+
+  it('모바일 테두리는 최대 글자 수 대비 비율만큼 채워진다', () => {
+    const { container } = renderWith('가'.repeat(125));
+
+    expect(ringFill(container)).toBe('25 100');
+  });
+
+  it('최대 글자 수면 한 바퀴를 넘지 않는다', () => {
+    const { container } = renderWith('가'.repeat(600));
+
+    expect(ringFill(container)).toBe('100 100');
+  });
+
+  it('글자 수는 입력창 설명으로 연결돼 화면 읽기 프로그램이 읽는다', () => {
+    renderWith('오늘 안녕');
+
+    const describedBy = screen
+      .getByLabelText('감정 입력')
+      .getAttribute('aria-describedby');
+    expect(describedBy).toContain('emotion-input-count');
+    expect(screen.getByText('5 / 500자').id).toBe('emotion-input-count');
+  });
+});

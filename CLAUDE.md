@@ -31,11 +31,11 @@
 
 ## 지금 구조 (11월)
 
-- 글 → OpenAI가 감정 분류 + 직접 선곡(Structured Outputs, 스트림) → 곡이 하나 완성될 때마다 iTunes에서 해석 → POST 스트림(SSE 형식)으로 곡마다 전송 → 프론트는 첫 곡에서 결과 화면으로
+- 글 → OpenAI가 감정 분류 + 직접 선곡(Structured Outputs, 스트림) → 곡이 하나 완성될 때마다 iTunes에서 해석 → POST 스트림(SSE 형식)으로 곡마다 전송 → 프론트는 스트림이 열리면 바로 결과 화면(머리말 · 모드별 10칸 스켈레톤)으로 가서 받는 대로 채움
 - 흐름도와 응답 시간 수치는 README, 측정 조건과 하네스는 `docs/measurements/eval/README.md`
 - 지나온 구조: 5월 아티스트 기반(Spotify → iTunes 이전, TS 전환) → 7월 Last.fm 유사곡 하이브리드 → 11월 AI 직접 선곡 · 곡 단위 스트리밍
 
 ## 지금 단계
 
-- 11/11부터 코드 리팩토링(주석 · 코드 개연성 · 필요성 점검)과 요청 흐름을 따라 로직별 공부
+- 리팩토링(11/11~11/27) 끝 — strict · ESLint 10 · CI(GitHub Actions) · 스켈레톤. 다음은 웹 퍼블리싱 수정과 요청 흐름을 따라 로직별 공부
 - 진행 상황과 다음 할 일은 로컬 메모 `.claude/now.md`(git 무시, 지도는 `.claude/README.md`)

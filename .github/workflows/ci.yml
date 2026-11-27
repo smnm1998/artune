@@ -1,0 +1,28 @@
+# 푸시·PR마다 lint → 타입 검사 → 테스트 → 빌드 (키·네트워크 없이 도는 것만 — 외부 호출은 테스트에서 모두 대체)
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint --workspaces --if-present
+      - name: Type check
+        run: npm run check-types --workspaces --if-present
+      - name: Test (backend)
+        run: npm run test --workspace=backend
+      - name: Test (frontend)
+        run: npm run test --workspace=frontend -- --run
+      - name: Build
+        run: npm run build --workspaces --if-present

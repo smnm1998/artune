@@ -11,6 +11,7 @@ import {
   artistNameStyle,
   trackNameStyle,
   playingIndicatorStyle,
+  equalizerStyle,
 } from './AlbumHoverModal.styles';
 
 interface AlbumHoverModalProps {
@@ -55,7 +56,11 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                 <p css={trackNameStyle}>추천곡: {album.name}</p>
               </div>
 
-              <div css={playingIndicatorStyle}>
+              {/* 깜빡임은 '재생 준비 중'에만 — 재생 중은 막대가 움직이고, 불가는 멈춰 있다 */}
+              <div
+                css={playingIndicatorStyle}
+                data-waiting={hasPreviewUrl && !isPlaying && !error}
+              >
                 {!hasPreviewUrl ? (
                   <>
                     <IoWarning size={24} />
@@ -63,8 +68,17 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                   </>
                 ) : isPlaying ? (
                   <>
-                    <IoPlayCircle size={24} />
-                    <span>30초 미리듣기 재생 중...</span>
+                    {/* 이퀄라이저 — 막대 셋이 엇갈려 오르내린다 (목업) */}
+                    <span
+                      css={equalizerStyle}
+                      data-testid="equalizer"
+                      aria-hidden="true"
+                    >
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                    <span>30초 미리듣기 재생 중</span>
                   </>
                 ) : error ? (
                   <>

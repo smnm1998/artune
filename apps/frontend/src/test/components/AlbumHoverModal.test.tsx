@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import AlbumHoverModal from '@/components/AlbumHoverModal/AlbumHoverModal';
 import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
 import type { Track } from '@/types/track';
 
-// jsdom은 오디오를 재생하지 못한다 — 재생 상태는 훅을 가짜로 바꿔 정한다
-vi.mock('@/hooks/audio/usePreviewAudio', () => ({ default: vi.fn() }));
+// jsdom은 오디오를 재생하지 못한다 — 재생 상태는 훅을 가짜로 바꿔 정한다 (상수 등 나머지 export는 진짜 그대로)
+vi.mock('@/hooks/audio/usePreviewAudio', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  default: vi.fn(),
+}));
 
 const track: Track = {
   id: '1',
@@ -38,12 +41,22 @@ describe('AlbumHoverModal — 미리듣기 상태 줄 (PC 호버 카드)', () =>
     expect(label.parentElement?.getAttribute('data-waiting')).toBe('false');
   });
 
-  it('재생을 기다리는 동안은 "재생 준비 중..."이 깜빡이고, 막대는 없다', () => {
-    audioState({ isPlaying: false });
-    render(<AlbumHoverModal isOpen album={track} />);
+  it('받는 중이 0.4초를 넘기면 그때 "재생 준비 중..."이 깜빡인다 — 그 전에는 빈 줄 (금방 재생되면 준비 중을 건너뛴다)', () => {
+    vi.useFakeTimers();
+    try {
+      audioState({ isPlaying: false });
+      render(<AlbumHoverModal isOpen album={track} />);
 
-    const label = screen.getByText('재생 준비 중...');
-    expect(screen.queryByTestId('equalizer')).toBeNull();
-    expect(label.parentElement?.getAttribute('data-waiting')).toBe('true');
+      expect(screen.queryByText('재생 준비 중...')).toBeNull();
+      act(() => vi.advanceTimersByTime(399));
+      expect(screen.queryByText('재생 준비 중...')).toBeNull();
+
+      act(() => vi.advanceTimersByTime(1));
+      const label = screen.getByText('재생 준비 중...');
+      expect(screen.queryByTestId('equalizer')).toBeNull();
+      expect(label.parentElement?.getAttribute('data-waiting')).toBe('true');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

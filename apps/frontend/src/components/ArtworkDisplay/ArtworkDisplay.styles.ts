@@ -1,5 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
+import { BREAKPOINTS } from '@/constants/breakpoints';
 
 // 아트워크 → 감정 정보 — 폭은 담는 쪽(왼쪽 패널 · 좁은 화면 카드)이 정한다
 export const artworkContainer = css`
@@ -17,6 +18,14 @@ export const artworkWrapper = css`
   overflow: hidden;
   background: ${colors.fill.skeleton};
   box-shadow: 0 0 0 1px ${colors.border.subtle};
+
+  /* 좁은 화면: 패널 없이 바탕 위에 놓여 그림자로 띄운다 */
+  @media (max-width: ${BREAKPOINTS.compact}px) {
+    border-radius: 24px;
+    box-shadow:
+      0 0 0 1px ${colors.border.subtle},
+      0 12px 32px rgba(25, 31, 40, 0.1);
+  }
 
   /* 이미지 로딩 */
   position: relative;

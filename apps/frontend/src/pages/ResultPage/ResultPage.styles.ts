@@ -1,11 +1,13 @@
 import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
 import { BREAKPOINTS } from '@/constants/breakpoints';
-import { MOBILE_BP } from '@/constants/size';
 
 /** 좁은 화면 = 아트워크 뷰 ↔ 플레이리스트 뷰 (ResultPage의 isCompactView와 같은 기준) */
 const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
-const MOBILE = `@media (max-width: ${MOBILE_BP})`;
+/** 모바일 — 입력 화면과 같은 기준(로고 가운데) */
+const MOBILE = `@media (max-width: ${BREAKPOINTS.mobile}px)`;
+/** 머리 높이 — 태블릿 72(20 + 40 + 12) · 모바일 50(6 + 44). 감정 결과 뷰가 남은 화면 높이를 채우는 데 쓴다 */
+const HEADER_HEIGHT = { compact: 72, mobile: 50 };
 
 // 결과 화면의 스크롤 상자 — 아트워크 뷰 ↔ 플레이리스트 뷰를 바꿀 때 이 상자를 맨 위로 올린다. 왼쪽 패널 sticky의 기준도 이 상자
 export const scrollAreaStyle = css`
@@ -13,11 +15,16 @@ export const scrollAreaStyle = css`
   overflow: auto;
 `;
 
-// ARTUNE — 입력 화면 머리(EmotionInputPage headerStyle)와 같은 여백
+// ARTUNE — 입력 화면 머리(EmotionInputPage headerStyle)와 같은 여백 · 모바일은 가운데
 export const headerStyle = css`
   display: flex;
   align-items: center;
   padding: 20px 24px 12px;
+
+  ${MOBILE} {
+    justify-content: center;
+    padding: 6px 16px 0;
+  }
 `;
 
 // PC: 3:7 (왼쪽 감정 결과 · 오른쪽 추천곡) / 좁은 화면: 한 뷰씩 가운데
@@ -37,10 +44,7 @@ export const containerStyle = css`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 20px;
+    padding: 0 20px;
     gap: 0;
   }
 `;
@@ -65,24 +69,46 @@ export const sidePanelStyle = css`
   border: 1px solid ${colors.border.subtle};
   box-shadow: ${colors.shadow.panel};
 
+  /* 좁은 화면: 패널 없이 바탕 위에 — 머리 아래 남은 화면 높이를 채우고, 버튼은 맨 아래 */
   ${COMPACT} {
     position: static;
     width: 100%;
-    max-width: 560px;
+    max-width: 480px;
     height: auto;
     max-height: none;
-    gap: 24px;
-    padding: 32px;
+    min-height: calc(100vh - ${HEADER_HEIGHT.compact}px);
+    min-height: calc(100dvh - ${HEADER_HEIGHT.compact}px);
+    gap: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
   }
 
   ${MOBILE} {
-    border-radius: 20px;
-    padding: 24px 20px;
-    gap: 80px;
+    min-height: calc(100vh - ${HEADER_HEIGHT.mobile}px);
+    min-height: calc(100dvh - ${HEADER_HEIGHT.mobile}px);
   }
 `;
 
-// 패널 맨 아래 — [감상 안내 · 다시하기] (좁은 화면은 [다시하기 | 음악 보기])
+// 위기 안내 · 아트워크 · 감정 — 좁은 화면은 남은 높이의 위아래 가운데
+export const sideMainStyle = css`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  ${COMPACT} {
+    flex: 1;
+    justify-content: center;
+    gap: 22px;
+    padding: 16px 0 8px;
+  }
+`;
+
+// 패널 맨 아래 — [감상 안내 · 다시하기] (좁은 화면은 [다시하기 | 추천곡 보기])
 export const sideFooterStyle = css`
   margin-top: auto;
   display: flex;
@@ -90,7 +116,8 @@ export const sideFooterStyle = css`
   gap: 10px;
 
   ${COMPACT} {
-    margin-top: 32px;
+    margin-top: 0;
+    padding: 16px 0 24px;
   }
 `;
 
@@ -112,9 +139,9 @@ export const trackSectionStyle = css`
 
   ${COMPACT} {
     width: 100%;
-    flex: 1;
-    gap: 20px;
-    padding-bottom: 20px;
+    max-width: 720px;
+    gap: 16px;
+    padding: 12px 0 24px;
   }
 `;
 
@@ -140,6 +167,7 @@ export const headingStyle = css`
 
   ${COMPACT} {
     gap: 4px;
+    margin-top: 8px; /* 머리(뒤로 · 토글)와 24 */
   }
 `;
 
@@ -231,33 +259,29 @@ export const mobileMusicHeaderStyle = css`
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 12px;
-  height: 56px; /* 버튼 높이 고정 */
+  gap: 10px;
   flex-shrink: 0;
 `;
 
+// 토글이 뒤로 버튼 옆 남은 폭을 다 쓴다
 export const toggleWrapperStyle = css`
   flex: 1;
-  height: 100%;
-  display: flex;
-  justify-content: center;
+  min-width: 0;
 
-  /* 토글을 머리 높이에 맞춘다 — 두 칸은 grid라 높이를 따라 늘어난다 */
   & > div {
-    height: 100%;
-    max-width: 400px;
+    max-width: none;
   }
 `;
 
 export const backButtonStyle = css`
-  width: 54px;
-  height: 54px;
-  border-radius: 50px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   background: ${colors.glass.panel};
   backdrop-filter: ${colors.glass.blur};
   -webkit-backdrop-filter: ${colors.glass.blur};
   border: 1px solid ${colors.border.subtle};
-  box-shadow: ${colors.shadow.raised};
+  box-shadow: 0 1px 2px rgba(25, 31, 40, 0.04);
   color: ${colors.text.primary};
   display: flex;
   align-items: center;

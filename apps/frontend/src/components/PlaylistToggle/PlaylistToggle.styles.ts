@@ -4,7 +4,12 @@ import { colors } from '@/styles/theme';
 export type ToggleSize = 'small' | 'large';
 
 /** 바닥 안쪽 여백 — 미끄러지는 흰 면이 이만큼 들어와 앉는다 */
-const INSET: Record<ToggleSize, number> = { small: 3, large: 6 };
+const INSET: Record<ToggleSize, number> = { small: 3, large: 4 };
+/** 고른 칸 모서리 — 바닥 모서리에서 안쪽 여백만큼 작게 */
+const RADIUS: Record<ToggleSize, { base: number; slot: number }> = {
+  small: { base: 12, slot: 9 },
+  large: { base: 16, slot: 12 },
+};
 
 // 토글 바닥 — 두 칸은 같은 폭(긴 이름 기준)
 export const toggleWrapperStyle = (size: ToggleSize) => css`
@@ -12,7 +17,7 @@ export const toggleWrapperStyle = (size: ToggleSize) => css`
   display: ${size === 'small' ? 'inline-grid' : 'grid'};
   grid-template-columns: 1fr 1fr;
   background: ${colors.fill.subtle};
-  border-radius: 12px;
+  border-radius: ${RADIUS[size].base}px;
   padding: ${INSET[size]}px;
   ${size === 'large' && 'width: 100%; max-width: 500px;'}
 `;
@@ -25,7 +30,7 @@ export const sliderStyle = (size: ToggleSize) => css`
   width: calc(50% - ${INSET[size]}px);
   height: calc(100% - ${INSET[size] * 2}px);
   background: ${colors.background.surface};
-  border-radius: ${size === 'small' ? 9 : 8}px;
+  border-radius: ${RADIUS[size].slot}px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: ${colors.shadow.raised};
   pointer-events: none;
@@ -42,9 +47,10 @@ export const toggleButtonStyle = (size: ToggleSize) => css`
   cursor: pointer;
   transition: color 0.3s ease;
   z-index: 1;
+  border-radius: ${RADIUS[size].slot}px;
   ${size === 'small'
-    ? 'height: 32px; padding: 0 14px; border-radius: 9px; font-size: 13px;'
-    : 'padding: 12px 16px; border-radius: 8px; font-size: 14px;'}
+    ? 'height: 32px; padding: 0 14px; font-size: 13px;'
+    : 'height: 40px; padding: 0 16px; font-size: 15px;'}
 
   &:hover {
     color: ${colors.text.secondary};

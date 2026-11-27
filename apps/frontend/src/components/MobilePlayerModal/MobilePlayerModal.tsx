@@ -1,8 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { IoClose, IoWarning } from 'react-icons/io5';
+import { IoWarning } from 'react-icons/io5';
 import { Track } from '@/types/track';
-import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
+import usePreviewAudio, {
+  PREVIEW_WAITING_DELAY_MS,
+} from '@/hooks/audio/usePreviewAudio';
+import useDelayedFlag from '@/hooks/ui/useDelayedFlag';
 import PreviewSource from '@/components/PreviewSource/PreviewSource';
+import Equalizer from '@/components/Equalizer/Equalizer';
 import * as styles from './MobilePlayerModal.styles';
 
 interface MobilePlayerModalProps {
@@ -12,6 +16,10 @@ interface MobilePlayerModalProps {
   track: Track | null;
 }
 
+/**
+ * 좁은 화면 플레이어 — 추천곡 화면 위에 어두운 막 + 흐림을 덧대고, 커버를 돌아가는 CD로 보여 준다.
+ * 위에서부터 CD · 곡명 · 가수 · 앨범 · 미리듣기 상태 · Apple Music 배지, 맨 아래 흰 닫기 버튼 (목업). 막의 빈 곳을 눌러도 닫힌다
+ */
 function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
   const activeTrack = track;
 
@@ -21,9 +29,18 @@ function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
     isEnabled: isOpen && !!activeTrack?.preview_url,
     fadeOutSeconds: 1.5,
   });
+  // 받는 중이 0.4초를 넘길 때만 '재생 준비 중' — 금방 재생되면 빈 줄에서 바로 '재생 중'으로
+  const hasPreview = !!activeTrack?.preview_url;
+  const showWaiting = useDelayedFlag(
+    isOpen && hasPreview && !isPlaying && !error,
+    PREVIEW_WAITING_DELAY_MS,
+  );
 
   // 아직 한 번도 열지 않았다
   if (!activeTrack) return null;
+
+  // 안의 내용을 눌러도 막까지 올라가 닫히지 않게
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
     <AnimatePresence>
@@ -35,59 +52,71 @@ function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
-          <motion.div
-            css={styles.contentStyle}
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 오디오 요소 (페이드아웃을 위해 닫히는 동안에도 DOM에 존재해야 함) */}
-            <audio
-              ref={audioRef}
-              src={activeTrack.preview_url ?? undefined}
-              preload="auto"
-            />
+          {/* 오디오 요소 (페이드아웃을 위해 닫히는 동안에도 DOM에 존재해야 함) */}
+          <audio
+            ref={audioRef}
+            src={activeTrack.preview_url ?? undefined}
+            preload="auto"
+          />
 
-            {/* CD 플레이어 (픽처 디스크) */}
-            <div css={styles.vinylWrapperStyle} data-playing={isPlaying}>
-              {/* 앨범 커버가 배경인 LP판 */}
-              <div
-                css={styles.vinylDiscStyle}
-                style={{
-                  backgroundImage: `url(${activeTrack.album.images[0]?.url})`,
-                }}
-              />
-              {/* 입체적인 중앙 흰색 홀 */}
-              <div css={styles.centerHoleStyle} />
-            </div>
+          <div css={styles.stageStyle}>
+            <motion.div
+              css={styles.contentStyle}
+              initial={{ scale: 0.94, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.94, y: 16 }}
+              onClick={stop}
+            >
+              {/* CD (커버가 그려진 픽처 디스크) — 재생 중에만 돈다 */}
+              <div css={styles.vinylWrapperStyle} data-playing={isPlaying}>
+                <div
+                  css={styles.vinylDiscStyle}
+                  style={{
+                    backgroundImage: `url(${activeTrack.album.images[0]?.url})`,
+                  }}
+                />
+                <div css={styles.centerHoleStyle} />
+              </div>
 
-            {/* 곡 정보 */}
-            <div css={styles.infoStyle}>
-              <h3 css={styles.titleStyle}>{activeTrack.name}</h3>
-              <p css={styles.artistStyle}>
-                {activeTrack.artists.map((a) => a.name).join(', ')}
+              {/* 곡 정보 */}
+              <div css={styles.infoStyle}>
+                <h3 css={styles.titleStyle}>{activeTrack.name}</h3>
+                <p css={styles.artistStyle}>
+                  {activeTrack.artists.map((a) => a.name).join(', ')}
+                </p>
+                <p css={styles.albumStyle}>{activeTrack.album.name}</p>
+              </div>
+
+              {/* 미리듣기 상태 — 배경·테두리 없이 글자만 */}
+              <p css={styles.statusStyle} data-waiting={showWaiting}>
+                {!hasPreview || error ? (
+                  <>
+                    <IoWarning aria-hidden="true" />
+                    <span>{error || '미리듣기를 제공하지 않는 곡입니다'}</span>
+                  </>
+                ) : isPlaying ? (
+                  <>
+                    <Equalizer css={styles.equalizerStyle} />
+                    <span>30초 미리듣기 재생 중</span>
+                  </>
+                ) : showWaiting ? (
+                  <span>재생 준비 중...</span>
+                ) : null}
               </p>
 
-              {(error || !activeTrack.preview_url) && (
-                <div css={styles.errorStyle}>
-                  <IoWarning />
-                  <span>{error || '미리듣기를 제공하지 않는 곡입니다'}</span>
-                </div>
-              )}
-
               <PreviewSource url={activeTrack.appleMusicUrl} onDark />
-            </div>
+            </motion.div>
+          </div>
 
-            {/* 닫기 버튼 */}
+          <div css={styles.closeBarStyle} onClick={stop}>
             <button
+              type="button"
               css={styles.closeButtonStyle}
               onClick={onClose}
-              aria-label="닫기"
             >
-              <IoClose />
+              닫기
             </button>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

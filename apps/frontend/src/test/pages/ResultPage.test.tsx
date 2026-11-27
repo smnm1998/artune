@@ -186,7 +186,7 @@ describe('결과 화면 — 스트림이 열린 뒤 받는 대로 채운다', ()
 });
 
 describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => {
-  // 좁은 화면: 아트워크 뷰가 먼저, '음악 보기'로 플레이리스트 뷰
+  // 좁은 화면: 아트워크 뷰가 먼저, '추천곡 보기'로 플레이리스트 뷰
   beforeEach(() =>
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: true,
@@ -206,7 +206,7 @@ describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => 
     const scrollArea = container.firstElementChild as HTMLElement;
 
     scrollArea.scrollTop = 400;
-    fireEvent.click(screen.getByRole('button', { name: '음악 보기' }));
+    fireEvent.click(screen.getByRole('button', { name: '추천곡 보기' }));
     expect(scrollArea.scrollTop).toBe(0);
 
     scrollArea.scrollTop = 400;
@@ -216,10 +216,21 @@ describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => 
     expect(scrollArea.scrollTop).toBe(0);
   });
 
+  it('감정 결과 뷰는 맨 위에 ARTUNE을 두고, 추천곡 뷰는 뒤로 · 토글이 맨 위라 로고가 없다', () => {
+    useAppStore.setState({ emotionResult: partial, isLoading: false });
+    render(<ResultPage />);
+    screen.getByRole('link', { name: /ARTUNE/ });
+
+    fireEvent.click(screen.getByRole('button', { name: '추천곡 보기' }));
+
+    expect(screen.queryByRole('link', { name: /ARTUNE/ })).toBeNull();
+    screen.getByRole('button', { name: '아트워크로 돌아가기' });
+  });
+
   it('좁은 화면 플레이리스트 뷰는 소개 카드 없이 10곡을 같은 격자로 둔다', () => {
     useAppStore.setState({ emotionResult: withTracks(3), isLoading: true });
     render(<ResultPage />);
-    fireEvent.click(screen.getByRole('button', { name: '음악 보기' }));
+    fireEvent.click(screen.getByRole('button', { name: '추천곡 보기' }));
 
     expect(screen.queryByText(FEATURED)).toBeNull();
     screen.getByText('곡 1', { selector: 'p' });

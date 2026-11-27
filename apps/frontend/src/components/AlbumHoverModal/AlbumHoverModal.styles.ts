@@ -12,16 +12,6 @@ const pulse = keyframes`
   }
 `;
 
-const equalize = keyframes`
-  0%,
-  100% {
-    transform: scaleY(0.35);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-`;
-
 export const modalOverlayStyle = css`
   position: absolute;
   top: 0;
@@ -121,6 +111,8 @@ export const playingIndicatorStyle = css`
   font-size: 13px;
   line-height: 18px;
   font-weight: 600;
+  /* 상태가 바뀌어도(빈 줄 · 아이콘 24 · 막대 14) 아래 배지가 움직이지 않게 */
+  min-height: 24px;
 
   /* 재생 준비 중에만 깜빡인다 */
   &[data-waiting='true'] {
@@ -139,44 +131,11 @@ export const playingIndicatorStyle = css`
   }
 `;
 
-// 재생 중 이퀄라이저 — 막대 셋이 바닥을 기준으로 0.35 ↔ 1배로, 서로 엇갈려 오르내린다
+// 재생 중 이퀄라이저(Equalizer) 높이 — 격자 칸 14, 작은 칸(소개 카드) 12
 export const equalizerStyle = css`
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
   height: 14px;
-
-  span {
-    width: 3px;
-    height: 100%;
-    border-radius: 2px;
-    background: currentColor;
-    transform-origin: bottom;
-    animation: ${equalize} 1s ease-in-out infinite;
-  }
-
-  span:nth-of-type(2) {
-    animation-delay: -0.35s;
-  }
-
-  span:nth-of-type(3) {
-    animation-delay: -0.7s;
-  }
 
   @container (max-height: 240px) {
     height: 12px;
-  }
-
-  /* 움직임 줄이기 — 높이를 엇갈린 채로 멈춘다 */
-  @media (prefers-reduced-motion: reduce) {
-    span {
-      animation: none;
-    }
-    span:nth-of-type(1) {
-      transform: scaleY(0.6);
-    }
-    span:nth-of-type(3) {
-      transform: scaleY(0.8);
-    }
   }
 `;

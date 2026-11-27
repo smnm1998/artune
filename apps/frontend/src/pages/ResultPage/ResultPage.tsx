@@ -25,6 +25,7 @@ import {
   headerStyle,
   containerStyle,
   sidePanelStyle,
+  sideMainStyle,
   sideFooterStyle,
   sideGuideStyle,
   trackSectionStyle,
@@ -52,7 +53,7 @@ type ViewMode = 'artwork' | 'music';
  * - 곡: 모드마다 10칸을 받은 곡이 앞에서부터 채우고, 다 받기 전에는 "곡을 고르고 있어요 n / 10"
  * - 끝났는데 10곡이 안 되면 남은 칸은 지우고, 0곡이면 빈 목록 안내 (도중 실패 포함)
  * - PC(>1024px): 3:7 — 왼쪽 감정 결과 패널(스크롤해도 제자리) · 오른쪽 소개 카드 1곡 + 3열 9곡
- * - 좁은 화면: 아트워크 뷰 → '음악 보기'로 플레이리스트 뷰(2열)
+ * - 좁은 화면: 감정 결과 뷰 → '추천곡 보기'로 추천곡 뷰(2열)
  */
 function ResultPage() {
   const liveResult = useAppStore((state) => state.emotionResult);
@@ -122,8 +123,8 @@ function ResultPage() {
 
   return (
     <div ref={scrollRef} css={scrollAreaStyle}>
-      {/* 입력 화면과 같은 자리 — 교차 페이드 동안 로고가 움직이지 않는다 */}
-      {!isCompactView && (
+      {/* 입력 화면과 같은 자리 — 교차 페이드 동안 로고가 움직이지 않는다 (좁은 화면 추천곡 뷰는 뒤로 · 토글이 맨 위) */}
+      {(!isCompactView || viewMode === 'artwork') && (
         <header css={headerStyle}>
           <BrandHome onHome={handleHome} />
         </header>
@@ -133,24 +134,27 @@ function ResultPage() {
       <div css={containerStyle}>
         {(!isCompactView || viewMode === 'artwork') && (
           <div css={sidePanelStyle}>
-            {emotionResult?.crisis && <CrisisNotice />}
-            {emotionResult ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <ArtworkDisplay
-                  artwork={emotionResult.artwork}
-                  emotionLabel={emotionResult.emotionLabel}
-                  description={emotionResult.description}
-                  // PC는 감상 안내를 패널 맨 아래 다시하기 바로 위에
-                  showGuide={isCompactView}
-                />
-              </motion.div>
-            ) : (
-              <ArtworkDisplaySkeleton />
-            )}
+            {/* 위기 안내 · 아트워크 · 감정 — 좁은 화면은 남은 높이의 위아래 가운데 */}
+            <div css={sideMainStyle}>
+              {emotionResult?.crisis && <CrisisNotice />}
+              {emotionResult ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <ArtworkDisplay
+                    artwork={emotionResult.artwork}
+                    emotionLabel={emotionResult.emotionLabel}
+                    description={emotionResult.description}
+                    // PC는 감상 안내를 패널 맨 아래 다시하기 바로 위에
+                    showGuide={isCompactView}
+                  />
+                </motion.div>
+              ) : (
+                <ArtworkDisplaySkeleton />
+              )}
+            </div>
 
             <motion.div
               css={sideFooterStyle}
@@ -162,7 +166,7 @@ function ResultPage() {
                 <p css={sideGuideStyle}>{ARTWORK_GUIDE}</p>
               )}
               <ActionButtons
-                // 좁은 화면에서만 '음악 보기' (PC는 플레이리스트가 옆에 있다)
+                // 좁은 화면에서만 '추천곡 보기' (PC는 플레이리스트가 옆에 있다)
                 onNext={isCompactView ? () => switchView('music') : undefined}
               />
             </motion.div>
@@ -180,7 +184,7 @@ function ResultPage() {
                     onClick={() => switchView('artwork')}
                     aria-label="아트워크로 돌아가기"
                   >
-                    <IoArrowBack size={24} />
+                    <IoArrowBack size={22} />
                   </button>
                   <div css={toggleWrapperStyle}>{toggle}</div>
                 </div>

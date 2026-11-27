@@ -1,5 +1,8 @@
 import { css, keyframes } from '@emotion/react';
 import { colors } from '@/styles/theme';
+import { BREAKPOINTS } from '@/constants/breakpoints';
+
+const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
 
 const sweep = keyframes`
   from {
@@ -39,6 +42,10 @@ export const cover = css`
   border-radius: 14px;
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
+
+  ${COMPACT} {
+    border-radius: 12px;
+  }
 `;
 
 // 격자 곡 칸 — 받은 곡 칸(커버 + 곡명 · 가수)과 같은 틀
@@ -47,6 +54,10 @@ export const trackSlot = css`
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+
+  ${COMPACT} {
+    gap: 10px;
+  }
 `;
 
 export const trackLines = css`
@@ -71,6 +82,10 @@ export const artworkSquare = css`
   border-radius: 18px;
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
+
+  ${COMPACT} {
+    border-radius: 24px;
+  }
 `;
 
 export const artworkInfo = css`

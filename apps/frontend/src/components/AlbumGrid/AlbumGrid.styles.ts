@@ -1,7 +1,6 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
 import { BREAKPOINTS } from '@/constants/breakpoints';
-import { MOBILE_BP } from '@/constants/size';
 
 const COMPACT = `@media (max-width: ${BREAKPOINTS.compact}px)`;
 
@@ -13,7 +12,7 @@ export const listStyle = css`
   width: 100%;
 `;
 
-/** PC(소개 카드 아래): 3열 — 1440 폭에서 칸 약 300px / 좁은 화면: 2열 */
+/** PC(소개 카드 아래): 3열 — 1440 폭에서 칸 약 300px / 좁은 화면: 2열 (목업 간격 14 · 22) */
 export const gridContainerStyle = (featureFirst: boolean) => css`
   display: grid;
   grid-template-columns: repeat(${featureFirst ? 3 : 2}, minmax(0, 1fr));
@@ -22,14 +21,8 @@ export const gridContainerStyle = (featureFirst: boolean) => css`
   width: 100%;
 
   ${COMPACT} {
-    column-gap: 30px;
-    row-gap: 30px;
-  }
-
-  @media (max-width: ${MOBILE_BP}) {
-    column-gap: 16px;
+    column-gap: 14px;
     row-gap: 22px;
-    padding: 0 4px;
   }
 `;
 
@@ -43,6 +36,10 @@ export const gridItemStyle = css`
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+
+  ${COMPACT} {
+    gap: 10px;
+  }
 `;
 
 export const trackMetaStyle = css`

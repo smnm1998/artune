@@ -1,7 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoPlayCircle, IoWarning } from 'react-icons/io5';
-import usePreviewAudio from '@/hooks/audio/usePreviewAudio';
+import usePreviewAudio, {
+  PREVIEW_WAITING_DELAY_MS,
+} from '@/hooks/audio/usePreviewAudio';
+import useDelayedFlag from '@/hooks/ui/useDelayedFlag';
 import PreviewSource from '@/components/PreviewSource/PreviewSource';
+import Equalizer from '@/components/Equalizer/Equalizer';
 import { Track } from '@/types/track';
 import {
   modalOverlayStyle,
@@ -27,6 +31,11 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
     isEnabled: isOpen && hasPreviewUrl,
     fadeOutSeconds: 2,
   });
+  // 받는 중이 0.4초를 넘길 때만 '재생 준비 중' — 금방 재생되면 빈 줄에서 바로 '재생 중'으로
+  const showWaiting = useDelayedFlag(
+    isOpen && hasPreviewUrl && !isPlaying && !error,
+    PREVIEW_WAITING_DELAY_MS,
+  );
 
   const artistNames = album.artists.map((artist) => artist.name).join(', ');
 
@@ -56,11 +65,8 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                 <p css={trackNameStyle}>추천곡: {album.name}</p>
               </div>
 
-              {/* 깜빡임은 '재생 준비 중'에만 — 재생 중은 막대가 움직이고, 불가는 멈춰 있다 */}
-              <div
-                css={playingIndicatorStyle}
-                data-waiting={hasPreviewUrl && !isPlaying && !error}
-              >
+              {/* 깜빡임은 '재생 준비 중'에만 — 재생 중은 막대가 움직이고, 불가는 멈춰 있다. 비어 있어도 줄 높이는 지킨다 */}
+              <div css={playingIndicatorStyle} data-waiting={showWaiting}>
                 {!hasPreviewUrl ? (
                   <>
                     <IoWarning size={24} />
@@ -68,16 +74,7 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                   </>
                 ) : isPlaying ? (
                   <>
-                    {/* 이퀄라이저 — 막대 셋이 엇갈려 오르내린다 (목업) */}
-                    <span
-                      css={equalizerStyle}
-                      data-testid="equalizer"
-                      aria-hidden="true"
-                    >
-                      <span />
-                      <span />
-                      <span />
-                    </span>
+                    <Equalizer css={equalizerStyle} />
                     <span>30초 미리듣기 재생 중</span>
                   </>
                 ) : error ? (
@@ -85,12 +82,12 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
                     <IoWarning size={24} />
                     <span>재생 불가: {error}</span>
                   </>
-                ) : (
+                ) : showWaiting ? (
                   <>
                     <IoPlayCircle size={24} />
                     <span>재생 준비 중...</span>
                   </>
-                )}
+                ) : null}
               </div>
 
               <PreviewSource url={album.appleMusicUrl} />

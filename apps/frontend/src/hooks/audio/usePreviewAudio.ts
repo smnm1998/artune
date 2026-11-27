@@ -1,5 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
+/**
+ * '재생 준비 중' 표시를 띄우기까지 기다리는 시간 — 열고 0.1초 뒤 받기 시작해 보통 이 안에 재생된다.
+ * 그보다 빨리 띄우면 '준비 중 → 재생 중'이 찰나에 바뀌어 깜빡임처럼 보였다 (11/27 👤)
+ */
+export const PREVIEW_WAITING_DELAY_MS = 400;
+
 interface UsePreviewAudioOptions {
   src?: string;
   isEnabled: boolean;

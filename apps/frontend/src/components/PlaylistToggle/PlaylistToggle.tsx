@@ -14,7 +14,7 @@ interface PlaylistToggleProps {
   onModeChange: (mode: Mode) => void;
   immerseLabel?: string;
   sootheLabel?: string;
-  /** small: PC 추천곡 머리 오른쪽 끝(높이 32) / large: 좁은 화면 머리 (11/27 — 모드 설명은 툴팁 대신 제목 아래 문장으로) */
+  /** small: PC 추천곡 머리 오른쪽 끝(높이 32) / large: 좁은 화면 머리, 뒤로 버튼 옆(높이 48) — 11/27 모드 설명은 툴팁 대신 제목 아래 문장으로 */
   size?: ToggleSize;
 }
 

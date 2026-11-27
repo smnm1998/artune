@@ -339,17 +339,19 @@ export const footerStyle = css`
   gap: 4px;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px 24px;
+  /* 스크롤 끝에 글자가 붙어 보이지 않게 아래를 넉넉히 (11/27 👤 24 → 48) */
+  padding: 16px 24px 48px;
   text-align: center;
   font-size: 12px;
   line-height: 18px;
   color: ${colors.text.tertiary};
+  word-break: keep-all;
 
   p {
     margin: 0;
   }
 
   ${COMPACT} {
-    padding: 0 20px 24px;
+    padding: 8px 20px 40px;
   }
 `;

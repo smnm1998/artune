@@ -125,7 +125,9 @@ describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => 
     expect(scrollArea.scrollTop).toBe(0);
 
     scrollArea.scrollTop = 400;
-    fireEvent.click(screen.getByRole('button', { name: '아트워크로 돌아가기' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '아트워크로 돌아가기' }),
+    );
     expect(scrollArea.scrollTop).toBe(0);
   });
 });

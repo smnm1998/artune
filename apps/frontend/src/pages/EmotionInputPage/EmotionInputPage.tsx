@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { EmotionInput } from '@/components';
+import { BrandHome, EmotionInput } from '@/components';
 import {
   containerStyle,
-  titleWrapperStyle,
+  headerStyle,
+  heroStyle,
   titleStyle,
   subTitleStyle,
-  inputWrapperStyle,
+  composerAreaStyle,
   footerStyle,
 } from './EmotionInputPage.styles';
 import useAppStore from '@/stores/useAppStore';
@@ -58,12 +59,20 @@ function EmotionInputPage() {
 
   return (
     <div css={containerStyle}>
-      <div css={titleWrapperStyle}>
-        <h1 css={titleStyle}>안녕하세요!</h1>
-        <p css={subTitleStyle}>오늘의 감정을 들려주세요.</p>
-      </div>
+      <header css={headerStyle}>
+        {/* 이미 처음 화면 — 눌러도 그대로 */}
+        <BrandHome />
+      </header>
 
-      <div css={inputWrapperStyle}>
+      <main css={heroStyle}>
+        <h1 css={titleStyle}>오늘의 감정을 들려주세요</h1>
+        <p css={subTitleStyle}>
+          있었던 일을 편하게 적어 주시면, 지금 마음에 어울리는 노래를 골라
+          드려요.
+        </p>
+      </main>
+
+      <div css={composerAreaStyle}>
         <EmotionInput
           value={text}
           onChange={handleTextChange}
@@ -72,9 +81,8 @@ function EmotionInputPage() {
           minLength={VALIDATION_RULES.MIN_LENGTH}
           maxLength={VALIDATION_RULES.MAX_LENGTH}
         />
+        <footer css={footerStyle}>{NOTICES.AI_BEFORE_USE}</footer>
       </div>
-
-      <footer css={footerStyle}>{NOTICES.AI_BEFORE_USE}</footer>
     </div>
   );
 }

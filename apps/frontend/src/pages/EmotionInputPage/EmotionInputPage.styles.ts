@@ -1,74 +1,88 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
-import { MOBILE_BP } from '@/constants/size';
+import { BREAKPOINTS } from '@/constants/breakpoints';
 
+const MOBILE = `@media (max-width: ${BREAKPOINTS.mobile}px)`;
+
+// 맨 위 로고 · 가운데 문구 · 맨 아래 입력창 — LLM 채팅 화면처럼 입력은 아래, 문구는 화면 정중앙
 export const containerStyle = css`
-  position: relative; /* 맨 아래 고지(footerStyle)의 기준 */
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  gap: 24px;
+  height: 100%;
+  overflow-y: auto;
 `;
 
-export const titleWrapperStyle = css`
+export const headerStyle = css`
+  display: flex;
+  align-items: center;
+  padding: 20px 24px 12px;
+
+  ${MOBILE} {
+    justify-content: center;
+    padding: 6px 16px 0;
+  }
+`;
+
+export const heroStyle = css`
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 24px 40px;
   text-align: center;
+
+  ${MOBILE} {
+    gap: 10px;
+    padding: 0 24px 24px;
+  }
 `;
 
 export const titleStyle = css`
-  font-size: 50px;
-  font-weight: 700;
   margin: 0;
+  font-size: 40px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: ${colors.text.primary};
+  word-break: keep-all;
 
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 32px;
+  ${MOBILE} {
+    font-size: 26px;
   }
 `;
 
 export const subTitleStyle = css`
-  font-size: 26px;
-  font-weight: 700;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.65;
   color: ${colors.text.secondary};
+  word-break: keep-all;
 
-  @media (max-width: ${MOBILE_BP}) {
-    font-size: 18px;
+  ${MOBILE} {
+    font-size: 15px;
   }
 `;
 
-export const inputWrapperStyle = css`
-  position: relative;
-  width: 100%;
-  max-width: 1000px;
-  padding: 24px;
+// 입력창 + 생성형 AI 고지 — 화면 맨 아래
+export const composerAreaStyle = css`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: ${colors.glass.panel};
-  border-radius: 24px;
-  box-shadow: ${colors.shadow.panel};
-  backdrop-filter: ${colors.glass.blur};
-  -webkit-backdrop-filter: ${colors.glass.blur};
-  border: 1px solid ${colors.border.subtle};
+  gap: 14px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
 
-  &:focus-within {
-    border-color: ${colors.border.focus};
+  ${MOBILE} {
+    gap: 10px;
+    padding: 0 16px 16px;
   }
 `;
 
-// 맨 아래 고정 한 줄 — 입력 화면은 스크롤이 없고 아래가 비어 있어 겹치지 않는다
 export const footerStyle = css`
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  padding: 0 20px;
+  margin: 0;
   text-align: center;
   font-size: 12px;
   line-height: 1.5;

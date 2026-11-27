@@ -38,7 +38,7 @@ function ActionButtons({ onNext }: ActionButtonsProps) {
       {onNext && (
         <button css={[buttonStyle, primaryButtonStyle]} onClick={onNext}>
           <div css={iconWrapperStyle}>
-            <IoMusicalNotes size={20} color="#ffffff" />
+            <IoMusicalNotes size={20} />
           </div>
           <span css={buttonTextStyle}>음악 보기</span>
         </button>

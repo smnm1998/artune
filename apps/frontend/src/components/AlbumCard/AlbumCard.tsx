@@ -6,6 +6,7 @@ import {
   vinylDiscStyle,
   vinylCenterStyle,
   albumCoverStyle,
+  noImageStyle,
 } from './AlbumCard.styles';
 
 interface AlbumCardProps {
@@ -54,20 +55,7 @@ function AlbumCard({ album, isHovered }: AlbumCardProps) {
               loading="lazy"
             />
           ) : (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontSize: '12px',
-              }}
-            >
-              No Image
-            </div>
+            <div css={noImageStyle}>No Image</div>
           )}
         </motion.div>
       </div>

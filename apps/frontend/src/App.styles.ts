@@ -6,7 +6,7 @@ export const appStyle = css`
   height: 100vh;
   overflow: hidden;
   position: relative;
-  background: ${colors.background.gradient};
+  background: ${colors.background.page};
 `;
 
 // 입력·결과 화면이 같은 자리에서 페이드로 바뀐다 — 스크롤은 각 화면이 맡는다 (결과 화면: ResultPage의 scrollAreaStyle)

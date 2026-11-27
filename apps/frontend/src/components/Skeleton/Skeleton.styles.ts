@@ -10,22 +10,17 @@ const sweep = keyframes`
   }
 `;
 
-/** 다크 글래스 바탕 위로 옅은 빛이 지나간다 — 움직임 줄이기 설정이면 멈춘다 */
+/** 회색 칠 위로 흰 빛이 지나간다 — 움직임 줄이기 설정이면 멈춘다 */
 const shimmer = css`
   position: relative;
   overflow: hidden;
-  background: ${colors.background.glass.subtle};
+  background: ${colors.fill.skeleton};
 
   &::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      ${colors.background.glass.subtle} 50%,
-      transparent 100%
-    );
+    background: ${colors.gradients.shimmer};
     animation: ${sweep} 1.6s ease-in-out infinite;
   }
 
@@ -42,7 +37,7 @@ export const cover = css`
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  border: 1px solid ${colors.border.light};
+  border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
 `;
 
@@ -62,7 +57,7 @@ export const artworkSquare = css`
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 16px;
-  border: 1px solid ${colors.border.light};
+  border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
 `;
 

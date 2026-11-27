@@ -46,15 +46,13 @@ export const leftSectionStyle = css`
   flex-direction: column;
   gap: 24px;
 
-  background: ${colors.background.glass.subtle};
-  backdrop-filter: blur(20px);
-  border: 1px solid ${colors.border.light};
+  background: ${colors.glass.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.subtle};
   border-radius: 24px;
   padding: 32px;
-
-  box-shadow:
-    0 8px 32px ${colors.shadow.light},
-    inset 0 1px 0 ${colors.shadow.inset};
+  box-shadow: ${colors.shadow.panel};
 
   /* PC: 스크롤 시 상단 고정 */
   position: sticky;
@@ -162,8 +160,11 @@ export const backButtonStyle = css`
   width: 54px;
   height: 54px;
   border-radius: 50px;
-  background: ${colors.background.glass.light};
-  border: 1px solid ${colors.border.light};
+  background: ${colors.glass.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.subtle};
+  box-shadow: ${colors.shadow.raised};
   color: ${colors.text.primary};
   display: flex;
   align-items: center;
@@ -173,7 +174,7 @@ export const backButtonStyle = css`
   flex-shrink: 0;
 
   &:active {
-    background: ${colors.background.glass.medium};
+    background: ${colors.background.surface};
     transform: scale(0.96);
   }
 `;

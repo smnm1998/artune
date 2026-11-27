@@ -9,8 +9,9 @@ export const modalOverlayStyle = css`
   width: 100%;
   height: 100%;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  background: ${colors.glass.overlay};
+  backdrop-filter: ${colors.glass.overlayBlur};
+  -webkit-backdrop-filter: ${colors.glass.overlayBlur};
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -96,7 +97,7 @@ export const playingIndicatorStyle = css`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: ${colors.accent.green};
+  color: ${colors.accent.base};
   font-size: 12px;
   font-weight: 600;
 

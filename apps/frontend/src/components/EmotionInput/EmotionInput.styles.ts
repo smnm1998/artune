@@ -22,7 +22,7 @@ export const textareaStyle = css`
   resize: none;
   transition: all 0.3s ease;
   overflow-y: auto;
-  caret-color: ${colors.text.primary};
+  caret-color: ${colors.accent.base};
 
   &:focus {
     outline: none;
@@ -58,7 +58,7 @@ export const textareaStyle = css`
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: ${colors.accent.primary.base};
+    background: ${colors.scrollbar.thumbHover};
   }
 
   @media (max-width: ${TABLET_BP}) {
@@ -77,27 +77,22 @@ export const sendButtonStyle = css`
   align-items: center;
   transition: all 0.3s ease;
   font-size: 24px;
-  color: ${colors.text.primary};
-  background: ${colors.background.glass.light};
-  box-shadow: 0 8px 32px 0 ${colors.shadow.medium};
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid ${colors.border.medium};
+  color: ${colors.text.onAccent};
+  background: ${colors.accent.base};
+  box-shadow: ${colors.shadow.accent};
+  border: none;
 
   &:hover:not(:disabled) {
-    background: ${colors.accent.primary.base};
-    border: 1px solid ${colors.accent.primary.border};
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px ${colors.shadow.colored};
+    background: ${colors.accent.hover};
   }
 
   &:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(0.95);
   }
 
   &:disabled {
-    background: ${colors.background.glass.subtle};
-    border: 1px solid ${colors.border.light};
+    background: ${colors.fill.hover};
+    box-shadow: none;
     color: ${colors.text.disabled};
     cursor: not-allowed;
     transform: none;
@@ -117,9 +112,18 @@ export const inputWrapperStyle = css`
   width: 100%;
 `;
 
+// 글자 수 — 오류 문구와 같은 자리·크기, 색만 흐리게
+export const counterStyle = css`
+  font-size: 0.875rem;
+  color: ${colors.text.tertiary};
+  margin: 0;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+`;
+
 export const errorMessageStyle = css`
   font-size: 0.875rem;
-  color: #ff6b6b;
+  color: ${colors.error};
   margin: 0;
   padding: 0 4px;
   animation: fadeIn 0.2s ease-in;

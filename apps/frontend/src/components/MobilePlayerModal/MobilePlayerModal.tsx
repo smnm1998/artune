@@ -70,23 +70,13 @@ function MobilePlayerModal({ isOpen, onClose, track }: MobilePlayerModalProps) {
               </p>
 
               {(error || !activeTrack.preview_url) && (
-                <div
-                  style={{
-                    color: '#ff6b6b',
-                    fontSize: '13px',
-                    marginTop: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                  }}
-                >
+                <div css={styles.errorStyle}>
                   <IoWarning />
                   <span>{error || '미리듣기를 제공하지 않는 곡입니다'}</span>
                 </div>
               )}
 
-              <PreviewSource url={activeTrack.appleMusicUrl} />
+              <PreviewSource url={activeTrack.appleMusicUrl} onDark />
             </div>
 
             {/* 닫기 버튼 */}

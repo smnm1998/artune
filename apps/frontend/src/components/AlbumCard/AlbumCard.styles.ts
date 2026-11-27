@@ -34,13 +34,11 @@ export const vinylDiscStyle = css`
   width: 100%;
   height: 100%;
 
-  background: ${colors.gradients.hologram}, ${colors.gradients.vinylReflection};
+  background: ${colors.vinyl.hologram}, ${colors.vinyl.reflection};
   background-blend-mode: overlay;
   border-radius: 50%;
-  border: 1px solid ${colors.border.vinyl};
-  box-shadow:
-    0 6px 20px ${colors.shadow.medium},
-    inset 0 0 50px ${colors.shadow.inset};
+  border: 1px solid ${colors.vinyl.border};
+  box-shadow: ${colors.vinyl.shadow};
 
   transform: rotate(-20deg);
   z-index: 0;
@@ -61,9 +59,9 @@ export const vinylCenterStyle = css`
   transform: translate(-50%, -50%);
   width: 20%;
   height: 20%;
-  background: ${colors.gradients.vinylCenter};
+  background: ${colors.vinyl.center};
   border-radius: 50%;
-  border: 2px solid ${colors.border.vinylCenter};
+  border: 2px solid ${colors.vinyl.centerBorder};
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
 `;
 
@@ -74,9 +72,7 @@ export const albumCoverStyle = css`
   height: 100%;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow:
-    0 8px 16px ${colors.shadow.medium},
-    0 4px 8px ${colors.shadow.light};
+  box-shadow: ${colors.shadow.cover};
   z-index: 1;
 
   img {
@@ -84,8 +80,20 @@ export const albumCoverStyle = css`
     height: 100%;
     object-fit: cover;
     display: block;
-    background: ${colors.background.glass.subtle};
+    background: ${colors.fill.skeleton};
   }
+`;
+
+// 커버 주소가 없는 곡
+export const noImageStyle = css`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${colors.fill.skeleton};
+  color: ${colors.text.tertiary};
+  font-size: 12px;
 `;
 
 export const artistNameStyle = css`

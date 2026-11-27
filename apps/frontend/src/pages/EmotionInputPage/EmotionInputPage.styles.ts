@@ -11,7 +11,6 @@ export const containerStyle = css`
   min-height: 100vh;
   padding: 20px;
   gap: 24px;
-  background: ${colors.background.gradient};
 `;
 
 export const titleWrapperStyle = css`
@@ -36,8 +35,7 @@ export const titleStyle = css`
 export const subTitleStyle = css`
   font-size: 26px;
   font-weight: 700;
-  color: ${colors.text.primary};
-  opacity: 0.6;
+  color: ${colors.text.secondary};
 
   @media (max-width: ${MOBILE_BP}) {
     font-size: 18px;
@@ -52,12 +50,16 @@ export const inputWrapperStyle = css`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: ${colors.background.glass.light};
-  border-radius: 16px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid ${colors.border.medium};
+  background: ${colors.glass.panel};
+  border-radius: 24px;
+  box-shadow: ${colors.shadow.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.subtle};
+
+  &:focus-within {
+    border-color: ${colors.border.focus};
+  }
 `;
 
 // 맨 아래 고정 한 줄 — 입력 화면은 스크롤이 없고 아래가 비어 있어 겹치지 않는다

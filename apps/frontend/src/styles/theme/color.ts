@@ -1,99 +1,87 @@
+/**
+ * 색 — 회백색 단색 바탕 · 유리는 한 겹(흰색 72%) · 초록은 누를 것과 재생 중에만 (11/27 리디자인, 목업 "Light Glass · Green")
+ * 대비는 바탕 #F2F4F6 기준: 글자 1 15.0 · 글자 2 6.5 · 글자 3 4.9 · 초록 4.9 · 초록 위 흰 글자 5.4 · 오류 5.0 (모두 4.5:1 이상)
+ */
 export const colors = {
-  // text
-  text: {
-    primary: '#f9f9f9', // 메인 텍스트
-    secondary: '#b0b0b0', // 보조 텍스트
-    tertiary: 'rgba(249, 249, 249, 0.7)', // 3차 텍스트
-    placeholder: 'rgba(249, 249, 249, 0.5)', // placeholder
-    disabled: 'rgba(249, 249, 249, 0.3)', // 비활성화
-  },
-
-  // background
   background: {
-    // 메인 배경
-    gradient: 'linear-gradient(135deg, #000f00 0%, #0d0d0d 100%)',
-    white: '#ffffff',
-    primaryWhite: '#f9f9f9',
-
-    // 글래스모피즘 (투명도 적용한 테마)
-    glass: {
-      subtle: 'rgba(255,255,255,0.05)', // 미세하게
-      light: 'rgba(255,255,255,0.1)', // 기본값
-      medium: 'rgba(255, 255, 255, 0.15)', // 호버
-      mediumHeavy: 'rgba(255,255,255,0.2)',
-      heavy: 'rgba(255,255,255,0.3)',
-    },
-
-    // 다크 배경
-    dark: {
-      primary: 'rgba(20, 20, 20, 0.95)',
-      subtle: 'rgba(40, 40, 50, 0.9)',
-    },
+    page: '#F2F4F6', // 화면 바탕 (단색)
+    surface: '#FFFFFF', // 단색 면 · 토글의 고른 칸
   },
 
-  // border
+  // 유리 — 한 겹만 쓴다(유리 위에 유리를 겹치지 않는다)
+  glass: {
+    panel: 'rgba(255, 255, 255, 0.72)', // 패널 · 입력 카드 · 보조 버튼
+    overlay: 'rgba(255, 255, 255, 0.88)', // 커버 위 호버 정보 카드
+    blur: 'blur(24px) saturate(160%)',
+    overlayBlur: 'blur(14px) saturate(160%)',
+  },
+
+  // 바탕보다 살짝 진한 칠 — 토글 바닥 · 보조 버튼 · 스켈레톤
+  fill: {
+    subtle: 'rgba(25, 31, 40, 0.05)',
+    hover: 'rgba(25, 31, 40, 0.09)',
+    skeleton: 'rgba(25, 31, 40, 0.06)',
+  },
+
+  text: {
+    primary: '#191F28', // 제목 · 본문
+    secondary: '#4E5968', // 설명 · 가수
+    tertiary: '#5F6B78', // 안내 · 고지 · 글자 수
+    placeholder: '#6B7684',
+    disabled: '#8B95A1',
+    onAccent: '#FFFFFF', // 초록 버튼 위
+    inverse: '#FFFFFF', // 어두운 막 위(모바일 플레이어)
+    inverseSecondary: '#E5E8EB',
+  },
+
   border: {
-    light: 'rgba(255, 255, 255, 0.1)', // 기본 테두리
-    medium: 'rgba(255, 255, 255, 0.18)', // 강조 테두리
-    strong: 'rgba(255, 255, 255, 0.2)', // 더 진한 테두리
-    hover: 'rgba(255, 255, 255, 0.3)', // 호버시
-
-    // 특수 테두리
-    vinyl: 'rgba(255, 255, 255, 0.5)', // CD 디스크
-    vinylCenter: 'rgba(200, 200, 200, 0.6)', // CD 중앙홀
+    subtle: 'rgba(25, 31, 40, 0.06)', // 패널 · 카드
+    default: 'rgba(25, 31, 40, 0.1)',
+    focus: 'rgba(11, 122, 69, 0.55)', // 입력 중인 칸
   },
 
-  // shadow
-  shadow: {
-    light: 'rgba(0, 0, 0, 0.3)',
-    medium: 'rgba(0, 0, 0, 0.4)',
-    strong: 'rgba(0, 0, 0, 0.5)',
-    subtle: 'rgba(0, 0, 0, 0.2)',
-
-    // 특수 그림자
-    inset: 'rgba(255, 255, 255, 0.05)', // 내부 하이라이트
-    colored: 'rgba(69, 234, 69, 0.2)', // 컬러 그림자
-  },
-
-  // 강조
   accent: {
-    // 메인 액센트
-    primary: {
-      base: 'rgba(69, 234, 69, 0.3)',
-      border: 'rgba(69, 234, 69, 0.4)',
-    },
-
-    // 초록 계열 (아이콘 등)
-    green: '#2d5f2d',
+    base: '#0B7A45',
+    hover: '#096A3C',
+    /** 어두운 막 위의 장식(재생 막대 등) — 글자에는 쓰지 않는다 */
+    bright: '#4ADE80',
   },
 
-  // 그라데이션
+  shadow: {
+    panel:
+      '0 1px 2px rgba(25, 31, 40, 0.04), 0 8px 24px rgba(25, 31, 40, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+    cover: '0 8px 20px rgba(25, 31, 40, 0.16)',
+    raised: '0 1px 3px rgba(25, 31, 40, 0.12)',
+    accent: '0 6px 16px rgba(11, 122, 69, 0.28)',
+    toast: '0 8px 24px rgba(25, 31, 40, 0.18)',
+  },
+
+  /** 모바일 플레이어 뒤 막 — 아래 화면이 아무리 밝아도 흰 글자가 4.5:1을 넘는 농도 */
+  scrim: 'rgba(10, 13, 17, 0.62)',
+
+  error: '#C62A39',
+
+  // 로딩 중 칠 위로 지나가는 빛
   gradients: {
-    // CD 홀로그램 효과 (무지개 반사)
+    shimmer:
+      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)',
+  },
+
+  // CD — PC 카드 CD는 4단계에서 빠진다(👤 11/27). 모바일 플레이어의 회전 CD는 남는다
+  vinyl: {
     hologram:
       'conic-gradient(from 45deg, #e0e0e0, #ffd4ff, #d4f4ff, #fff4d4, #ffd4d4, #d4ffe4, #e0e0e0)',
-    // CD 중앙 홀 그라데이션
-    vinylCenter:
-      'radial-gradient(circle, rgba(40, 40, 40, 0.9) 0%, rgba(80, 80, 80, 0.7) 40%, rgba(140, 140, 140, 0.5) 100%)',
-
-    // CD 디스크 반사광
-    vinylReflection:
+    reflection:
       'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(200, 200, 200, 0.5) 50%, rgba(150, 150, 150, 0.7) 100%)',
-
-    // 로딩 shimmer 효과
-    shimmer:
-      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 100%)',
+    center:
+      'radial-gradient(circle, rgba(40, 40, 40, 0.9) 0%, rgba(80, 80, 80, 0.7) 40%, rgba(140, 140, 140, 0.5) 100%)',
+    border: 'rgba(25, 31, 40, 0.08)',
+    centerBorder: 'rgba(255, 255, 255, 0.8)',
+    shadow: '0 6px 20px rgba(25, 31, 40, 0.14)',
   },
 
-  // 스크롤 바
   scrollbar: {
-    thumb: 'rgba(255, 255, 255, 0.2)',
-    thumbHover: 'rgba(255, 255, 255, 0.3)',
-  },
-
-  // Error
-  error: {
-    color: 'linear-gradient(135deg, #ff4444 0%, #cc0000 100%)',
-    textColor: '#ffffff',
+    thumb: 'rgba(25, 31, 40, 0.2)',
+    thumbHover: 'rgba(25, 31, 40, 0.3)',
   },
 };

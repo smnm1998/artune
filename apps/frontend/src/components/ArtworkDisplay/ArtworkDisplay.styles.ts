@@ -10,16 +10,16 @@ export const artworkContainer = css`
   padding: 20px;
 `;
 
-// 아트워크
+// 아트워크 — 이미지가 오기 전에는 칠 위로 빛이 지나간다
 export const artworkWrapper = css`
   width: 100%;
   aspect-ratio: 1/1;
   border-radius: 16px;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  background: ${colors.background.glass.subtle};
-  border: 1px solid ${colors.border.light};
-  box-shadow: 0 8px 32px ${colors.shadow.light};
+  background: ${colors.fill.skeleton};
+  box-shadow:
+    0 0 0 1px ${colors.border.subtle},
+    ${colors.shadow.cover};
 
   /* 이미지 로딩 */
   position: relative;
@@ -68,29 +68,29 @@ export const artworkInfo = css`
   text-align: center;
 `;
 
-// 감정 설명
+// 감정 이름
 export const emotionalLabel = css`
   font-size: 32px;
   font-weight: 700;
+  letter-spacing: -0.03em;
   margin: 0;
   color: ${colors.text.primary};
-  text-shadow: 0 2px 8px ${colors.shadow.light};
 `;
 
+// 공감 문구
 export const description = css`
   font-size: 16px;
   font-weight: 400;
   margin: 0;
-  color: ${colors.text.tertiary};
-  line-height: 1.5;
+  color: ${colors.text.secondary};
+  line-height: 1.6;
 `;
 
 // 안내 문구
 export const guideText = css`
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(249, 249, 249, 0.8);
-  line-height: 1.6;
+  font-size: 13px;
+  font-weight: 400;
+  color: ${colors.text.tertiary};
+  line-height: 1.5;
   margin-top: 8px;
-  font-style: italic;
 `;

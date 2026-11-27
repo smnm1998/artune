@@ -8,6 +8,7 @@ import {
   sendButtonStyle,
   sendButtonIconStyle,
   errorMessageStyle,
+  counterStyle,
   inputWrapperStyle,
 } from './EmotionInput.styles';
 
@@ -91,7 +92,7 @@ function EmotionInput({
 
       {/* 글자 수 표시 */}
       {maxLength && (
-        <p css={errorMessageStyle} style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <p css={counterStyle}>
           {value.length} / {maxLength}자
         </p>
       )}

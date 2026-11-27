@@ -17,27 +17,23 @@ export const toggleWrapperStyle = css`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: ${colors.background.glass.subtle};
-  backdrop-filter: blur(10px);
-  border: 1px solid ${colors.border.light};
+  background: ${colors.fill.subtle};
   border-radius: 12px;
   padding: 6px;
   overflow: visible;
 `;
 
-// 슬라이딩 인디케이터
+// 슬라이딩 인디케이터 — 고른 칸은 흰 면 + 얕은 그림자(초록은 누를 것과 재생 중에만 쓴다)
 export const sliderStyle = css`
   position: absolute;
   top: 6px;
   left: 6px;
   width: calc(50% - 6px);
   height: calc(100% - 12px);
-  background: rgba(34, 139, 34, 0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(34, 139, 34, 0.5);
+  background: ${colors.background.surface};
   border-radius: 8px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.2);
+  box-shadow: ${colors.shadow.raised};
   pointer-events: none;
   z-index: 0;
 `;
@@ -49,15 +45,15 @@ export const toggleButtonStyle = css`
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: rgba(249, 249, 249, 0.6);
+  color: ${colors.text.tertiary};
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: color 0.3s ease;
   z-index: 1;
 
   &:hover {
-    color: rgba(249, 249, 249, 0.9);
+    color: ${colors.text.secondary};
   }
 
   &:active {
@@ -84,11 +80,9 @@ export const tooltipStyle = css`
   left: 50%;
   transform: translateX(-50%) translateY(4px);
   padding: 8px 12px;
-  background: ${colors.background.dark.primary};
-  backdrop-filter: blur(10px);
-  border: 1px solid ${colors.border.strong};
+  background: ${colors.text.primary};
   border-radius: 8px;
-  color: ${colors.text.primary};
+  color: ${colors.text.inverse};
   font-size: 12px;
   font-weight: 400;
   white-space: nowrap;
@@ -105,7 +99,7 @@ export const tooltipStyle = css`
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: ${colors.background.dark.primary};
+    border-top-color: ${colors.text.primary};
   }
 `;
 

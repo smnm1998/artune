@@ -13,8 +13,10 @@ export const overlayStyle = css`
   width: 100%;
   height: 100%;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
+  /* 아래 화면 위에 덧붙인 어두운 막 + 흐림 — 흰 글자가 읽히는 농도(colors.scrim) */
+  background: ${colors.scrim};
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -138,14 +140,25 @@ export const infoStyle = css`
 export const titleStyle = css`
   font-size: 20px;
   font-weight: 700;
-  color: ${colors.text.primary};
+  color: ${colors.text.inverse};
   line-height: 1.4;
   word-break: keep-all;
 `;
 
 export const artistStyle = css`
   font-size: 16px;
-  color: ${colors.text.secondary};
+  color: ${colors.text.inverseSecondary};
+`;
+
+// 미리듣기 불가·재생 실패 안내 — 어두운 막 위라 흰 글자
+export const errorStyle = css`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: ${colors.text.inverse};
 `;
 
 export const closeButtonStyle = css`
@@ -153,17 +166,18 @@ export const closeButtonStyle = css`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: ${colors.background.glass.light};
-  border: 1px solid ${colors.border.light};
+  background: ${colors.background.surface};
+  border: none;
+  box-shadow: ${colors.shadow.toast};
   color: ${colors.text.primary};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 24px;
-  transition: background 0.2s;
+  transition: transform 0.15s ease;
 
   &:active {
-    background: ${colors.background.glass.medium};
+    transform: scale(0.94);
   }
 `;

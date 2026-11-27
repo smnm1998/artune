@@ -9,9 +9,11 @@ export const notice = css`
   margin: 0 20px;
   padding: 16px 20px;
   border-radius: 16px;
-  backdrop-filter: blur(10px);
-  background: ${colors.background.glass.light};
-  border: 1px solid ${colors.accent.primary.border};
+  background: ${colors.glass.panel};
+  backdrop-filter: ${colors.glass.blur};
+  -webkit-backdrop-filter: ${colors.glass.blur};
+  border: 1px solid ${colors.border.default};
+  box-shadow: ${colors.shadow.panel};
   text-align: center;
 `;
 
@@ -22,17 +24,18 @@ export const message = css`
   color: ${colors.text.primary};
 `;
 
+// 전화 걸기 — 누를 것이라 초록
 export const call = css`
   align-self: center;
   padding: 8px 16px;
   border-radius: 999px;
-  background: ${colors.accent.primary.base};
-  color: ${colors.text.primary};
+  background: ${colors.accent.base};
+  color: ${colors.text.onAccent};
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
 
   &:hover {
-    background: ${colors.background.glass.mediumHeavy};
+    background: ${colors.accent.hover};
   }
 `;

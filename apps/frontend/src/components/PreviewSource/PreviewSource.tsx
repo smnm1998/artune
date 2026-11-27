@@ -2,6 +2,7 @@ import { NOTICES } from '@/constants/notices';
 import {
   wrapperStyle,
   attributionStyle,
+  attributionOnDarkStyle,
   badgeLinkStyle,
   badgeImageStyle,
 } from './PreviewSource.styles';
@@ -16,6 +17,8 @@ export const APPLE_MUSIC_BADGE_SRC =
 interface PreviewSourceProps {
   /** 이 곡의 Apple Music 주소 — 없으면(곡 링크를 보내지 않는 이전 서버) 배지를 뺀다 */
   url?: string;
+  /** 어두운 막 위(모바일 플레이어) — 출처 문구를 밝은 색으로 */
+  onDark?: boolean;
 }
 
 /**
@@ -23,7 +26,7 @@ interface PreviewSourceProps {
  * - iTunes Search API 약관: 미리듣기·커버는 스토어 배지 가까이, 미리듣기에는 출처 표기(문구는 약관 그대로)
  * - Apple Music 가이드라인: 한 화면에 배지는 하나 → 카드마다가 아니라 열린 곡(PC 호버 카드·모바일 모달)에만 둔다
  */
-function PreviewSource({ url }: PreviewSourceProps) {
+function PreviewSource({ url, onDark = false }: PreviewSourceProps) {
   return (
     <div css={wrapperStyle}>
       {url && (
@@ -40,7 +43,9 @@ function PreviewSource({ url }: PreviewSourceProps) {
           />
         </a>
       )}
-      <p css={attributionStyle}>{NOTICES.PREVIEW_ATTRIBUTION}</p>
+      <p css={[attributionStyle, onDark && attributionOnDarkStyle]}>
+        {NOTICES.PREVIEW_ATTRIBUTION}
+      </p>
     </div>
   );
 }

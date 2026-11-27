@@ -50,6 +50,23 @@ describe('EmotionInputPage', () => {
     screen.getByText(/최소 5자/); // 없으면 여기서 실패한다
   });
 
+  it('보조 문구 — PC는 긴 문장, 모바일은 한 줄에 들어가는 짧은 문장', () => {
+    const { unmount } = render(<EmotionInputPage />);
+    screen.getByText(/있었던 일을 편하게 적어 주시면/);
+    unmount();
+
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: true,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+    render(<EmotionInputPage />);
+
+    screen.getByText('지금 마음에 어울리는 노래를 골라 드려요.');
+    expect(screen.queryByText(/있었던 일을 편하게 적어 주시면/)).toBeNull();
+  });
+
   it('보내는 중에는 다시 보내지 않는다', () => {
     useAppStore.setState({ isLoading: true, draft: '오늘 시험을 망쳤어' });
     render(<EmotionInputPage />);

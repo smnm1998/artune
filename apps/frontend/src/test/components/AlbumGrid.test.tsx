@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AlbumGrid from '@/components/AlbumGrid/AlbumGrid';
@@ -40,6 +40,50 @@ describe('AlbumGrid (PC 호버)', () => {
     );
 
     await user.unhover(screen.getByAltText('곡 3'));
+    expect(badges()).toHaveLength(0);
+  });
+
+  it('소개 카드와 격자는 같은 호버 상태를 써서, 둘을 오가도 배지는 하나다', async () => {
+    const user = userEvent.setup();
+    render(
+      <AlbumGrid
+        tracks={[track(1), track(2), track(3)]}
+        interaction="hover"
+        featureFirst
+      />,
+    );
+
+    await user.hover(screen.getByAltText('곡 1'));
+    expect(badges()).toHaveLength(1);
+    expect(badges()[0].getAttribute('href')).toBe(
+      'https://music.apple.com/kr/song/1',
+    );
+
+    await user.hover(screen.getByAltText('곡 2'));
+    expect(badges()).toHaveLength(1);
+    expect(badges()[0].getAttribute('href')).toBe(
+      'https://music.apple.com/kr/song/2',
+    );
+  });
+});
+
+describe('AlbumGrid (좁은 화면 탭)', () => {
+  it('누르면 그 곡으로 플레이어를 열고, 커버 위 정보 카드는 띄우지 않는다', async () => {
+    const user = userEvent.setup();
+    const onTrackClick = vi.fn();
+    render(
+      <AlbumGrid
+        tracks={[track(1), track(2)]}
+        interaction="tap"
+        onTrackClick={onTrackClick}
+      />,
+    );
+
+    await user.click(screen.getByAltText('곡 2'));
+
+    expect(onTrackClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: '2' }),
+    );
     expect(badges()).toHaveLength(0);
   });
 });

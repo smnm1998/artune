@@ -16,6 +16,7 @@ export const buttonStyle = css`
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 48px;
   padding: 14px 20px;
   background: ${colors.fill.subtle};
   border: none;

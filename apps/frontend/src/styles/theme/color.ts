@@ -67,18 +67,7 @@ export const colors = {
       'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)',
   },
 
-  // CD — PC 카드 CD는 4단계에서 빠진다(👤 11/27). 모바일 플레이어의 회전 CD는 남는다
-  vinyl: {
-    hologram:
-      'conic-gradient(from 45deg, #e0e0e0, #ffd4ff, #d4f4ff, #fff4d4, #ffd4d4, #d4ffe4, #e0e0e0)',
-    reflection:
-      'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(200, 200, 200, 0.5) 50%, rgba(150, 150, 150, 0.7) 100%)',
-    center:
-      'radial-gradient(circle, rgba(40, 40, 40, 0.9) 0%, rgba(80, 80, 80, 0.7) 40%, rgba(140, 140, 140, 0.5) 100%)',
-    border: 'rgba(25, 31, 40, 0.08)',
-    centerBorder: 'rgba(255, 255, 255, 0.8)',
-    shadow: '0 6px 20px rgba(25, 31, 40, 0.14)',
-  },
+  // PC 카드의 CD 장식 색(vinyl)은 11/27 CD를 빼며 지웠다 — 모바일 플레이어의 회전 CD는 자기 스타일(커버 이미지)을 쓴다
 
   scrollbar: {
     thumb: 'rgba(25, 31, 40, 0.2)',

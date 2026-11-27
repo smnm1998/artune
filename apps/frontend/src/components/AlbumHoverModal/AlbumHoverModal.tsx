@@ -35,7 +35,7 @@ function AlbumHoverModal({ isOpen, album }: AlbumHoverModalProps) {
         <audio
           ref={audioRef}
           src={isOpen ? (album.preview_url ?? undefined) : undefined}
-          style={{ display: 'none' }}
+          hidden
         />
       )}
 

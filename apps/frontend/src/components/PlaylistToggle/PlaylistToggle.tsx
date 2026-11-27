@@ -1,13 +1,10 @@
-import useHover from '@/hooks/ui/useHover';
 import {
-  toggleContainerStyle,
   toggleWrapperStyle,
   toggleButtonStyle,
   activeToggleButtonStyle,
   sliderStyle,
   modeLabelStyle,
-  tooltipStyle,
-  tooltipVisibleStyle,
+  type ToggleSize,
 } from './PlaylistToggle.styles';
 
 type Mode = 'immerse' | 'soothe';
@@ -17,8 +14,8 @@ interface PlaylistToggleProps {
   onModeChange: (mode: Mode) => void;
   immerseLabel?: string;
   sootheLabel?: string;
-  immerseDescription?: string;
-  sootheDescription?: string;
+  /** small: PC 추천곡 머리 오른쪽 끝(높이 32) / large: 좁은 화면 머리 (11/27 — 모드 설명은 툴팁 대신 제목 아래 문장으로) */
+  size?: ToggleSize;
 }
 
 function PlaylistToggle({
@@ -26,69 +23,38 @@ function PlaylistToggle({
   onModeChange,
   immerseLabel,
   sootheLabel,
-  immerseDescription,
-  sootheDescription,
+  size = 'large',
 }: PlaylistToggleProps) {
-  const { handleMouseEnter, handleMouseLeave, isHovered } = useHover<Mode>();
+  const modes: { id: Mode; label: string }[] = [
+    { id: 'immerse', label: immerseLabel || '감정 심취' },
+    { id: 'soothe', label: sootheLabel || '감정 완화' },
+  ];
 
   return (
-    <div css={toggleContainerStyle}>
-      <div css={toggleWrapperStyle}>
-        {/* 슬라이딩 인디케이터 */}
-        <div
-          css={sliderStyle}
-          style={{
-            transform:
-              selectedMode === 'immerse'
-                ? 'translateX(0%)'
-                : 'translateX(100%)',
-          }}
-        />
+    <div css={toggleWrapperStyle(size)}>
+      {/* 고른 칸 뒤로 흰 면이 미끄러진다 */}
+      <div
+        css={sliderStyle(size)}
+        style={{
+          transform:
+            selectedMode === 'immerse' ? 'translateX(0%)' : 'translateX(100%)',
+        }}
+      />
 
-        {/* 감정 심취 버튼 */}
+      {modes.map(({ id, label }) => (
         <button
+          key={id}
+          type="button"
           css={[
-            toggleButtonStyle,
-            selectedMode === 'immerse' && activeToggleButtonStyle,
+            toggleButtonStyle(size),
+            selectedMode === id && activeToggleButtonStyle,
           ]}
-          onClick={() => onModeChange('immerse')}
-          onMouseEnter={() => handleMouseEnter('immerse')}
-          onMouseLeave={handleMouseLeave}
+          aria-pressed={selectedMode === id}
+          onClick={() => onModeChange(id)}
         >
-          <span css={modeLabelStyle}>{immerseLabel || '감정 심취'}</span>
-
-          {/* Hover 툴팁 */}
-          {immerseDescription && (
-            <div
-              css={[tooltipStyle, isHovered('immerse') && tooltipVisibleStyle]}
-            >
-              {immerseDescription}
-            </div>
-          )}
+          <span css={modeLabelStyle}>{label}</span>
         </button>
-
-        {/* 감정 완화 버튼 */}
-        <button
-          css={[
-            toggleButtonStyle,
-            selectedMode === 'soothe' && activeToggleButtonStyle,
-          ]}
-          onClick={() => onModeChange('soothe')}
-          onMouseEnter={() => handleMouseEnter('soothe')}
-          onMouseLeave={handleMouseLeave}
-        >
-          <span css={modeLabelStyle}>{sootheLabel || '감정 완화'}</span>
-
-          {/* Hover 툴팁 */}
-          {sootheDescription && (
-            <div
-              css={[tooltipStyle, isHovered('soothe') && tooltipVisibleStyle]}
-            >
-              {sootheDescription}
-            </div>
-          )}
-        </button>
-      </div>
+      ))}
     </div>
   );
 }

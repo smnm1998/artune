@@ -1,25 +1,22 @@
 import { css } from '@emotion/react';
 import { colors } from '@/styles/theme';
 
-// 전체 컨테이너
+// 아트워크 → 감정 정보 — 폭은 담는 쪽(왼쪽 패널 · 좁은 화면 카드)이 정한다
 export const artworkContainer = css`
   display: flex;
   flex-direction: column;
-  max-width: 500px;
+  width: 100%;
   gap: 20px;
-  padding: 20px;
 `;
 
 // 아트워크 — 이미지가 오기 전에는 칠 위로 빛이 지나간다
 export const artworkWrapper = css`
   width: 100%;
   aspect-ratio: 1/1;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   background: ${colors.fill.skeleton};
-  box-shadow:
-    0 0 0 1px ${colors.border.subtle},
-    ${colors.shadow.cover};
+  box-shadow: 0 0 0 1px ${colors.border.subtle};
 
   /* 이미지 로딩 */
   position: relative;
@@ -60,37 +57,47 @@ export const artworkImage = css`
   z-index: 1;
 `;
 
-// 감정 정보 영역
+// 감정 정보 영역 — 왼쪽 정렬(작은 제목 → 감정 이름 → 공감 문구)
 export const artworkInfo = css`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: center;
+  gap: 4px;
+  word-break: keep-all;
+`;
+
+// "오늘의 감정"
+export const eyebrow = css`
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  color: ${colors.text.tertiary};
 `;
 
 // 감정 이름
 export const emotionalLabel = css`
-  font-size: 32px;
+  margin: 0;
+  font-size: 28px;
+  line-height: 38px;
   font-weight: 700;
   letter-spacing: -0.03em;
-  margin: 0;
   color: ${colors.text.primary};
 `;
 
 // 공감 문구
 export const description = css`
-  font-size: 16px;
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 25px;
   font-weight: 400;
-  margin: 0;
   color: ${colors.text.secondary};
-  line-height: 1.6;
 `;
 
-// 안내 문구
+// 감상 안내 (좁은 화면)
 export const guideText = css`
+  margin: 10px 0 0;
   font-size: 13px;
+  line-height: 20px;
   font-weight: 400;
   color: ${colors.text.tertiary};
-  line-height: 1.5;
-  margin-top: 8px;
 `;

@@ -8,6 +8,8 @@ import { SCREEN_TRACK_COUNT } from '@/constants/playlist';
 import {
   ArtworkDisplay,
   ArtworkDisplaySkeleton,
+  ARTWORK_GUIDE,
+  BrandHome,
   CrisisNotice,
   PlaylistToggle,
   AlbumGrid,
@@ -16,18 +18,28 @@ import {
 } from '@/components';
 import useAppStore from '@/stores/useAppStore';
 import useMediaQuery from '@/hooks/ui/useMediaQuery';
+import useConfirmRestart from '@/hooks/ui/useConfirmRestart';
 import { NOTICES } from '@/constants/notices';
 import {
   scrollAreaStyle,
+  headerStyle,
   containerStyle,
-  leftSectionStyle,
-  rightSectionStyle,
+  sidePanelStyle,
+  sideFooterStyle,
+  sideGuideStyle,
+  trackSectionStyle,
+  trackHeaderStyle,
+  headingStyle,
+  titleRowStyle,
+  sectionTitleStyle,
+  statusStyle,
+  liveDotStyle,
+  countStyle,
+  modeDescriptionStyle,
   mobileMusicHeaderStyle,
   backButtonStyle,
   toggleWrapperStyle,
-  actionButtonWrapperStyle,
   playlistStyle,
-  statusStyle,
   emptyStateStyle,
   footerStyle,
 } from './ResultPage.styles';
@@ -37,9 +49,10 @@ type ViewMode = 'artwork' | 'music';
 /**
  * 감정 분석 결과 페이지 — 스트림이 열리면 바로 들어와 받는 대로 채운다.
  * - 머리말 전(약 2초): 아트워크·감정·공감 문구 자리는 스켈레톤
- * - 곡: 모드마다 10칸을 받은 곡이 앞에서부터 채우고, 다 받기 전에는 "곡을 고르고 있어요"
+ * - 곡: 모드마다 10칸을 받은 곡이 앞에서부터 채우고, 다 받기 전에는 "곡을 고르고 있어요 n / 10"
  * - 끝났는데 10곡이 안 되면 남은 칸은 지우고, 0곡이면 빈 목록 안내 (도중 실패 포함)
- * - PC(>1024px): 아트워크와 플레이리스트가 나란히 / 좁은 화면: 아트워크 뷰 → '음악 보기'로 플레이리스트 뷰
+ * - PC(>1024px): 3:7 — 왼쪽 감정 결과 패널(스크롤해도 제자리) · 오른쪽 소개 카드 1곡 + 3열 9곡
+ * - 좁은 화면: 아트워크 뷰 → '음악 보기'로 플레이리스트 뷰(2열)
  */
 function ResultPage() {
   const liveResult = useAppStore((state) => state.emotionResult);
@@ -65,21 +78,61 @@ function ResultPage() {
     setSelectedTrack(track);
     setIsPlayerOpen(true);
   };
+  // ARTUNE(홈)도 다시하기와 같다 — 결과를 버리기 전에 묻는다
+  const handleHome = useConfirmRestart();
   const isCompactView = useMediaQuery(`(max-width: ${BREAKPOINTS.compact}px)`);
 
   if (!emotionResult && !isLoading) return null;
   const playlists = emotionResult?.playlists;
-  const tracks = playlists?.[selectedMode].tracks ?? [];
+  const playlist = playlists?.[selectedMode];
+  const tracks = playlist?.tracks ?? [];
   const pending = isLoading
     ? Math.max(0, SCREEN_TRACK_COUNT - tracks.length)
     : 0;
 
+  // "추천곡" + 고르는 중 상태 · 그 아래 모드 설명(머리말과 함께 온다)
+  const trackHeading = (
+    <div css={headingStyle}>
+      <div css={titleRowStyle}>
+        <h2 css={sectionTitleStyle}>추천곡</h2>
+        {pending > 0 && (
+          <p css={statusStyle} role="status">
+            <span css={liveDotStyle} aria-hidden="true" />
+            곡을 고르고 있어요
+            {/* 숫자는 곡마다 바뀐다 — 읽어 주기는 처음 한 번만 */}
+            <span css={countStyle} aria-hidden="true">
+              {tracks.length} / {SCREEN_TRACK_COUNT}
+            </span>
+          </p>
+        )}
+      </div>
+      <p css={modeDescriptionStyle}>{playlist?.description}</p>
+    </div>
+  );
+
+  const toggle = (
+    <PlaylistToggle
+      selectedMode={selectedMode}
+      onModeChange={setSelectedMode}
+      immerseLabel={playlists?.immerse.modeLabel}
+      sootheLabel={playlists?.soothe.modeLabel}
+      size={isCompactView ? 'large' : 'small'}
+    />
+  );
+
   return (
     <div ref={scrollRef} css={scrollAreaStyle}>
+      {/* 입력 화면과 같은 자리 — 교차 페이드 동안 로고가 움직이지 않는다 */}
+      {!isCompactView && (
+        <header css={headerStyle}>
+          <BrandHome onHome={handleHome} />
+        </header>
+      )}
+
       {/* 화면 전체의 나타남은 App의 교차 페이드가 맡는다 — 여기서 또 흐리게 시작하면 두 번 겹친다 */}
       <div css={containerStyle}>
         {(!isCompactView || viewMode === 'artwork') && (
-          <div css={leftSectionStyle}>
+          <div css={sidePanelStyle}>
             {emotionResult?.crisis && <CrisisNotice />}
             {emotionResult ? (
               <motion.div
@@ -91,6 +144,8 @@ function ResultPage() {
                   artwork={emotionResult.artwork}
                   emotionLabel={emotionResult.emotionLabel}
                   description={emotionResult.description}
+                  // PC는 감상 안내를 패널 맨 아래 다시하기 바로 위에
+                  showGuide={isCompactView}
                 />
               </motion.div>
             ) : (
@@ -98,11 +153,14 @@ function ResultPage() {
             )}
 
             <motion.div
-              css={actionButtonWrapperStyle}
+              css={sideFooterStyle}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
+              {!isCompactView && emotionResult && (
+                <p css={sideGuideStyle}>{ARTWORK_GUIDE}</p>
+              )}
               <ActionButtons
                 // 좁은 화면에서만 '음악 보기' (PC는 플레이리스트가 옆에 있다)
                 onNext={isCompactView ? () => switchView('music') : undefined}
@@ -112,34 +170,29 @@ function ResultPage() {
         )}
 
         {(!isCompactView || viewMode === 'music') && (
-          <div css={rightSectionStyle}>
-            <div css={mobileMusicHeaderStyle}>
-              {isCompactView && (
-                <button
-                  css={backButtonStyle}
-                  onClick={() => switchView('artwork')}
-                  aria-label="아트워크로 돌아가기"
-                >
-                  <IoArrowBack size={24} />
-                </button>
-              )}
-
-              <div css={toggleWrapperStyle}>
-                <PlaylistToggle
-                  selectedMode={selectedMode}
-                  onModeChange={setSelectedMode}
-                  immerseLabel={playlists?.immerse.modeLabel}
-                  sootheLabel={playlists?.soothe.modeLabel}
-                  // 툴팁은 PC에서만 (터치에서는 누르기를 방해한다)
-                  immerseDescription={
-                    !isCompactView ? playlists?.immerse.description : undefined
-                  }
-                  sootheDescription={
-                    !isCompactView ? playlists?.soothe.description : undefined
-                  }
-                />
+          <section css={trackSectionStyle}>
+            {isCompactView ? (
+              <>
+                <div css={mobileMusicHeaderStyle}>
+                  <button
+                    type="button"
+                    css={backButtonStyle}
+                    onClick={() => switchView('artwork')}
+                    aria-label="아트워크로 돌아가기"
+                  >
+                    <IoArrowBack size={24} />
+                  </button>
+                  <div css={toggleWrapperStyle}>{toggle}</div>
+                </div>
+                {trackHeading}
+              </>
+            ) : (
+              // PC: 왼쪽 제목·상태·설명, 오른쪽 끝 작은 토글
+              <div css={trackHeaderStyle}>
+                {trackHeading}
+                {toggle}
               </div>
-            </div>
+            )}
 
             <motion.div
               key={selectedMode}
@@ -148,11 +201,6 @@ function ResultPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              {pending > 0 && (
-                <p css={statusStyle} role="status">
-                  곡을 고르고 있어요
-                </p>
-              )}
               {tracks.length === 0 && !isLoading ? (
                 <div css={emptyStateStyle}>
                   <div className="empty-icon">🎵</div>
@@ -169,10 +217,11 @@ function ResultPage() {
                   pending={pending}
                   interaction={isCompactView ? 'tap' : 'hover'}
                   onTrackClick={openPlayer}
+                  featureFirst={!isCompactView}
                 />
               )}
             </motion.div>
-          </div>
+          </section>
         )}
 
         <MobilePlayerModal

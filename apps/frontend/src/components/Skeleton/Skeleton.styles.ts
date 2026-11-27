@@ -31,14 +31,29 @@ const shimmer = css`
   }
 `;
 
-// 곡 카드 자리 — 받은 곡 카드의 커버와 같은 정사각형
+// 커버 자리 — 받은 곡 커버와 같은 정사각형 · 같은 모서리
 export const cover = css`
   ${shimmer};
   width: 100%;
-  height: 100%;
-  border-radius: 8px;
+  aspect-ratio: 1;
+  border-radius: 14px;
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
+`;
+
+// 격자 곡 칸 — 받은 곡 칸(커버 + 곡명 · 가수)과 같은 틀
+export const trackSlot = css`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+`;
+
+export const trackLines = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 3px 2px 0;
 `;
 
 // 머리말 자리 — ArtworkDisplay와 같은 틀
@@ -46,17 +61,14 @@ export const artworkContainer = css`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 500px;
   gap: 20px;
-  padding: 20px;
-  box-sizing: border-box;
 `;
 
 export const artworkSquare = css`
   ${shimmer};
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid ${colors.border.subtle};
   box-sizing: border-box;
 `;
@@ -64,14 +76,13 @@ export const artworkSquare = css`
 export const artworkInfo = css`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
-/** 글줄 자리 — 감정 이름(굵고 짧게) · 공감 문구(두 줄) */
+/** 글줄 자리 — 감정 이름(굵고 짧게) · 공감 문구(두 줄) · 곡명 · 가수 */
 export const line = (width: string, height: number) => css`
   ${shimmer};
   width: ${width};
   height: ${height}px;
-  border-radius: 6px;
+  border-radius: ${height / 2}px;
 `;

@@ -12,11 +12,11 @@ export const modalOverlayStyle = css`
   background: ${colors.glass.overlay};
   backdrop-filter: ${colors.glass.overlayBlur};
   -webkit-backdrop-filter: ${colors.glass.overlayBlur};
-  border-radius: 8px;
+  border-radius: 14px; /* 커버(AlbumCard)와 같은 모서리 */
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 카드 폭이 200~380px로 달라서, 안쪽 여백·간격을 카드 크기에 비례시키려고 크기 컨테이너로 둔다 */
+  /* 카드 폭이 200~300px(소개 카드 240)로 달라서, 안쪽 여백·간격을 카드 크기에 비례시키려고 크기 컨테이너로 둔다 */
   container-type: size;
 `;
 

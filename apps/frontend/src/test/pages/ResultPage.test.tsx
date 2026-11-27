@@ -27,7 +27,32 @@ const partial: EmotionResponse = {
   },
 };
 
+/** 곡 n개를 받은 상태 — 모드 설명은 머리말(meta)과 함께 온다 */
+const tracksOf = (n: number): Track[] =>
+  Array.from({ length: n }, (_, i) => ({
+    ...track,
+    id: String(i + 1),
+    name: `곡 ${i + 1}`,
+    key: (i + 1).toString(16).padStart(8, '0'),
+  }));
+const withTracks = (n: number): EmotionResponse => ({
+  ...partial,
+  playlists: {
+    immerse: {
+      modeLabel: '감정 심취',
+      description: '지친 마음에 조용히 머무는 곡들이에요',
+      tracks: tracksOf(n),
+    },
+    soothe: {
+      modeLabel: '감정 완화',
+      description: '천천히 숨을 고르게 해 줄 곡들이에요',
+      tracks: [],
+    },
+  },
+});
+
 const WAITING = '곡을 고르고 있어요';
+const FEATURED = '먼저 들어보세요';
 const NOT_FOUND = '플레이리스트를 찾을 수 없어요';
 
 const showSoothe = () =>
@@ -99,6 +124,65 @@ describe('결과 화면 — 스트림이 열린 뒤 받는 대로 채운다', ()
 
     screen.getByRole('complementary', { name: '상담 안내' });
   });
+
+  it('PC는 첫 곡을 소개 카드로 크게, 나머지는 그 아래 격자로 둔다 (첫 곡이 오기 전에는 소개 카드도 스켈레톤)', () => {
+    useAppStore.setState({ emotionResult: null, isLoading: true });
+    const { rerender } = render(<ResultPage />);
+
+    // 듣는 법 안내는 곡보다 먼저 보인다 — 기다리는 동안 읽게
+    screen.getByText(FEATURED);
+    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+
+    act(() => useAppStore.setState({ emotionResult: withTracks(3) }));
+    rerender(<ResultPage />);
+
+    expect(
+      screen.getByRole('heading', { level: 3, name: '곡 1' }),
+    ).not.toBeNull();
+    // 격자에는 2번째 곡부터 — 커버 아래 곡명이 붙는다
+    expect(screen.queryAllByText('곡 1', { selector: 'p' })).toHaveLength(0);
+    screen.getByText('곡 2', { selector: 'p' });
+    screen.getByText('곡 3', { selector: 'p' });
+    expect(trackSlots()).toBe(7);
+  });
+
+  it('모드 설명은 제목 아래 문장으로 늘 보이고, 고르는 중에는 받은 곡 수를 함께 보인다', () => {
+    useAppStore.setState({ emotionResult: withTracks(3), isLoading: true });
+    render(<ResultPage />);
+
+    screen.getByText('지친 마음에 조용히 머무는 곡들이에요');
+    expect(screen.getByRole('status').textContent).toContain('3 / 10');
+
+    showSoothe();
+
+    screen.getByText('천천히 숨을 고르게 해 줄 곡들이에요');
+    expect(screen.getByRole('status').textContent).toContain('0 / 10');
+    expect(
+      screen
+        .getByRole('button', { name: '감정 완화' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
+  it('ARTUNE을 누르면 다시하기처럼 묻고, 확인했을 때만 처음 화면으로 간다', () => {
+    useAppStore.setState({
+      emotionResult: partial,
+      isLoading: false,
+      currentPage: 'result',
+    });
+    render(<ResultPage />);
+    const home = screen.getByRole('link', { name: /ARTUNE/ });
+
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal('confirm', confirm);
+    fireEvent.click(home);
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(useAppStore.getState().currentPage).toBe('result');
+
+    confirm.mockReturnValue(true);
+    fireEvent.click(home);
+    expect(useAppStore.getState().currentPage).toBe('input');
+  });
 });
 
 describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => {
@@ -130,6 +214,16 @@ describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => 
       screen.getByRole('button', { name: '아트워크로 돌아가기' }),
     );
     expect(scrollArea.scrollTop).toBe(0);
+  });
+
+  it('좁은 화면 플레이리스트 뷰는 소개 카드 없이 10곡을 같은 격자로 둔다', () => {
+    useAppStore.setState({ emotionResult: withTracks(3), isLoading: true });
+    render(<ResultPage />);
+    fireEvent.click(screen.getByRole('button', { name: '음악 보기' }));
+
+    expect(screen.queryByText(FEATURED)).toBeNull();
+    screen.getByText('곡 1', { selector: 'p' });
+    expect(trackSlots()).toBe(7);
   });
 });
 

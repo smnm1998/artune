@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Track } from '@/types/track';
 import { IoArrowBack } from 'react-icons/io5';
+import type { PlaylistMode } from '@artune/shared-types';
+import { Track } from '@/types/track';
 import { BREAKPOINTS } from '@/constants/breakpoints';
+import { SCREEN_TRACK_COUNT } from '@/constants/playlist';
 import {
   ArtworkDisplay,
+  ArtworkDisplaySkeleton,
   CrisisNotice,
   PlaylistToggle,
   AlbumGrid,
@@ -22,47 +25,36 @@ import {
   backButtonStyle,
   toggleWrapperStyle,
   actionButtonWrapperStyle,
+  playlistStyle,
+  statusStyle,
   emptyStateStyle,
   footerStyle,
 } from './ResultPage.styles';
 
-type Mode = 'immerse' | 'soothe';
 type ViewMode = 'artwork' | 'music';
 
 /**
- * 감정 분석 결과 페이지
- *
- * - **PC (>1024px)**: 좌측 아트워크, 우측 플레이리스트가 나란히 배치됩니다.
- * - **Tablet/Mobile (<=1024px)**: 아트워크 뷰와 플레이리스트 뷰가 분리되어 전환됩니다.
+ * 감정 분석 결과 페이지 — 스트림이 열리면 바로 들어와 받는 대로 채운다.
+ * - 머리말 전(약 2초): 아트워크·감정·공감 문구 자리는 스켈레톤
+ * - 곡: 모드마다 10칸을 받은 곡이 앞에서부터 채우고, 다 받기 전에는 "곡을 고르고 있어요"
+ * - 끝났는데 10곡이 안 되면 남은 칸은 지우고, 0곡이면 빈 목록 안내 (도중 실패 포함)
+ * - PC(>1024px): 아트워크와 플레이리스트가 나란히 / 좁은 화면: 아트워크 뷰 → '음악 보기'로 플레이리스트 뷰
  */
 function ResultPage() {
   const emotionResult = useAppStore((state) => state.emotionResult);
-  // 첫 곡이 와서 넘어온 뒤에도 남은 곡을 받는 중이면 true — 빈 목록은 '못 찾음'이 아니라 '고르는 중'
   const isLoading = useAppStore((state) => state.isLoading);
-  const [selectedMode, setSelectedMode] = useState<Mode>('immerse');
-
-  // 뷰 상태: 'artwork' | 'music'
+  const [selectedMode, setSelectedMode] = useState<PlaylistMode>('immerse');
   const [viewMode, setViewMode] = useState<ViewMode>('artwork');
-
-  // 선택된 트랙 상태 (모바일 모달용)
+  // 좁은 화면에서 누른 곡 — 플레이어 모달로 연다
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
-
-  const handleTrackClick = (track: Track) => {
-    if (isCompactView) {
-      setSelectedTrack(track);
-    }
-  };
-
   const isCompactView = useMediaQuery(`(max-width: ${BREAKPOINTS.compact}px)`);
 
-  const closePlayerModal = () => {
-    setSelectedTrack(null);
-  };
-
-  if (!emotionResult) return null;
-  const currentPlaylist = emotionResult.playlists[selectedMode];
-  const isEmpty =
-    !currentPlaylist.tracks || currentPlaylist.tracks.length === 0;
+  if (!emotionResult && !isLoading) return null;
+  const playlists = emotionResult?.playlists;
+  const tracks = playlists?.[selectedMode].tracks ?? [];
+  const pending = isLoading
+    ? Math.max(0, SCREEN_TRACK_COUNT - tracks.length)
+    : 0;
 
   return (
     <>
@@ -72,26 +64,25 @@ function ResultPage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {/* 아트워크 섹션 
-        - PC: 항상 표시
-        - Compact View: viewMode가 'artwork'일 때만 표시 
-      */}
         {(!isCompactView || viewMode === 'artwork') && (
           <div css={leftSectionStyle}>
-            {emotionResult.crisis && <CrisisNotice />}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <ArtworkDisplay
-                artwork={emotionResult.artwork}
-                emotionLabel={emotionResult.emotionLabel}
-                description={emotionResult.description}
-              />
-            </motion.div>
+            {emotionResult?.crisis && <CrisisNotice />}
+            {emotionResult ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <ArtworkDisplay
+                  artwork={emotionResult.artwork}
+                  emotionLabel={emotionResult.emotionLabel}
+                  description={emotionResult.description}
+                />
+              </motion.div>
+            ) : (
+              <ArtworkDisplaySkeleton />
+            )}
 
-            {/* 하단 액션 버튼 그룹 */}
             <motion.div
               css={actionButtonWrapperStyle}
               initial={{ opacity: 0 }}
@@ -99,22 +90,16 @@ function ResultPage() {
               transition={{ delay: 0.4 }}
             >
               <ActionButtons
-                // Compact View일 때만 '음악 보기' 버튼 활성화
+                // 좁은 화면에서만 '음악 보기' (PC는 플레이리스트가 옆에 있다)
                 onNext={isCompactView ? () => setViewMode('music') : undefined}
               />
             </motion.div>
           </div>
         )}
 
-        {/* 플레이리스트 섹션 
-        - PC: 항상 표시
-        - Compact View: viewMode가 'music'일 때만 표시 
-      */}
         {(!isCompactView || viewMode === 'music') && (
           <div css={rightSectionStyle}>
-            {/* 헤더 (뒤로가기 + 토글) */}
             <div css={mobileMusicHeaderStyle}>
-              {/* Compact View 전용 뒤로가기 버튼 */}
               {isCompactView && (
                 <button
                   css={backButtonStyle}
@@ -125,23 +110,18 @@ function ResultPage() {
                 </button>
               )}
 
-              {/* 플레이리스트 모드 토글 */}
               <div css={toggleWrapperStyle}>
                 <PlaylistToggle
                   selectedMode={selectedMode}
                   onModeChange={setSelectedMode}
-                  immerseLabel={emotionResult.playlists.immerse.modeLabel}
-                  sootheLabel={emotionResult.playlists.soothe.modeLabel}
-                  // PC에서만 툴팁 표시 (터치 디바이스 방해 방지)
+                  immerseLabel={playlists?.immerse.modeLabel}
+                  sootheLabel={playlists?.soothe.modeLabel}
+                  // 툴팁은 PC에서만 (터치에서는 누르기를 방해한다)
                   immerseDescription={
-                    !isCompactView
-                      ? emotionResult.playlists.immerse.description
-                      : undefined
+                    !isCompactView ? playlists?.immerse.description : undefined
                   }
                   sootheDescription={
-                    !isCompactView
-                      ? emotionResult.playlists.soothe.description
-                      : undefined
+                    !isCompactView ? playlists?.soothe.description : undefined
                   }
                 />
               </div>
@@ -149,18 +129,17 @@ function ResultPage() {
 
             <motion.div
               key={selectedMode}
+              css={playlistStyle}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              style={{ width: '100%', flex: 1 }}
             >
-              {isEmpty && isLoading ? (
-                <div css={emptyStateStyle}>
-                  <div className="empty-icon">🎵</div>
-                  <h3>곡을 고르고 있어요</h3>
-                  <p>곧 이어서 보여 드릴게요.</p>
-                </div>
-              ) : isEmpty ? (
+              {pending > 0 && (
+                <p css={statusStyle} role="status">
+                  곡을 고르고 있어요
+                </p>
+              )}
+              {tracks.length === 0 && !isLoading ? (
                 <div css={emptyStateStyle}>
                   <div className="empty-icon">🎵</div>
                   <h3>플레이리스트를 찾을 수 없어요</h3>
@@ -172,18 +151,19 @@ function ResultPage() {
                 </div>
               ) : (
                 <AlbumGrid
-                  tracks={currentPlaylist.tracks}
-                  onTrackClick={isCompactView ? handleTrackClick : undefined}
+                  tracks={tracks}
+                  pending={pending}
+                  interaction={isCompactView ? 'tap' : 'hover'}
+                  onTrackClick={setSelectedTrack}
                 />
               )}
             </motion.div>
           </div>
         )}
 
-        {/* 모바일 플레이어 모달 */}
         <MobilePlayerModal
           isOpen={!!selectedTrack}
-          onClose={closePlayerModal}
+          onClose={() => setSelectedTrack(null)}
           track={selectedTrack}
         />
       </motion.div>

@@ -11,7 +11,7 @@ export const colors = {
   // background
   background: {
     // 메인 배경
-    gradient: 'linear-gradient(135deg, #000f00 0%, #0d0d0d 100%',
+    gradient: 'linear-gradient(135deg, #000f00 0%, #0d0d0d 100%)',
     white: '#ffffff',
     primaryWhite: '#f9f9f9',
 

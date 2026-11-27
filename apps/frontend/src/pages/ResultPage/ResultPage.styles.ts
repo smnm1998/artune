@@ -172,6 +172,30 @@ export const backButtonStyle = css`
   }
 `;
 
+// 플레이리스트 영역 — 안내 문구를 그리드 위 여백에 띄우는 기준
+export const playlistStyle = css`
+  position: relative;
+  width: 100%;
+  flex: 1;
+`;
+
+// 곡을 다 받기 전 그리드 위 안내 — 위 여백에 띄워 끝날 때 그리드가 움직이지 않게
+export const statusStyle = css`
+  position: absolute;
+  top: -28px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+  color: ${colors.text.tertiary};
+
+  @media (max-width: ${TABLET_BP}) {
+    top: -24px;
+    font-size: 13px;
+  }
+`;
+
 export const emptyStateStyle = css`
   display: flex;
   flex-direction: column;

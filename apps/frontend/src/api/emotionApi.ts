@@ -15,7 +15,8 @@ export type { EmotionResponse };
 export interface AnalyzeOptions {
   seen?: SeenHistory;
   signal?: AbortSignal;
-  onProgress?: (progress: number, message: string) => void;
+  /** 스트림이 열렸을 때(HTTP 200) 한 번 — 이 뒤의 실패는 error 이벤트나 끊김으로 온다 */
+  onOpen?: () => void;
   /** 감정·공감 문구·아트워크가 정해졌을 때 한 번, 곡보다 먼저 (곡 목록은 비어 있다) */
   onMeta?: (meta: EmotionResponse) => void;
   /** 곡 하나 — 모드별 최종 순서대로 오고, index는 그 모드에서 몇 번째인지 */
@@ -40,15 +41,16 @@ async function httpErrorMessage(response: Response): Promise<string> {
 }
 
 /**
- * 감정 분석 + 추천 (POST 스트리밍). 글과 이력은 본문으로 보내고, 진행률·머리말·곡·결과는 SSE 형식으로 흘러온다.
+ * 감정 분석 + 추천 (POST 스트리밍). 글과 이력은 본문으로 보내고, 머리말·곡·결과는 SSE 형식으로 흘러온다.
+ * - 진행률(progress) 이벤트는 서버 프로토콜에 남아 있지만 화면은 쓰지 않는다 — 결과 화면의 스켈레톤이 받는 대로 채운다
  * - 취소는 signal로: fetch와 본문 읽기가 함께 멈추고 연결이 닫힌다
  * - 취소·시간 초과 오류는 그대로 넘긴다(스토어가 signal.reason으로 구분). 그 밖의 네트워크 실패는
  *   브라우저 영어 메시지(Failed to fetch) 대신 연결 끊김 문구로 바꾼다
  * @returns 최종 응답 (곡 이벤트를 다 모은 것과 같다)
  */
-export async function analyzeEmotionWithProgress(
+export async function analyzeEmotionStream(
   text: string,
-  { seen, signal, onProgress, onMeta, onTrack }: AnalyzeOptions = {},
+  { seen, signal, onOpen, onMeta, onTrack }: AnalyzeOptions = {},
 ): Promise<EmotionResponse> {
   const request: AnalyzeRequest = { text, seen };
   let response: Response;
@@ -71,14 +73,13 @@ export async function analyzeEmotionWithProgress(
   }
   if (!response.ok) throw new Error(await httpErrorMessage(response));
   if (!response.body) throw new Error(CONNECTION_LOST);
+  onOpen?.();
 
   let failure: string | null = null;
   try {
     for await (const event of readSseEvents<EmotionStreamEvent>(
       response.body,
     )) {
-      if (event.type === 'progress')
-        onProgress?.(event.progress, event.message);
       if (event.type === 'meta') onMeta?.(event.data);
       if (event.type === 'track')
         onTrack?.(event.mode, event.index, event.track);

@@ -22,7 +22,9 @@ const badges = () =>
 describe('AlbumGrid (PC 호버)', () => {
   it('Apple 배지는 마우스를 올린 곡에만, 화면에 하나만 나온다 (가이드라인: 배지 1개)', async () => {
     const user = userEvent.setup();
-    render(<AlbumGrid tracks={[track(1), track(2), track(3)]} />);
+    render(
+      <AlbumGrid tracks={[track(1), track(2), track(3)]} interaction="hover" />,
+    );
 
     expect(badges()).toHaveLength(0);
 

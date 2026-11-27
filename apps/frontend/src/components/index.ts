@@ -6,6 +6,6 @@ export { default as ArtworkDisplay } from './ArtworkDisplay/ArtworkDisplay';
 export { default as CrisisNotice } from './CrisisNotice/CrisisNotice';
 export { default as EmotionInput } from './EmotionInput/EmotionInput';
 export { showErrorToast } from './ErrorToast/ErrorToast';
-export { default as Loading } from './Loading/Loading';
 export { default as PlaylistToggle } from './PlaylistToggle/PlaylistToggle';
 export { default as MobilePlayerModal } from './MobilePlayerModal/MobilePlayerModal';
+export { AlbumCardSkeleton, ArtworkDisplaySkeleton } from './Skeleton/Skeleton';

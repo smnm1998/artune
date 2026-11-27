@@ -17,4 +17,6 @@ vi.mock('framer-motion', () => ({
     span: 'span',
   },
   AnimatePresence: ({ children }) => children,
+  // 화면이 사라지는 중인지 — 기본은 '있음'. 사라지는 동안을 보는 테스트는 mockReturnValue(false)
+  useIsPresent: vi.fn(() => true),
 }));

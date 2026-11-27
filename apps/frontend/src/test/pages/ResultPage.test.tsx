@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { useIsPresent } from 'framer-motion';
 import ResultPage from '@/pages/ResultPage';
 import useAppStore from '@/stores/useAppStore';
 import type { EmotionResponse, Track } from '@artune/shared-types';
@@ -129,5 +130,41 @@ describe('좁은 화면 — 아트워크 뷰 ↔ 플레이리스트 뷰', () => 
       screen.getByRole('button', { name: '아트워크로 돌아가기' }),
     );
     expect(scrollArea.scrollTop).toBe(0);
+  });
+});
+
+describe('교차 페이드 — 결과 화면이 사라지는 동안', () => {
+  beforeEach(() =>
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })),
+  );
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.mocked(useIsPresent).mockReturnValue(true);
+    useAppStore.getState().reset();
+  });
+
+  it('다시하기로 결과가 비워져도 사라지는 동안에는 마지막 결과를 그대로 보여 준다', () => {
+    useAppStore.setState({ emotionResult: partial, isLoading: false });
+    render(<ResultPage />);
+
+    // App의 AnimatePresence가 결과 화면을 내보내는 중 — 같은 렌더에서 스토어는 결과를 비운다
+    vi.mocked(useIsPresent).mockReturnValue(false);
+    act(() => useAppStore.getState().reset());
+
+    expect(screen.queryByText(partial.emotionLabel)).not.toBeNull();
+  });
+
+  it('화면에 남아 있는 동안 결과가 비워지면 그대로 비운다 (사라지는 중일 때만 붙잡는다)', () => {
+    useAppStore.setState({ emotionResult: partial, isLoading: false });
+    render(<ResultPage />);
+
+    act(() => useAppStore.getState().reset());
+
+    expect(screen.queryByText(partial.emotionLabel)).toBeNull();
   });
 });

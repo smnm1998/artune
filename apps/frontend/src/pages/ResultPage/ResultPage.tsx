@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useIsPresent } from 'framer-motion';
 import { IoArrowBack } from 'react-icons/io5';
 import type { PlaylistMode } from '@artune/shared-types';
 import { Track } from '@/types/track';
@@ -42,8 +42,14 @@ type ViewMode = 'artwork' | 'music';
  * - PC(>1024px): 아트워크와 플레이리스트가 나란히 / 좁은 화면: 아트워크 뷰 → '음악 보기'로 플레이리스트 뷰
  */
 function ResultPage() {
-  const emotionResult = useAppStore((state) => state.emotionResult);
+  const liveResult = useAppStore((state) => state.emotionResult);
   const isLoading = useAppStore((state) => state.isLoading);
+  // 다시하기는 결과를 비우고 입력 화면으로 바꾼다 — 이 화면이 사라지는(교차 페이드) 동안에는 마지막 결과를 그대로 그린다.
+  // 비운 결과를 그대로 따르면 나가는 동안 빈 화면만 흐려진다 (11/27 측정: 결과 쪽 투명도가 처음부터 없음)
+  const isPresent = useIsPresent();
+  const [lastResult, setLastResult] = useState(liveResult);
+  if (liveResult && liveResult !== lastResult) setLastResult(liveResult);
+  const emotionResult = liveResult ?? (isPresent ? null : lastResult);
   const [selectedMode, setSelectedMode] = useState<PlaylistMode>('immerse');
   const [viewMode, setViewMode] = useState<ViewMode>('artwork');
   // 두 뷰가 같은 스크롤 상자를 쓴다 — 바꿀 때 맨 위로 올리지 않으면 앞 뷰에서 내린 위치 그대로 다음 뷰가 뜬다
@@ -70,12 +76,8 @@ function ResultPage() {
 
   return (
     <div ref={scrollRef} css={scrollAreaStyle}>
-      <motion.div
-        css={containerStyle}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      {/* 화면 전체의 나타남은 App의 교차 페이드가 맡는다 — 여기서 또 흐리게 시작하면 두 번 겹친다 */}
+      <div css={containerStyle}>
         {(!isCompactView || viewMode === 'artwork') && (
           <div css={leftSectionStyle}>
             {emotionResult?.crisis && <CrisisNotice />}
@@ -178,7 +180,7 @@ function ResultPage() {
           onClose={() => setIsPlayerOpen(false)}
           track={selectedTrack}
         />
-      </motion.div>
+      </div>
 
       {/* 맨 아래 고지 — 두 뷰(아트워크·플레이리스트) 모두 이 아래에 온다. 상표 문구는 사이트에 한 번 */}
       <footer css={footerStyle}>

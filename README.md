@@ -12,11 +12,11 @@
   <br/>
 
   <p>
-    <img src="https://img.shields.io/badge/React-19.1-61DAFB?logo=react&logoColor=black" alt="React">
-    <img src="https://img.shields.io/badge/NestJS-11.0-E0234E?logo=nestjs&logoColor=white" alt="NestJS">
+    <img src="https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=black" alt="React">
+    <img src="https://img.shields.io/badge/NestJS-11.1-E0234E?logo=nestjs&logoColor=white" alt="NestJS">
     <img src="https://img.shields.io/badge/TypeScript-5.9%20%7C%206.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
-    <img src="https://img.shields.io/badge/Vite-7.1-646CFF?logo=vite&logoColor=white" alt="Vite">
-    <img src="https://img.shields.io/badge/Turborepo-2.6-EF4444?logo=turborepo&logoColor=white" alt="Turborepo">
+    <img src="https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite&logoColor=white" alt="Vite">
+    <img src="https://img.shields.io/badge/Turborepo-2.11-EF4444?logo=turborepo&logoColor=white" alt="Turborepo">
     <img src="https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white" alt="Node.js">
     <img src="https://img.shields.io/badge/OpenAI-gpt--6--luna-412991?logo=openai&logoColor=white" alt="OpenAI">
   </p>
@@ -89,13 +89,13 @@ sequenceDiagram
 - **Package Manager**: npm Workspaces
 - **Shared Types**: `packages/shared-types` (프론트·백 응답 타입 공유)
 - **Runtime**: Node.js 24
-- **CI**: GitHub Actions — 푸시·PR마다 lint · 타입 검사 · 테스트 · 빌드 (`.github/workflows/ci.yml`)
+- **CI**: GitHub Actions — 푸시·PR마다 lint · 타입 검사 · 테스트 · 빌드 (`.github/workflows/ci.yml`, 키·네트워크 없이 — 외부 호출은 테스트에서 모두 대체)
 
 ### Frontend (`apps/frontend`)
 
-- **Core**: React 19, Vite 7, TypeScript
+- **Core**: React 19, Vite 7, TypeScript (strict)
 - **State Management**: Zustand 5 (요청·취소·결과 상태와 비동기 액션)
-- **Styling**: Emotion (CSS-in-JS), Framer Motion (애니메이션)
+- **Styling**: Emotion (CSS-in-JS, 색은 용도별 토큰), Framer Motion (화면 교차 페이드 · 플레이어), Pretendard 가변 글꼴
 - **Testing**: Vitest, React Testing Library (컴포넌트·페이지·스토어·API)
 - **Lint**: ESLint 10 (flat config) + typescript-eslint + react-hooks, Prettier
 - **Deploy**: Vercel
@@ -109,6 +109,7 @@ sequenceDiagram
   - **iTunes Search API**: 곡 검색 · KR 스토어 표기 조회 · 30초 미리듣기
 - **Caching**: NestJS CacheModule (곡 해석 결과 6시간, 차단·네트워크 오류는 캐시하지 않고 다음 요청에서 재시도)
 - **Rate Limit**: `@nestjs/throttler` (IP당 분당 5회, Railway가 넣는 `X-Real-IP` 기준)
+- **CORS**: 배포 주소와 로컬·사설 IP(같은 와이파이의 휴대폰 테스트)만 허용, 환경 변수에 기대지 않음
 - **Testing**: Jest (서비스·유틸 단위 테스트, 요청 제한은 실제 HTTP 요청으로 검증)
 - **Lint**: ESLint 10 (flat config) + typescript-eslint, Prettier
 - **Protocol**: HTTP, POST 스트리밍 (SSE 형식 — 프론트는 `fetch` + `ReadableStream`으로 읽음)
@@ -118,17 +119,47 @@ sequenceDiagram
 
 ### PC
 
-|                          감정 입력                          |                                곡을 받는 중                                 |                                결과                                 |
-| :---------------------------------------------------------: | :-------------------------------------------------------------------------: | :-----------------------------------------------------------------: |
-| <img src="./docs/input.png" width="280" alt="PC 감정 입력"> |     <img src="./docs/skeleton.jpeg" width="280" alt="PC 곡을 받는 중">      |    <img src="./docs/result.png" width="280" alt="PC 결과 화면">     |
-|            문구는 화면 정중앙, 입력창은 맨 아래             | 스트림이 열리면 바로 결과 화면 — 곡 10칸을 스켈레톤으로 두고 받는 대로 채움 | 왼쪽 감정 패널 고정 · 첫 곡 소개 카드 + 3열, 커버에 올리면 미리듣기 |
+<!-- 칸 폭을 33%로 고정 — 마크다운 표는 설명 길이로 칸 폭이 정해져 사진 크기가 제각각이 된다 -->
+<table>
+  <tr>
+    <th width="33%">감정 입력</th>
+    <th width="33%">곡을 받는 중</th>
+    <th width="33%">결과</th>
+  </tr>
+  <tr>
+    <td><img src="./docs/input.png" width="100%" alt="PC 감정 입력"></td>
+    <td><img src="./docs/skeleton.jpeg" width="100%" alt="PC 곡을 받는 중"></td>
+    <td><img src="./docs/result.png" width="100%" alt="PC 결과 화면"></td>
+  </tr>
+  <tr>
+    <td align="center">문구는 화면 정중앙, 입력창은 맨 아래</td>
+    <td align="center">스트림이 열리면 바로 결과 화면 — 곡 10칸을 스켈레톤으로 두고 받는 대로 채움</td>
+    <td align="center">왼쪽 감정 패널 고정 · 첫 곡 소개 카드 + 3열, 커버에 올리면 미리듣기</td>
+  </tr>
+</table>
 
 ### 모바일
 
-|                             감정 입력                              |                              추천곡                              |                              미리듣기                              |
-| :----------------------------------------------------------------: | :--------------------------------------------------------------: | :----------------------------------------------------------------: |
-| <img src="./docs/m_input.jpeg" width="200" alt="모바일 감정 입력"> | <img src="./docs/m_result.jpeg" width="200" alt="모바일 추천곡"> | <img src="./docs/m_listen.jpeg" width="200" alt="모바일 미리듣기"> |
-|                    입력창은 칸 안에 보내기 버튼                    |              감정 결과 ↔ 추천곡 두 화면, 모드 토글               |                곡을 탭하면 플레이어 · 30초 미리듣기                |
+<table>
+  <tr>
+    <th width="25%">감정 입력</th>
+    <th width="25%">감정 결과</th>
+    <th width="25%">추천곡</th>
+    <th width="25%">미리듣기</th>
+  </tr>
+  <tr>
+    <td><img src="./docs/m_input.png" width="100%" alt="모바일 감정 입력"></td>
+    <td><img src="./docs/m_result.png" width="100%" alt="모바일 감정 결과"></td>
+    <td><img src="./docs/m_list.png" width="100%" alt="모바일 추천곡"></td>
+    <td><img src="./docs/m_listen.png" width="100%" alt="모바일 미리듣기"></td>
+  </tr>
+  <tr>
+    <td align="center">입력창은 칸 안에 보내기 버튼</td>
+    <td align="center">아트워크 · 감정 · 공감 문구, 버튼으로 추천곡 화면으로</td>
+    <td align="center">모드 토글 · 2열</td>
+    <td align="center">곡을 탭하면 플레이어 · 30초 미리듣기</td>
+  </tr>
+</table>
 
 ## ⚙️ 설치 및 실행
 
@@ -190,36 +221,29 @@ artune/
 │   │   │   ├── music/              # 지역 쿼터 · 본 곡 후순위 · 노출 기록(머리 곡)
 │   │   │   ├── itunes/             # 곡 해석(곡명·아티스트 대조) · KR 표기 · 캐시 · rate limit 처리
 │   │   │   ├── dalle/              # 감정별 아트워크 매핑 (DALL·E 호출은 정지)
+│   │   │   ├── cors.config.ts      # 허용 주소 (배포 · 로컬 · 사설 IP)
 │   │   │   └── throttle.config.ts  # IP당 요청 제한
 │   │   └── scripts/eval/           # 선곡 품질 · 응답 시간 측정 하네스
 │   └── frontend/                   # React Client
 │       └── src/
-│           ├── components/         # AlbumCard · AlbumGrid · AlbumHoverModal · MobilePlayerModal · PreviewSource 등
-│           ├── hooks/              # usePreviewAudio · useMediaQuery · useHover 등
+│           ├── components/         # AlbumGrid · FeaturedTrack · AlbumHoverModal · MobilePlayerModal · Skeleton · Equalizer 등
+│           ├── hooks/              # audio/usePreviewAudio · ui/(useMediaQuery · useHover · useDelayedFlag 등)
 │           ├── stores/             # Zustand Store (요청 · 취소 · 결과)
 │           ├── api/                # POST 스트림 읽기 (SSE 형식)
 │           ├── utils/              # 본 곡 이력(localStorage) · 입력 검증
-│           ├── constants/          # 고지 문구 등
-│           └── pages/
+│           ├── constants/          # 고지 문구 · 브레이크포인트 등
+│           ├── test/               # Vitest + Testing Library
+│           └── pages/              # 입력 · 결과
 ├── packages/
 │   └── shared-types/               # 프론트·백 공유 응답 타입
-├── docs/measurements/              # 측정 기록
+├── docs/                           # 화면 미리보기 이미지 · measurements/(측정 기록)
 ├── package.json
 └── turbo.json
 ```
 
 ## 💡 주요 기술적 고민
 
-### 1. Spotify 정책 변경 대응 — iTunes Search API 완전 이전
-
-> 7월, 초기 아티스트 기반 버전의 작업입니다. 추천 구조는 이후 **아티스트 기반 → Last.fm 유사곡 하이브리드(7월) → AI 직접 선곡(11월)** 으로 바뀌었습니다.
-
-Spotify API 정책 변경(Developer Mode 유저 제한, Premium 강제)에 대응해 음악 추천 파이프라인을 iTunes Search API로 완전 이전했습니다.
-
-- **LLM 큐레이션 전환**: 오디오 피쳐(valence/energy/tempo) 기반 필터링 대신, GPT가 감정·모드별 아티스트 풀을 직접 큐레이션하는 구조로 재설계. 추천 요청당 Spotify API 호출 65회 전부 제거.
-- **Rate Limit 방어**: 429/403을 상태별로 판별해 국가 폴백의 호출 증폭(최대 3배)을 차단하고, 일시적 차단 결과가 캐시에 남는 문제를 수정. throttle 상황에서도 트랙 수율 20/20 유지.
-
-### 2. 첫 곡까지 12.2초 → 3.2초 — AI 선곡 스트리밍
+### 1. 첫 곡까지 12.2초 → 3.2초 — AI 선곡 스트리밍
 
 AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 때까지(p50 약 7.6초) 기다렸다가 곡을 찾기 시작해서, **첫 곡이 곧 전체 완료 시점(12.2초)** 이었습니다.
 
@@ -239,35 +263,51 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 - 대가: KR 표기 조회를 곡이 오는 대로 나눠 하느라 요청당 iTunes 호출이 27 → 29.5회(p50)로 늘었습니다.
 - 첫 곡 시점은 브라우저가 첫 곡을 받은 때입니다. 이때는 결과 화면으로 넘어가는 애니메이션(1.6초)이 더 붙어 있었는데, 이후 스트림이 열리면 바로 스켈레톤 결과 화면으로 넘어가게 바꿔 받은 곡이 곧바로 카드로 보입니다(같은 모의 서버 조건에서 첫 카드가 보이는 시점 3.92초 → 2.28초).
 
-### 3. 측정 기반 응답시간 최적화 (17.9초 → 11.6초, -35%)
+### 2. 리팩토링 — 조용히 실패하던 것들 (11/11 ~ 11/27)
 
-> 초기 아티스트 기반 버전(7월)의 작업입니다. 지금 구조(AI 직접 선곡)의 측정은 위 2번입니다.
+기능을 더하기보다, 겉으로는 멀쩡해 보이지만 실제로는 동작하지 않던 부분을 찾아 고쳤습니다.
 
-단계별 타이밍 계측을 심어 병목을 실측으로 식별한 뒤 최적화했습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing/response-timing.log))
+- **곡을 받는 도중 연결이 끊기면 서버가 죽었습니다.** 화면을 확인하다 탭을 닫았더니 서버가 `AbortError`로 종료됐고, 머리말 전에 요청을 끊으면 매번 재현됐습니다. 지역 쿼터의 결과 Promise는 만들 때 시작하는데, 받는 쪽은 AI가 곡을 다 쓴 뒤에야 `await`해서, 그 사이 취소가 만든 거부를 받을 곳이 없었습니다(Node 기본값은 처리 안 된 거부 = 프로세스 종료). 결과를 만든 자리에서 거부를 처리됨으로 표시하고, 회귀 테스트(수정 전 코드에서 실패 확인)와 끊는 시점 5가지로 서버가 살아 있는 것을 확인했습니다.
+- **`lint` 명령이 아무것도 하지 않았습니다.** 설정 파일 없이 ESLint 8만 깔려 있었고, `npm run lint`는 검사할 패키지가 없어 늘 성공했습니다. ESLint 10(flat config · typescript-eslint · react-hooks)을 백·프론트에 붙이고 GitHub Actions로 푸시마다 lint · 타입 검사 · 테스트 · 빌드를 돌립니다. 새 규칙이 실제 개선 3건을 찾았습니다(오류를 바꿀 때 원래 오류를 `cause`로 보존 2건, effect로 prop을 상태에 복사하던 플레이어 1건).
+- **백엔드 strict가 꺼져 있었습니다.** `noImplicitAny: false`가 strict를 막고 있어 `strict: true`로 켰습니다.
+- **CORS · 의존성**: 쓰지 않던 `FRONTEND_URL` 대신 허용 주소를 코드에 고정했습니다(배포 주소 + 로컬 · 사설 IP). `npm audit`으로 multer DoS 취약점(high)을 패치해 배포 의존성 취약점을 0으로 만들었습니다.
+- **입력 검증**: 허용 문자 목록이 `^^` · `:)` · 이모지를 막고 있어 제어 문자만 거부하도록 바꿨고, 한글 조합 중 Enter로 마지막 글자가 빈 입력창에 남던 문제를 고쳤습니다.
 
-| 단계          | 응답시간  | 조치                                                                         |
-| :------------ | :-------- | :--------------------------------------------------------------------------- |
-| Baseline      | 17.9s     | LLM 52% + iTunes 순차 호출 48%로 병목 분해                                   |
-| SSE 병렬화    | ~13.8s    | iTunes 구간 8.6s → 4.5s. 완료 카운트 기반 마일스톤으로 진행률 단조 증가 보장 |
-| LLM 출력 축소 | **11.6s** | 아티스트 40→25명/모드로 출력 토큰 절감 (수율 20/20 유지 검증)                |
+테스트는 백엔드 212개 · 프론트 110개입니다(11/28 기준).
 
-### 4. 오디오 UX 디테일 (HTMLAudioElement & Interaction)
+### 3. 리디자인 — 바꾸고, 재서 확인하기 (11/27)
 
-- 단순한 play/pause가 아닌, 판을 천천히 멈추는 듯한 경험을 주기 위해 커스텀 훅(`usePreviewAudio`)을 구현했습니다.
+어두운 Glassmorphism 테마를 라이트(회백색 · 초록) 테마로 바꿨습니다. 목업으로 화면을 먼저 정하고, 단계마다 테스트와 실제 폭 스크린샷으로 확인했습니다.
+
+- **배치**: PC 결과는 3 : 7(왼쪽 감정 패널 고정 · 오른쪽 첫 곡 소개 카드 + 3열 9곡), 모바일은 감정 결과 ↔ 추천곡 두 화면과 탭하면 열리는 플레이어. 3열에서 10곡 중 1곡이 남는 문제는 곡 수를 바꾸지 않고(서버 지역 비율 · 이력 가정이 바뀜) 소개 1곡 + 3×3 배치로 풀었습니다.
+- **수치**: 입력 → 결과 전환 1.0초 → 0.5초(차례로 사라지고 나타나던 것을 동시 교차로) · 글자색 3단 대비 15.0 / 6.5 / 4.9 : 1, 초록 위 흰 글자 5.4 : 1(모두 WCAG AA 4.5 이상).
+- **재 보다가 찾은 것**:
+  - 교차 페이드의 투명도를 재 보니 다시하기 방향만 나가는 결과 화면이 처음부터 비어 있었습니다. 스토어가 결과를 먼저 비우고 있어서, 화면이 나가는 동안만 마지막 결과를 붙잡게 했습니다(`useIsPresent`).
+  - PC 왼쪽 패널 `sticky`는 원래부터 붙지 않고 있었습니다(400px 내리면 패널도 −400). 조상의 `overflow-x: hidden`이 스크롤 상자가 되는 문제라 `clip`으로 바꿔 위 16px에 고정했습니다.
+  - 모바일에서 화면을 바꾸면 이전 스크롤 위치가 따라왔습니다. 두 화면이 스크롤 상자 하나를 같이 쓰고 있어, 스크롤 상자를 페이지로 옮기고 화면을 바꿀 때 맨 위로 올립니다.
+- **기본기**: 굵은 글자가 가짜 볼드로 나오던 글꼴을 가변 글꼴로, 입력창만 다른 글꼴이던 것(`font: inherit`), `lang="ko"`, iOS 입력 확대 방지(16px), 한국어 줄바꿈 `keep-all`, 모바일 Safari 주소창 높이(`100dvh`).
+
+### 4. 미리듣기 오디오 (HTMLAudioElement)
+
+- 단순한 play/pause가 아니라 소리가 서서히 줄어들며 멈추도록 커스텀 훅(`usePreviewAudio`)을 만들었습니다.
 - `requestAnimationFrame`으로 프레임마다 볼륨을 줄여 페이드아웃한 뒤 멈춥니다. 호버를 풀면 0.5초로 짧게 줄입니다.
 - 탭이 가려지면 바로 멈추고, 이벤트 리스너와 타이머를 정리합니다.
+- 상태 줄은 받는 중이 0.4초를 넘을 때만 "재생 준비 중"을 띄웁니다. 빠르면 찰나에 "재생 중"으로 바뀌어 깜빡임처럼 보였기 때문입니다. 30초를 다 들으면 "미리듣기가 끝났어요"로 남습니다(전에는 "재생 준비 중"으로 돌아갔습니다).
 
-### 5. 반응형 디자인과 Glassmorphism
+### 5. 초기 버전(5 ~ 7월) — Spotify → iTunes 이전과 측정 기반 최적화
 
-- Emotion을 활용해 세련된 Dark Glassmorphism 테마를 구축했습니다.
-- PC에서는 한 화면에 아트워크와 리스트를, 모바일에서는 토글 방식을 적용하여 디바이스별 최적화된 레이아웃을 제공합니다.
+> 추천 구조는 **아티스트 기반(5월) → Last.fm 유사곡 하이브리드(7월) → AI 직접 선곡(11월)** 으로 바뀌었습니다. 아래 수치는 초기 아티스트 기반 버전 기준입니다.
+
+- **iTunes 완전 이전(5월)**: Spotify API 정책 변경(Developer Mode 유저 제한, Premium 강제)에 대응해 음악 추천을 iTunes Search API로 옮겼습니다. 오디오 피처(valence/energy/tempo) 필터링 대신 GPT가 감정 · 모드별 아티스트를 고르는 구조로 바꿔, 추천 요청당 Spotify API 호출 65회를 모두 없앴습니다.
+- **Rate Limit 방어(7월)**: 429/403을 상태별로 구분해 국가 폴백이 호출을 최대 3배로 늘리던 것을 막고, 일시적 차단 결과가 캐시에 남는 문제를 고쳤습니다.
+- **응답 시간 17.9초 → 11.6초(7월, −35%)**: 단계별 타이밍을 심어 병목(LLM 52% · iTunes 순차 호출 48%)을 실측한 뒤, iTunes 호출 병렬화(8.6초 → 4.5초)와 LLM 출력 축소(아티스트 40 → 25명/모드)로 줄였습니다. ([원본 로그](./docs/measurements/2026-07-21-response-timing/response-timing.log))
 
 ## ⚠️ 한계와 알고 있는 문제
 
 **약관 · 표기**
 
-- **미리듣기 사용 범위**: iTunes Search API 약관은 미리듣기를 스토어로 이어지는 홍보 목적에 허용합니다. 열린 곡(PC 호버 카드 · 모바일 모달)에 Apple Music 배지와 "provided courtesy of iTunes"를 붙이고 연속 · 자동 재생 없이 한 번만 틀지만, 감정 추천 서비스의 미리듣기가 '홍보 목적'에 맞는지는 약관 해석의 영역으로 남아 있습니다.
-- **배지와의 거리**: Apple Music 가이드라인의 '한 화면에 배지 하나'를 따라 배지는 열린 곡에만 둡니다. 그래서 모바일 그리드의 커버는 누르기 전엔 배지와 떨어져 있고(약관은 미리듣기 · 커버를 배지 가까이 두라고 합니다), 모바일 모달이 열릴 때의 확대 효과에 배지도 함께 움직입니다(가이드라인은 배지 애니메이션을 금지합니다).
+- **미리듣기 사용 범위**: iTunes Search API 약관은 미리듣기를 스토어로 이어지는 홍보 목적에 허용합니다. 열린 곡(PC 호버 카드 · 모바일 플레이어)에 Apple Music 배지와 "provided courtesy of iTunes"를 붙이고 연속 · 자동 재생 없이 한 번만 틀지만, 감정 추천 서비스의 미리듣기가 '홍보 목적'에 맞는지는 약관 해석의 영역으로 남아 있습니다.
+- **배지와의 거리**: Apple Music 가이드라인의 '한 화면에 배지 하나'를 따라 배지는 열린 곡에만 둡니다. 그래서 모바일 그리드의 커버는 누르기 전엔 배지와 떨어져 있고(약관은 미리듣기 · 커버를 배지 가까이 두라고 합니다), 곡이 열릴 때의 확대 효과(PC 커버 1.03배 · 모바일 플레이어 0.94 → 1배)에 배지도 함께 움직입니다(가이드라인은 배지 애니메이션을 금지합니다).
 
 **설계**
 
@@ -278,6 +318,10 @@ AI 직접 선곡으로 바꾼 뒤에는 OpenAI가 27곡짜리 JSON을 다 쓸 �
 - **해석 오매칭**: 채택 곡 정밀도는 96%(사람 검수 100건)로, 동명곡이나 다른 버전이 드물게 섞입니다.
 - **고정 규칙**: 지역 비율(한국 6 · 팝 3 · 일본 1)은 알고리즘이 아니라 제품 결정이고, 사용자가 바꿀 수 없습니다.
 - **정적 아트워크**: DALL·E 실시간 생성은 비용 때문에 멈추고 감정별 이미지 12장을 씁니다. 생성 코드는 다시 켤 수 있게 남겨 두었습니다.
+
+**화면**
+
+- **낮은 노트북 화면**: 위기 안내가 함께 뜨고 화면 높이가 낮으면(예: 1366×657) PC 왼쪽 패널이 화면보다 길어져, 스크롤하는 동안 '다시하기' 버튼이 가려집니다(맨 아래에서는 보입니다).
 
 **측정**
 
